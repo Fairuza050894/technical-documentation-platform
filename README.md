@@ -154,3 +154,27 @@ Run the dedicated audit with:
 ```bash
 make audit-changes
 ```
+
+
+## Technical Source Overview generation
+
+The Documents workspace generates deterministic Markdown from a completed synchronization snapshot. A baseline snapshot is optional and, when selected, adds a breaking-change summary produced by the existing deterministic comparator.
+
+Generated documents include project and source metadata, endpoint details, request and response models, component schemas, security information, JSON Pointer evidence, generation metadata, and a SHA-256 content checksum.
+
+API endpoints:
+
+```text
+POST /api/projects/{project_id}/documents/technical-source-overview
+GET  /api/projects/{project_id}/documents
+GET  /api/documents/{document_id}
+GET  /api/documents/{document_id}/download
+```
+
+The same normalized inputs always produce the same Markdown content. Generation time and history metadata are stored separately and do not alter the document checksum.
+
+Run the dedicated audit with:
+
+```bash
+make audit-documents
+```

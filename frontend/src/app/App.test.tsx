@@ -98,6 +98,34 @@ describe("App", () => {
     await waitFor(() => expect(screen.getByText("Create a project first")).toBeInTheDocument());
   });
 
+  it("opens the Documents workspace from primary navigation", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      const url = getRequestUrl(input);
+      if (url.endsWith("/api/health")) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              status: "ok",
+              service: "Technical Documentation Platform",
+              version: "0.1.0",
+              environment: "development",
+            }),
+            { status: 200 },
+          ),
+        );
+      }
+      return Promise.resolve(
+        new Response(JSON.stringify({ items: [], total: 0 }), { status: 200 }),
+      );
+    });
+
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: "Documents" }));
+
+    expect(screen.getByRole("heading", { name: "Documents" })).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText("Create a project first")).toBeInTheDocument());
+  });
+
   it("shows backend metadata on the overview", async () => {
     vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
       const url = getRequestUrl(input);

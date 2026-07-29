@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import { ApiCatalogWorkspace } from "../modules/catalog/ApiCatalogWorkspace";
 import { ChangesWorkspace } from "../modules/changes/ChangesWorkspace";
+import { DocumentsWorkspace } from "../modules/documents/DocumentsWorkspace";
 import { ProjectWorkspace } from "../modules/projects/ProjectWorkspace";
 import { SourceWorkspace } from "../modules/sources/SourceWorkspace";
 
@@ -94,10 +95,12 @@ export function App() {
         {activeNavigation === "Sources" && <SourceWorkspace />}
         {activeNavigation === "API Catalog" && <ApiCatalogWorkspace />}
         {activeNavigation === "Changes" && <ChangesWorkspace />}
+        {activeNavigation === "Documents" && <DocumentsWorkspace />}
         {activeNavigation !== "Projects" &&
           activeNavigation !== "Sources" &&
           activeNavigation !== "API Catalog" &&
-          activeNavigation !== "Changes" && (
+          activeNavigation !== "Changes" &&
+          activeNavigation !== "Documents" && (
             <Overview apiState={apiState} activeNavigation={activeNavigation} />
           )}
       </main>
@@ -167,8 +170,11 @@ function Overview({
 
               <article className="status-card">
                 <span className="status-label">Current vertical slice</span>
-                <strong>Projects, sources, and API catalog</strong>
-                <p>Import OpenAPI files, synchronize normalized operations, and preserve source evidence.</p>
+                <strong>Source-to-document pipeline</strong>
+                <p>
+                  Import OpenAPI files, synchronize normalized operations, compare snapshots,
+                  and generate traceable Markdown.
+                </p>
                 <span className="status-indicator status-indicator--success">Implemented</span>
               </article>
             </div>

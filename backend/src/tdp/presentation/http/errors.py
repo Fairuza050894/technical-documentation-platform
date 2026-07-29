@@ -20,6 +20,15 @@ from tdp.modules.changes.domain.errors import (
     ComparisonRunNotFoundError,
     InvalidComparisonError,
 )
+from tdp.modules.documents.domain.errors import (
+    DocumentError,
+    DocumentNotFoundError,
+    DocumentProjectNotFoundError,
+    DocumentSnapshotNotFoundError,
+    DocumentSourceNotFoundError,
+    InvalidDocumentGenerationError,
+    InvalidDocumentIdError,
+)
 from tdp.modules.projects.domain.errors import (
     InvalidProjectDescriptionError,
     InvalidProjectIdError,
@@ -67,6 +76,15 @@ _CHANGE_DETECTION_ERROR_STATUS: Mapping[type[ChangeDetectionError], int] = {
     ComparisonRunNotFoundError: 404,
 }
 
+_DOCUMENT_ERROR_STATUS: Mapping[type[DocumentError], int] = {
+    InvalidDocumentIdError: 422,
+    DocumentProjectNotFoundError: 404,
+    DocumentSourceNotFoundError: 404,
+    DocumentSnapshotNotFoundError: 404,
+    InvalidDocumentGenerationError: 422,
+    DocumentNotFoundError: 404,
+}
+
 _PROJECT_ERROR_STATUS: Mapping[type[ProjectError], int] = {
     InvalidProjectIdError: 422,
     InvalidProjectKeyError: 422,
@@ -112,6 +130,17 @@ async def change_detection_error_handler(request: Request, exc: Exception) -> JS
         exc.code,
         str(exc),
         _CHANGE_DETECTION_ERROR_STATUS.get(type(exc), 400),
+    )
+
+
+async def document_error_handler(request: Request, exc: Exception) -> JSONResponse:
+    if not isinstance(exc, DocumentError):
+        raise exc
+    return _error_response(
+        request,
+        exc.code,
+        str(exc),
+        _DOCUMENT_ERROR_STATUS.get(type(exc), 400),
     )
 
 

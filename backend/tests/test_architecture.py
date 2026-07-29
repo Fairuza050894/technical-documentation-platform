@@ -147,3 +147,37 @@ def test_change_domain_has_no_framework_or_infrastructure_imports() -> None:
         for path in (_CHANGE_MODULE / "domain").glob("*.py")
     }
     assert all(not imports for imports in violations.values()), violations
+
+
+_DOCUMENT_MODULE = _BACKEND_ROOT / "src" / "tdp" / "modules" / "documents"
+
+
+def test_document_domain_has_no_framework_or_infrastructure_imports() -> None:
+    forbidden_prefixes = (
+        "fastapi",
+        "pydantic",
+        "sqlite3",
+        "tdp.modules.documents.infrastructure",
+        "tdp.modules.documents.presentation",
+    )
+    violations = {
+        str(path.relative_to(_BACKEND_ROOT)): sorted(
+            module for module in imported_modules(path) if module.startswith(forbidden_prefixes)
+        )
+        for path in (_DOCUMENT_MODULE / "domain").glob("*.py")
+    }
+    assert all(not imports for imports in violations.values()), violations
+
+
+def test_document_application_does_not_import_infrastructure_or_presentation() -> None:
+    forbidden_prefixes = (
+        "tdp.modules.documents.infrastructure",
+        "tdp.modules.documents.presentation",
+    )
+    violations = {
+        str(path.relative_to(_BACKEND_ROOT)): sorted(
+            module for module in imported_modules(path) if module.startswith(forbidden_prefixes)
+        )
+        for path in (_DOCUMENT_MODULE / "application").glob("*.py")
+    }
+    assert all(not imports for imports in violations.values()), violations
