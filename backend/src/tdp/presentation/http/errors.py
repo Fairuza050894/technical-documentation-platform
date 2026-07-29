@@ -26,8 +26,16 @@ from tdp.modules.documents.domain.errors import (
     DocumentProjectNotFoundError,
     DocumentSnapshotNotFoundError,
     DocumentSourceNotFoundError,
+    DocumentVersionNotFoundError,
+    InvalidDocumentActorError,
+    InvalidDocumentCommentError,
     InvalidDocumentGenerationError,
     InvalidDocumentIdError,
+    InvalidDocumentRevisionReasonError,
+    InvalidDocumentVersionIdError,
+    InvalidDocumentVersionNumberError,
+    InvalidDocumentWorkflowTransitionError,
+    InvalidWorkflowEventIdError,
 )
 from tdp.modules.projects.domain.errors import (
     InvalidProjectDescriptionError,
@@ -78,11 +86,19 @@ _CHANGE_DETECTION_ERROR_STATUS: Mapping[type[ChangeDetectionError], int] = {
 
 _DOCUMENT_ERROR_STATUS: Mapping[type[DocumentError], int] = {
     InvalidDocumentIdError: 422,
+    InvalidDocumentVersionIdError: 422,
+    InvalidWorkflowEventIdError: 422,
+    InvalidDocumentVersionNumberError: 422,
+    InvalidDocumentActorError: 422,
+    InvalidDocumentCommentError: 422,
+    InvalidDocumentRevisionReasonError: 422,
+    InvalidDocumentWorkflowTransitionError: 409,
     DocumentProjectNotFoundError: 404,
     DocumentSourceNotFoundError: 404,
     DocumentSnapshotNotFoundError: 404,
     InvalidDocumentGenerationError: 422,
     DocumentNotFoundError: 404,
+    DocumentVersionNotFoundError: 404,
 }
 
 _PROJECT_ERROR_STATUS: Mapping[type[ProjectError], int] = {

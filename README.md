@@ -178,3 +178,38 @@ Run the dedicated audit with:
 ```bash
 make audit-documents
 ```
+
+## Document lifecycle core
+
+Generated Technical Source Overviews are organized as immutable document versions. The first distinct content is version `1.0`; each later distinct checksum creates the next minor version. Generating identical normalized content reuses the existing version instead of creating a duplicate.
+
+Lifecycle statuses:
+
+```text
+DRAFT
+IN_REVIEW
+CHANGES_REQUESTED
+APPROVED
+SUPERSEDED
+```
+
+API endpoints:
+
+```text
+GET  /api/documents/{document_id}/versions
+GET  /api/document-versions/{version_id}
+GET  /api/document-versions/{version_id}/download
+POST /api/document-versions/{version_id}/submit-review
+POST /api/document-versions/{version_id}/request-changes
+POST /api/document-versions/{version_id}/approve
+POST /api/document-versions/{version_id}/supersede
+GET  /api/document-versions/{version_id}/workflow-events
+```
+
+Approving a newer version automatically supersedes the previously approved version in the same document series. Every generation and workflow transition records actor, status transition, comment, and timestamp. Existing rows from the previous `generated_documents` table are migrated automatically into version history when the backend starts.
+
+Run the dedicated lifecycle audit with:
+
+```bash
+make audit-lifecycle
+```
