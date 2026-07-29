@@ -5,18 +5,21 @@ from tdp.modules.catalog.domain.model import SynchronizationId, SynchronizationS
 from tdp.modules.catalog.domain.repository import CatalogRepository
 from tdp.modules.changes.domain.model import DeterministicCatalogComparator
 from tdp.modules.documents.application.commands import (
+    CompareDocumentVersionsCommand,
     DocumentWorkflowCommand,
     GenerateTechnicalSourceOverviewCommand,
 )
 from tdp.modules.documents.application.dto import (
     DocumentDetailDto,
     DocumentSummaryDto,
+    DocumentVersionComparisonDto,
     WorkflowEventDto,
 )
 from tdp.modules.documents.application.ports import (
     TechnicalSourceOverviewContext,
     TechnicalSourceOverviewRenderer,
 )
+from tdp.modules.documents.domain.comparison import DeterministicMarkdownSectionComparator
 from tdp.modules.documents.domain.errors import (
     DocumentNotFoundError,
     DocumentProjectNotFoundError,
@@ -24,6 +27,7 @@ from tdp.modules.documents.domain.errors import (
     DocumentSourceNotFoundError,
     DocumentVersionNotFoundError,
     InvalidDocumentGenerationError,
+    InvalidDocumentVersionComparisonError,
 )
 from tdp.modules.documents.domain.model import (
     DocumentId,
@@ -56,6 +60,7 @@ class DocumentApplicationService:
         self._catalog_repository = catalog_repository
         self._comparator = comparator
         self._renderer = renderer
+        self._document_comparator = DeterministicMarkdownSectionComparator()
 
     async def generate(
         self,
@@ -257,6 +262,26 @@ class DocumentApplicationService:
             series.clear_approved_version(now=version.superseded_at)
         await self._repository.apply_workflow_transition(series, version, event)
         return DocumentDetailDto.from_domain(version)
+
+    async def compare_versions(
+        self,
+        command: CompareDocumentVersionsCommand,
+    ) -> DocumentVersionComparisonDto:
+        baseline = await self._require_version(command.baseline_version_id)
+        target = await self._require_version(command.target_version_id)
+        if baseline.document_id != target.document_id:
+            raise InvalidDocumentVersionComparisonError(
+                "Document versions must belong to the same document series."
+            )
+
+        comparison = self._document_comparator.compare(
+            baseline_version_id=str(baseline.id),
+            target_version_id=str(target.id),
+            document_id=str(target.document_id),
+            baseline_content=baseline.content,
+            target_content=target.content,
+        )
+        return DocumentVersionComparisonDto.from_domain(comparison)
 
     async def list_workflow_events(self, version_id: str) -> list[WorkflowEventDto]:
         version = await self._require_version(version_id)

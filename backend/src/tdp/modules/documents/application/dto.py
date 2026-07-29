@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from tdp.modules.documents.domain.comparison import DocumentVersionComparison
 from tdp.modules.documents.domain.model import DocumentVersion, DocumentWorkflowEvent
 
 
@@ -130,4 +131,51 @@ class WorkflowEventDto:
             new_status=event.new_status.value,
             comment=event.comment,
             created_at=event.created_at.isoformat(),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class DocumentSectionChangeDto:
+    section_key: str
+    section_title: str
+    kind: str
+    before_checksum: str
+    after_checksum: str
+    before_excerpt: str
+    after_excerpt: str
+
+
+@dataclass(frozen=True, slots=True)
+class DocumentVersionComparisonDto:
+    baseline_version_id: str
+    target_version_id: str
+    document_id: str
+    total: int
+    added_total: int
+    modified_total: int
+    removed_total: int
+    changes: list[DocumentSectionChangeDto]
+
+    @classmethod
+    def from_domain(cls, comparison: DocumentVersionComparison) -> "DocumentVersionComparisonDto":
+        return cls(
+            baseline_version_id=comparison.baseline_version_id,
+            target_version_id=comparison.target_version_id,
+            document_id=comparison.document_id,
+            total=len(comparison.changes),
+            added_total=comparison.added_total,
+            modified_total=comparison.modified_total,
+            removed_total=comparison.removed_total,
+            changes=[
+                DocumentSectionChangeDto(
+                    section_key=change.section_key,
+                    section_title=change.section_title,
+                    kind=change.kind.value,
+                    before_checksum=change.before_checksum,
+                    after_checksum=change.after_checksum,
+                    before_excerpt=change.before_excerpt,
+                    after_excerpt=change.after_excerpt,
+                )
+                for change in comparison.changes
+            ],
         )

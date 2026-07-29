@@ -7,14 +7,23 @@ import type { ProjectCollection } from "../projects/types";
 import { listSources } from "../sources/api";
 import type { TechnicalSource } from "../sources/types";
 import {
+  approveDocumentVersion,
+  compareDocumentVersions,
   generateTechnicalSourceOverview,
   getDocumentDownloadUrl,
   getGeneratedDocument,
   listGeneratedDocuments,
+  listWorkflowEvents,
+  requestDocumentChanges,
+  submitDocumentForReview,
+  supersedeDocumentVersion,
 } from "./api";
 import type {
+  DocumentSectionChangeKind,
+  DocumentVersionComparison,
   GeneratedDocumentDetail,
   GeneratedDocumentSummary,
+  WorkflowEvent,
 } from "./types";
 
 interface SnapshotOption {
@@ -22,17 +31,28 @@ interface SnapshotOption {
   source: TechnicalSource;
 }
 
+type WorkflowAction = "submit-review" | "request-changes" | "approve" | "supersede";
+type ChangeFilter = "ALL" | DocumentSectionChangeKind;
+
 export function DocumentsWorkspace() {
   const [projects, setProjects] = useState<ProjectCollection>({ items: [], total: 0 });
   const [projectId, setProjectId] = useState("");
   const [snapshots, setSnapshots] = useState<SnapshotOption[]>([]);
   const [targetRunId, setTargetRunId] = useState("");
   const [baselineRunId, setBaselineRunId] = useState("");
-  const [documents, setDocuments] = useState<GeneratedDocumentSummary[]>([]);
-  const [selectedDocument, setSelectedDocument] =
-    useState<GeneratedDocumentDetail | null>(null);
+  const [versions, setVersions] = useState<GeneratedDocumentSummary[]>([]);
+  const [selectedVersion, setSelectedVersion] = useState<GeneratedDocumentDetail | null>(null);
+  const [workflowEvents, setWorkflowEvents] = useState<WorkflowEvent[]>([]);
+  const [generationActor, setGenerationActor] = useState("Technical Writer");
+  const [revisionReason, setRevisionReason] = useState("");
+  const [workflowActor, setWorkflowActor] = useState("Technical Writer");
+  const [workflowComment, setWorkflowComment] = useState("");
+  const [comparisonBaselineId, setComparisonBaselineId] = useState("");
+  const [comparisonTargetId, setComparisonTargetId] = useState("");
+  const [comparison, setComparison] = useState<DocumentVersionComparison | null>(null);
+  const [changeFilter, setChangeFilter] = useState<ChangeFilter>("ALL");
   const [message, setMessage] = useState("Select a completed synchronization snapshot.");
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [isBusy, setIsBusy] = useState(false);
 
   useEffect(() => {
     void listProjects().then((collection) => {
@@ -42,29 +62,62 @@ export function DocumentsWorkspace() {
   }, []);
 
   useEffect(() => {
+    let isCurrent = true;
+
     if (!projectId) {
       setSnapshots([]);
-      setDocuments([]);
+      setVersions([]);
       setTargetRunId("");
       setBaselineRunId("");
-      setSelectedDocument(null);
-      return;
+      setSelectedVersion(null);
+      setWorkflowEvents([]);
+      setComparison(null);
+      setComparisonBaselineId("");
+      setComparisonTargetId("");
+      setChangeFilter("ALL");
+      return () => {
+        isCurrent = false;
+      };
     }
 
-    void Promise.all([loadSnapshots(projectId), listGeneratedDocuments(projectId)]).then(
-      ([snapshotOptions, documentCollection]) => {
+    async function load(): Promise<void> {
+      setMessage("Loading document workspace…");
+      try {
+        const [snapshotOptions, documentCollection] = await Promise.all([
+          loadSnapshots(projectId),
+          listGeneratedDocuments(projectId),
+        ]);
+        if (!isCurrent) {
+          return;
+        }
         setSnapshots(snapshotOptions);
-        setDocuments(documentCollection.items);
+        setVersions(documentCollection.items);
         setTargetRunId(snapshotOptions[0]?.run.id ?? "");
         setBaselineRunId(snapshotOptions[1]?.run.id ?? "");
-        setSelectedDocument(null);
+        setSelectedVersion(null);
+        setWorkflowEvents([]);
+        setComparison(null);
+        setChangeFilter("ALL");
+        setComparisonTargetId(documentCollection.items[0]?.id ?? "");
+        setComparisonBaselineId(documentCollection.items[1]?.id ?? "");
         setMessage(
           snapshotOptions.length === 0
             ? "Synchronize an OpenAPI source before generating a document."
             : "Select a target snapshot and an optional baseline.",
         );
-      },
-    );
+      } catch (error: unknown) {
+        if (isCurrent) {
+          setMessage(
+            error instanceof Error ? error.message : "Document workspace could not load.",
+          );
+        }
+      }
+    }
+
+    void load();
+    return () => {
+      isCurrent = false;
+    };
   }, [projectId]);
 
   const availableBaselines = useMemo(
@@ -72,40 +125,157 @@ export function DocumentsWorkspace() {
     [snapshots, targetRunId],
   );
 
+  const selectedSeriesVersions = useMemo(() => {
+    if (selectedVersion === null) {
+      return versions;
+    }
+    return versions.filter((version) => version.document_id === selectedVersion.document_id);
+  }, [selectedVersion, versions]);
+
+  const currentVersionId = selectedSeriesVersions[0]?.id ?? null;
+  const approvedVersionId =
+    selectedSeriesVersions.find((version) => version.status === "APPROVED")?.id ?? null;
+
+  const comparisonVersions = useMemo(() => {
+    const documentId =
+      selectedVersion?.document_id ?? versions[0]?.document_id ?? null;
+    return documentId === null
+      ? []
+      : versions.filter((version) => version.document_id === documentId);
+  }, [selectedVersion, versions]);
+
+  const filteredChanges = useMemo(() => {
+    if (comparison === null || changeFilter === "ALL") {
+      return comparison?.changes ?? [];
+    }
+    return comparison.changes.filter((change) => change.kind === changeFilter);
+  }, [changeFilter, comparison]);
+
+  function configureComparison(items: GeneratedDocumentSummary[]): void {
+    setComparison(null);
+    setChangeFilter("ALL");
+    setComparisonTargetId(items[0]?.id ?? "");
+    setComparisonBaselineId(items[1]?.id ?? "");
+  }
+
+  async function refreshVersions(preferredVersionId?: string): Promise<void> {
+    if (!projectId) {
+      return;
+    }
+    const collection = await listGeneratedDocuments(projectId);
+    setVersions(collection.items);
+    configureComparison(collection.items);
+    const versionId = preferredVersionId ?? selectedVersion?.id;
+    if (versionId && collection.items.some((item) => item.id === versionId)) {
+      await openVersion(versionId, false);
+    }
+  }
+
   async function generate(): Promise<void> {
-    if (!projectId || !targetRunId || isGenerating) {
+    if (!projectId || !targetRunId || isBusy) {
       return;
     }
 
-    setIsGenerating(true);
+    setIsBusy(true);
     setMessage("Generating deterministic Markdown…");
     try {
       const document = await generateTechnicalSourceOverview(
         projectId,
         targetRunId,
         baselineRunId || null,
+        revisionReason,
+        generationActor,
       );
-      setSelectedDocument(document);
-      setDocuments((current) => [
-        document,
-        ...current.filter((item) => item.id !== document.id),
-      ]);
-      setMessage("Technical Source Overview generated.");
+      await refreshVersions(document.id);
+      setRevisionReason("");
+      setMessage(
+        document.reused_existing_version
+          ? `Version ${document.version} already contains this content. Existing version reused.`
+          : `Version ${document.version} generated as ${document.status}.`,
+      );
     } catch (error: unknown) {
       setMessage(error instanceof Error ? error.message : "Document generation failed.");
     } finally {
-      setIsGenerating(false);
+      setIsBusy(false);
     }
   }
 
-  async function openDocument(documentId: string): Promise<void> {
-    setMessage("Loading generated document…");
+  async function openVersion(versionId: string, announce = true): Promise<void> {
+    if (announce) {
+      setMessage("Loading document version…");
+    }
     try {
-      const document = await getGeneratedDocument(documentId);
-      setSelectedDocument(document);
-      setMessage("Generated document loaded.");
+      const [document, events] = await Promise.all([
+        getGeneratedDocument(versionId),
+        listWorkflowEvents(versionId),
+      ]);
+      setSelectedVersion(document);
+      setWorkflowEvents(events.items);
+      setWorkflowComment("");
+      const seriesVersions = versions.filter(
+        (version) => version.document_id === document.document_id,
+      );
+      setComparisonTargetId(document.id);
+      setComparisonBaselineId(
+        seriesVersions.find((version) => version.id !== document.id)?.id ?? "",
+      );
+      setComparison(null);
+      if (announce) {
+        setMessage(`Version ${document.version} loaded.`);
+      }
     } catch (error: unknown) {
-      setMessage(error instanceof Error ? error.message : "Document could not be loaded.");
+      setMessage(error instanceof Error ? error.message : "Document version could not load.");
+    }
+  }
+
+  async function runWorkflow(action: WorkflowAction): Promise<void> {
+    if (selectedVersion === null || isBusy) {
+      return;
+    }
+
+    setIsBusy(true);
+    setMessage("Applying document workflow action…");
+    try {
+      const handlers: Record<WorkflowAction, () => Promise<GeneratedDocumentDetail>> = {
+        "submit-review": () =>
+          submitDocumentForReview(selectedVersion.id, workflowActor, workflowComment),
+        "request-changes": () =>
+          requestDocumentChanges(selectedVersion.id, workflowActor, workflowComment),
+        approve: () =>
+          approveDocumentVersion(selectedVersion.id, workflowActor, workflowComment),
+        supersede: () =>
+          supersedeDocumentVersion(selectedVersion.id, workflowActor, workflowComment),
+      };
+      const updated = await handlers[action]();
+      await refreshVersions(updated.id);
+      setWorkflowComment("");
+      setMessage(`Version ${updated.version} is now ${formatStatus(updated.status)}.`);
+    } catch (error: unknown) {
+      setMessage(error instanceof Error ? error.message : "Workflow action failed.");
+    } finally {
+      setIsBusy(false);
+    }
+  }
+
+  async function compareVersions(): Promise<void> {
+    if (!comparisonBaselineId || !comparisonTargetId || isBusy) {
+      return;
+    }
+
+    setIsBusy(true);
+    setMessage("Comparing structured document sections…");
+    try {
+      const result = await compareDocumentVersions(
+        comparisonBaselineId,
+        comparisonTargetId,
+      );
+      setComparison(result);
+      setChangeFilter("ALL");
+      setMessage(`Comparison completed with ${result.total} section changes.`);
+    } catch (error: unknown) {
+      setMessage(error instanceof Error ? error.message : "Version comparison failed.");
+    } finally {
+      setIsBusy(false);
     }
   }
 
@@ -113,10 +283,10 @@ export function DocumentsWorkspace() {
     <>
       <header className="topbar">
         <div>
-          <p className="eyebrow">Deterministic document generation</p>
+          <p className="eyebrow">Governed document lifecycle</p>
           <h1>Documents</h1>
         </div>
-        <span className="environment-badge">Markdown output</span>
+        <span className="environment-badge">Versioned Markdown</span>
       </header>
 
       <section className="content-section" aria-labelledby="document-generator-title">
@@ -124,8 +294,8 @@ export function DocumentsWorkspace() {
           <div>
             <h2 id="document-generator-title">Generate Technical Source Overview</h2>
             <p>
-              Render source-backed Markdown from a normalized snapshot. A baseline adds a
-              deterministic breaking-change summary.
+              Create an immutable draft version from a normalized snapshot. Identical content
+              reuses the existing checksum-backed version.
             </p>
           </div>
         </div>
@@ -174,16 +344,37 @@ export function DocumentsWorkspace() {
                 allowEmpty
                 onChange={setBaselineRunId}
               />
+
+              <div className="field">
+                <label htmlFor="generation-actor">Generated by</label>
+                <input
+                  id="generation-actor"
+                  value={generationActor}
+                  maxLength={80}
+                  onChange={(event) => setGenerationActor(event.target.value)}
+                />
+              </div>
+
+              <div className="field field--wide">
+                <label htmlFor="revision-reason">Revision reason</label>
+                <textarea
+                  id="revision-reason"
+                  value={revisionReason}
+                  maxLength={500}
+                  placeholder="Describe why this version is being generated."
+                  onChange={(event) => setRevisionReason(event.target.value)}
+                />
+              </div>
             </div>
 
             <div className="form-actions">
               <button
                 className="button button--primary"
                 type="button"
-                disabled={!targetRunId || isGenerating}
+                disabled={!targetRunId || generationActor.trim().length < 2 || isBusy}
                 onClick={() => void generate()}
               >
-                {isGenerating ? "Generating…" : "Generate overview"}
+                {isBusy ? "Working…" : "Generate version"}
               </button>
             </div>
           </div>
@@ -196,15 +387,15 @@ export function DocumentsWorkspace() {
       <section className="content-section" aria-labelledby="document-history-title">
         <div className="section-heading section-heading--split">
           <div>
-            <h2 id="document-history-title">Generation history</h2>
-            <p>Each generation is stored with its input snapshot and content checksum.</p>
+            <h2 id="document-history-title">Version history</h2>
+            <p>Every distinct checksum is stored as an immutable document version.</p>
           </div>
-          <span className="record-count">{documents.length} documents</span>
+          <span className="record-count">{versions.length} versions</span>
         </div>
 
-        {documents.length === 0 ? (
+        {versions.length === 0 ? (
           <div className="empty-state">
-            <h3>No generated documents</h3>
+            <h3>No document versions</h3>
             <p>Generate the first Technical Source Overview from a completed snapshot.</p>
           </div>
         ) : (
@@ -212,40 +403,48 @@ export function DocumentsWorkspace() {
             <table>
               <thead>
                 <tr>
-                  <th>Document</th>
-                  <th>Snapshot</th>
-                  <th>Content</th>
+                  <th>Version</th>
+                  <th>Status</th>
+                  <th>Source snapshot</th>
+                  <th>Revision</th>
                   <th>Generated</th>
                   <th className="table-action-column">Action</th>
                 </tr>
               </thead>
               <tbody>
-                {documents.map((document) => (
-                  <tr key={document.id}>
+                {versions.map((version) => (
+                  <tr key={version.id} className={selectedVersion?.id === version.id ? "is-selected" : undefined}>
                     <td>
-                      <strong>{document.title}</strong>
-                      <span className="table-secondary-text">{document.file_name}</span>
+                      <strong>v{version.version}</strong>
+                      <span className="table-secondary-text">{version.title}</span>
                     </td>
                     <td>
-                      <code>{document.target_run_id.slice(0, 8)}</code>
+                      <StatusBadge status={version.status} />
+                      {version.id === currentVersionId && (
+                        <span className="table-secondary-text">Current version</span>
+                      )}
+                      {version.id === approvedVersionId && (
+                        <span className="table-secondary-text">Current approved</span>
+                      )}
+                    </td>
+                    <td>
+                      <code>{version.target_run_id.slice(0, 8)}</code>
                       <span className="table-secondary-text">
-                        Baseline: {document.baseline_run_id?.slice(0, 8) ?? "None"}
+                        Baseline: {version.baseline_run_id?.slice(0, 8) ?? "None"}
                       </span>
                     </td>
                     <td>
-                      {document.operation_count} operations · {document.schema_count} schemas
-                      <span className="table-secondary-text">
-                        {document.breaking_change_count} breaking changes
-                      </span>
+                      {version.revision_reason || "No revision reason"}
+                      <span className="table-secondary-text">By {version.created_by}</span>
                     </td>
-                    <td>{new Date(document.generated_at).toLocaleString()}</td>
+                    <td>{formatDate(version.generated_at)}</td>
                     <td className="table-action-column">
                       <button
                         className="button button--secondary"
                         type="button"
-                        onClick={() => void openDocument(document.id)}
+                        onClick={() => void openVersion(version.id)}
                       >
-                        Preview
+                        Open
                       </button>
                     </td>
                   </tr>
@@ -256,26 +455,235 @@ export function DocumentsWorkspace() {
         )}
       </section>
 
-      {selectedDocument !== null && (
-        <section className="content-section" aria-labelledby="document-preview-title">
+      {selectedVersion !== null && (
+        <section className="content-section" aria-labelledby="document-detail-title">
           <div className="section-heading section-heading--split">
             <div>
-              <h2 id="document-preview-title">{selectedDocument.title}</h2>
-              <p>
-                SHA-256 <code>{selectedDocument.checksum}</code>
-              </p>
+              <p className="eyebrow">Version {selectedVersion.version}</p>
+              <h2 id="document-detail-title">{selectedVersion.title}</h2>
+              <div className="document-detail-badges">
+                <StatusBadge status={selectedVersion.status} />
+                {selectedVersion.id === currentVersionId && <span className="status-badge">Current</span>}
+                {selectedVersion.id === approvedVersionId && <span className="status-badge status-badge--approved">Official approved</span>}
+              </div>
             </div>
             <a
               className="button button--secondary"
-              href={getDocumentDownloadUrl(selectedDocument.id)}
-              download={selectedDocument.file_name}
+              href={getDocumentDownloadUrl(selectedVersion.id)}
+              download={selectedVersion.file_name}
             >
               Download Markdown
             </a>
           </div>
-          <pre className="document-preview">{selectedDocument.content}</pre>
+
+          <dl className="document-metadata-grid">
+            <Metadata label="Document ID" value={selectedVersion.document_id} code />
+            <Metadata label="Version ID" value={selectedVersion.id} code />
+            <Metadata label="Checksum" value={selectedVersion.checksum} code />
+            <Metadata label="Created by" value={selectedVersion.created_by} />
+            <Metadata label="Revision reason" value={selectedVersion.revision_reason || "Not provided"} />
+            <Metadata
+              label="Catalog content"
+              value={`${selectedVersion.operation_count} operations · ${selectedVersion.schema_count} schemas · ${selectedVersion.breaking_change_count} breaking changes`}
+            />
+          </dl>
+
+          <div className="document-workspace-grid">
+            <article className="document-panel" aria-labelledby="workflow-actions-title">
+              <h3 id="workflow-actions-title">Review and approval</h3>
+              <p>Available actions follow the immutable document lifecycle.</p>
+              <div className="field">
+                <label htmlFor="workflow-actor">Actor</label>
+                <input
+                  id="workflow-actor"
+                  value={workflowActor}
+                  maxLength={80}
+                  onChange={(event) => setWorkflowActor(event.target.value)}
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="workflow-comment">Review comment</label>
+                <textarea
+                  id="workflow-comment"
+                  value={workflowComment}
+                  maxLength={1000}
+                  placeholder="Record the review decision or requested change."
+                  onChange={(event) => setWorkflowComment(event.target.value)}
+                />
+              </div>
+              <WorkflowActions
+                version={selectedVersion}
+                actor={workflowActor}
+                comment={workflowComment}
+                disabled={isBusy}
+                onAction={(action) => void runWorkflow(action)}
+              />
+            </article>
+
+            <article className="document-panel" aria-labelledby="workflow-history-title">
+              <div className="section-heading section-heading--split">
+                <div>
+                  <h3 id="workflow-history-title">Workflow timeline</h3>
+                  <p>{workflowEvents.length} recorded events</p>
+                </div>
+              </div>
+              {workflowEvents.length === 0 ? (
+                <p className="loading-state">No workflow events were found.</p>
+              ) : (
+                <ol className="workflow-timeline">
+                  {workflowEvents.map((event) => (
+                    <li key={event.id}>
+                      <div>
+                        <strong>{formatAction(event.action)}</strong>
+                        <span>{formatDate(event.created_at)}</span>
+                      </div>
+                      <p>
+                        {event.actor} · {formatStatus(event.new_status)}
+                      </p>
+                      {event.comment && <blockquote>{event.comment}</blockquote>}
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </article>
+          </div>
+
+          <details className="document-preview-disclosure" open>
+            <summary>Markdown preview</summary>
+            <pre className="document-preview">{selectedVersion.content}</pre>
+          </details>
         </section>
       )}
+
+      <section className="content-section" aria-labelledby="version-comparison-title">
+        <div className="section-heading">
+          <div>
+            <h2 id="version-comparison-title">Compare document versions</h2>
+            <p>
+              Compare deterministic level-two Markdown sections without using AI or line-order
+              heuristics.
+            </p>
+          </div>
+        </div>
+
+        {comparisonVersions.length < 2 ? (
+          <div className="empty-state">
+            <h3>Two versions required</h3>
+            <p>Generate another distinct document version before running a comparison.</p>
+          </div>
+        ) : (
+          <div className="comparison-toolbar">
+            <VersionSelect
+              id="comparison-baseline"
+              label="Baseline version"
+              value={comparisonBaselineId}
+              versions={comparisonVersions.filter(
+                (version) => version.id !== comparisonTargetId,
+              )}
+              onChange={setComparisonBaselineId}
+            />
+            <VersionSelect
+              id="comparison-target"
+              label="Target version"
+              value={comparisonTargetId}
+              versions={comparisonVersions.filter(
+                (version) => version.id !== comparisonBaselineId,
+              )}
+              onChange={setComparisonTargetId}
+            />
+            <div className="catalog-toolbar__action">
+              <button
+                className="button button--primary"
+                type="button"
+                disabled={!comparisonBaselineId || !comparisonTargetId || isBusy}
+                onClick={() => void compareVersions()}
+              >
+                Compare versions
+              </button>
+            </div>
+          </div>
+        )}
+
+        {comparison !== null && (
+          <div className="comparison-results">
+            <div className="comparison-summary" aria-label="Version comparison summary">
+              <SummaryMetric label="Total changes" value={comparison.total} />
+              <SummaryMetric label="Added" value={comparison.added_total} />
+              <SummaryMetric label="Modified" value={comparison.modified_total} />
+              <SummaryMetric label="Removed" value={comparison.removed_total} />
+            </div>
+
+            <div className="workspace-filter">
+              <label htmlFor="change-filter">Change filter</label>
+              <select
+                id="change-filter"
+                value={changeFilter}
+                onChange={(event) => setChangeFilter(event.target.value as ChangeFilter)}
+              >
+                <option value="ALL">All changes</option>
+                <option value="ADDED">Added</option>
+                <option value="MODIFIED">Modified</option>
+                <option value="REMOVED">Removed</option>
+              </select>
+            </div>
+
+            {filteredChanges.length === 0 ? (
+              <div className="empty-state">
+                <h3>No matching section changes</h3>
+                <p>The selected versions are identical for this filter.</p>
+              </div>
+            ) : (
+              <div className="table-frame">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Section</th>
+                      <th>Change</th>
+                      <th>Baseline evidence</th>
+                      <th>Target evidence</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredChanges.map((change) => (
+                      <tr key={`${change.section_key}-${change.kind}`}>
+                        <td>
+                          <strong>{change.section_title}</strong>
+                          <span className="table-secondary-text">{change.section_key}</span>
+                        </td>
+                        <td>
+                          <span className={`change-kind change-kind--${change.kind.toLowerCase()}`}>
+                            {change.kind}
+                          </span>
+                        </td>
+                        <td>
+                          <span className="comparison-excerpt">
+                            {change.before_excerpt || "Not present"}
+                          </span>
+                          {change.before_checksum && (
+                            <code className="checksum-text">
+                              {change.before_checksum.slice(0, 12)}
+                            </code>
+                          )}
+                        </td>
+                        <td>
+                          <span className="comparison-excerpt">
+                            {change.after_excerpt || "Not present"}
+                          </span>
+                          {change.after_checksum && (
+                            <code className="checksum-text">
+                              {change.after_checksum.slice(0, 12)}
+                            </code>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+      </section>
     </>
   );
 }
@@ -327,10 +735,157 @@ function SnapshotSelect({
         )}
         {options.map(({ run, source }) => (
           <option key={run.id} value={run.id}>
-            {source.name} · {new Date(run.started_at).toLocaleString()}
+            {source.name} · {formatDate(run.started_at)}
           </option>
         ))}
       </select>
     </div>
   );
+}
+
+function VersionSelect({
+  id,
+  label,
+  value,
+  versions,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  versions: GeneratedDocumentSummary[];
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="field">
+      <label htmlFor={id}>{label}</label>
+      <select id={id} value={value} onChange={(event) => onChange(event.target.value)}>
+        <option value="">Select version</option>
+        {versions.map((version) => (
+          <option key={version.id} value={version.id}>
+            v{version.version} · {formatStatus(version.status)}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+function WorkflowActions({
+  version,
+  actor,
+  comment,
+  disabled,
+  onAction,
+}: {
+  version: GeneratedDocumentDetail;
+  actor: string;
+  comment: string;
+  disabled: boolean;
+  onAction: (action: WorkflowAction) => void;
+}) {
+  const actorInvalid = actor.trim().length < 2;
+  if (version.status === "DRAFT") {
+    return (
+      <button
+        className="button button--primary"
+        type="button"
+        disabled={disabled || actorInvalid}
+        onClick={() => onAction("submit-review")}
+      >
+        Submit for review
+      </button>
+    );
+  }
+  if (version.status === "IN_REVIEW") {
+    return (
+      <div className="workflow-action-row">
+        <button
+          className="button button--primary"
+          type="button"
+          disabled={disabled || actorInvalid}
+          onClick={() => onAction("approve")}
+        >
+          Approve version
+        </button>
+        <button
+          className="button button--secondary"
+          type="button"
+          disabled={disabled || actorInvalid || comment.trim().length === 0}
+          onClick={() => onAction("request-changes")}
+        >
+          Request changes
+        </button>
+      </div>
+    );
+  }
+  if (version.status === "APPROVED") {
+    return (
+      <button
+        className="button button--secondary"
+        type="button"
+        disabled={disabled || actorInvalid}
+        onClick={() => onAction("supersede")}
+      >
+        Supersede approved version
+      </button>
+    );
+  }
+  return (
+    <p className="loading-state">
+      {version.status === "CHANGES_REQUESTED"
+        ? "Generate a revised version to address the requested changes."
+        : "Superseded versions are read-only."}
+    </p>
+  );
+}
+
+function StatusBadge({ status }: { status: GeneratedDocumentSummary["status"] }) {
+  return (
+    <span className={`status-badge status-badge--${status.toLowerCase()}`}>
+      {formatStatus(status)}
+    </span>
+  );
+}
+
+function Metadata({
+  label,
+  value,
+  code = false,
+}: {
+  label: string;
+  value: string;
+  code?: boolean;
+}) {
+  return (
+    <div>
+      <dt>{label}</dt>
+      <dd>{code ? <code>{value}</code> : value}</dd>
+    </div>
+  );
+}
+
+function SummaryMetric({ label, value }: { label: string; value: number }) {
+  return (
+    <div>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function formatStatus(value: string): string {
+  return value
+    .toLowerCase()
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function formatAction(value: string): string {
+  return formatStatus(value);
+}
+
+function formatDate(value: string): string {
+  return new Date(value).toLocaleString();
 }

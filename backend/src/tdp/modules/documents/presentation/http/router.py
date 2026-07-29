@@ -6,12 +6,14 @@ from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
 
 from tdp.modules.documents.application.commands import (
+    CompareDocumentVersionsCommand,
     DocumentWorkflowCommand,
     GenerateTechnicalSourceOverviewCommand,
 )
 from tdp.modules.documents.application.dto import (
     DocumentDetailDto,
     DocumentSummaryDto,
+    DocumentVersionComparisonDto,
     WorkflowEventDto,
 )
 from tdp.modules.documents.application.service import DocumentApplicationService
@@ -29,6 +31,11 @@ class GenerateTechnicalSourceOverviewRequest(BaseModel):
 class DocumentWorkflowRequest(BaseModel):
     actor: str = Field(min_length=2, max_length=80)
     comment: str = Field(default="", max_length=1000)
+
+
+class CompareDocumentVersionsRequest(BaseModel):
+    baseline_version_id: str
+    target_version_id: str
 
 
 class DocumentSummaryResponse(BaseModel):
@@ -89,6 +96,33 @@ class WorkflowEventResponse(BaseModel):
 class WorkflowEventCollectionResponse(BaseModel):
     items: list[WorkflowEventResponse]
     total: int
+
+
+class DocumentSectionChangeResponse(BaseModel):
+    section_key: str
+    section_title: str
+    kind: str
+    before_checksum: str
+    after_checksum: str
+    before_excerpt: str
+    after_excerpt: str
+
+
+class DocumentVersionComparisonResponse(BaseModel):
+    baseline_version_id: str
+    target_version_id: str
+    document_id: str
+    total: int
+    added_total: int
+    modified_total: int
+    removed_total: int
+    changes: list[DocumentSectionChangeResponse]
+
+    @classmethod
+    def from_dto(
+        cls, comparison: DocumentVersionComparisonDto
+    ) -> "DocumentVersionComparisonResponse":
+        return cls.model_validate(asdict(comparison))
 
 
 def get_document_service(request: Request) -> DocumentApplicationService:
@@ -241,6 +275,23 @@ async def list_document_version_workflow_events(
     events = await service.list_workflow_events(version_id)
     items = [WorkflowEventResponse.from_dto(event) for event in events]
     return WorkflowEventCollectionResponse(items=items, total=len(items))
+
+
+@router.post(
+    "/document-version-comparisons",
+    response_model=DocumentVersionComparisonResponse,
+)
+async def compare_document_versions(
+    payload: CompareDocumentVersionsRequest,
+    service: DocumentServiceDependency,
+) -> DocumentVersionComparisonResponse:
+    comparison = await service.compare_versions(
+        CompareDocumentVersionsCommand(
+            baseline_version_id=payload.baseline_version_id,
+            target_version_id=payload.target_version_id,
+        )
+    )
+    return DocumentVersionComparisonResponse.from_dto(comparison)
 
 
 def _workflow_command(

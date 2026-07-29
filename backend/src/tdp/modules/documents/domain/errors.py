@@ -61,3 +61,7 @@ class DocumentNotFoundError(DocumentError):
 
 class DocumentVersionNotFoundError(DocumentError):
     code = "DOCUMENT_VERSION_NOT_FOUND"
+
+
+class InvalidDocumentVersionComparisonError(DocumentError):
+    code = "INVALID_DOCUMENT_VERSION_COMPARISON"
