@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { ApiCatalogWorkspace } from "../modules/catalog/ApiCatalogWorkspace";
+import { ChangesWorkspace } from "../modules/changes/ChangesWorkspace";
 import { ProjectWorkspace } from "../modules/projects/ProjectWorkspace";
 import { SourceWorkspace } from "../modules/sources/SourceWorkspace";
 
@@ -92,9 +93,11 @@ export function App() {
         {activeNavigation === "Projects" && <ProjectWorkspace />}
         {activeNavigation === "Sources" && <SourceWorkspace />}
         {activeNavigation === "API Catalog" && <ApiCatalogWorkspace />}
+        {activeNavigation === "Changes" && <ChangesWorkspace />}
         {activeNavigation !== "Projects" &&
           activeNavigation !== "Sources" &&
-          activeNavigation !== "API Catalog" && (
+          activeNavigation !== "API Catalog" &&
+          activeNavigation !== "Changes" && (
             <Overview apiState={apiState} activeNavigation={activeNavigation} />
           )}
       </main>

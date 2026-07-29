@@ -127,3 +127,22 @@ def test_catalog_application_does_not_import_infrastructure_or_presentation() ->
     }
 
     assert all(not imports for imports in violations.values()), violations
+
+_CHANGE_MODULE = _BACKEND_ROOT / "src" / "tdp" / "modules" / "changes"
+
+
+def test_change_domain_has_no_framework_or_infrastructure_imports() -> None:
+    forbidden_prefixes = (
+        "fastapi",
+        "pydantic",
+        "sqlite3",
+        "tdp.modules.changes.infrastructure",
+        "tdp.modules.changes.presentation",
+    )
+    violations = {
+        str(path.relative_to(_BACKEND_ROOT)): sorted(
+            module for module in imported_modules(path) if module.startswith(forbidden_prefixes)
+        )
+        for path in (_CHANGE_MODULE / "domain").glob("*.py")
+    }
+    assert all(not imports for imports in violations.values()), violations

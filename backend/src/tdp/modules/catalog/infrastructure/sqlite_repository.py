@@ -136,6 +136,15 @@ class SqliteCatalogRepository(CatalogRepository):
             source_id,
         )
 
+    async def list_operations_by_run(
+        self,
+        run_id: SynchronizationId,
+    ) -> list[ApiOperation]:
+        return await asyncio.to_thread(self._list_operations_by_run, run_id)
+
+    async def list_schemas_by_run(self, run_id: SynchronizationId) -> list[ApiSchema]:
+        return await asyncio.to_thread(self._list_schemas_by_run, run_id)
+
     def _connect(self) -> sqlite3.Connection:
         connection = sqlite3.connect(self._database_path, timeout=5)
         connection.row_factory = sqlite3.Row
@@ -313,6 +322,30 @@ class SqliteCatalogRepository(CatalogRepository):
                 ORDER BY schema.name ASC
                 """,
                 parameters,
+            ).fetchall()
+        return [self._schema_from_row(row) for row in rows]
+
+    def _list_operations_by_run(self, run_id: SynchronizationId) -> list[ApiOperation]:
+        with self._connect() as connection:
+            rows = connection.execute(
+                """
+                SELECT * FROM api_operations
+                WHERE synchronization_id = ?
+                ORDER BY path ASC, method ASC
+                """,
+                (str(run_id),),
+            ).fetchall()
+        return [self._operation_from_row(row) for row in rows]
+
+    def _list_schemas_by_run(self, run_id: SynchronizationId) -> list[ApiSchema]:
+        with self._connect() as connection:
+            rows = connection.execute(
+                """
+                SELECT * FROM api_schemas
+                WHERE synchronization_id = ?
+                ORDER BY name ASC
+                """,
+                (str(run_id),),
             ).fetchall()
         return [self._schema_from_row(row) for row in rows]
 

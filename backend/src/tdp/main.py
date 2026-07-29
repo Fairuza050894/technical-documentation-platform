@@ -8,6 +8,10 @@ from tdp.modules.catalog.domain.errors import CatalogError
 from tdp.modules.catalog.infrastructure.openapi_parser import DeterministicOpenApiCatalogParser
 from tdp.modules.catalog.infrastructure.sqlite_repository import SqliteCatalogRepository
 from tdp.modules.catalog.presentation.http.router import router as catalog_router
+from tdp.modules.changes.application.service import ChangeDetectionApplicationService
+from tdp.modules.changes.domain.errors import ChangeDetectionError
+from tdp.modules.changes.domain.model import DeterministicCatalogComparator
+from tdp.modules.changes.presentation.http.router import router as changes_router
 from tdp.modules.projects.application.service import ProjectApplicationService
 from tdp.modules.projects.domain.errors import ProjectError
 from tdp.modules.projects.infrastructure.sqlite_repository import SqliteProjectRepository
@@ -21,6 +25,7 @@ from tdp.modules.sources.infrastructure.sqlite_repository import SqliteSourceRep
 from tdp.modules.sources.presentation.http.router import router as sources_router
 from tdp.presentation.http.errors import (
     catalog_error_handler,
+    change_detection_error_handler,
     project_error_handler,
     source_error_handler,
     validation_error_handler,
@@ -60,6 +65,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         artifact_store,
         DeterministicOpenApiCatalogParser(),
     )
+    application.state.change_detection_service = ChangeDetectionApplicationService(
+        catalog_repository,
+        DeterministicCatalogComparator(),
+    )
     application.add_middleware(RequestIdMiddleware)
     application.add_middleware(
         CORSMiddleware,
@@ -69,6 +78,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_headers=["Content-Type", "X-Request-ID"],
     )
     application.add_exception_handler(CatalogError, catalog_error_handler)
+    application.add_exception_handler(ChangeDetectionError, change_detection_error_handler)
     application.add_exception_handler(ProjectError, project_error_handler)
     application.add_exception_handler(SourceError, source_error_handler)
     application.add_exception_handler(RequestValidationError, validation_error_handler)
@@ -76,6 +86,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.include_router(projects_router, prefix=runtime_settings.api_prefix)
     application.include_router(sources_router, prefix=runtime_settings.api_prefix)
     application.include_router(catalog_router, prefix=runtime_settings.api_prefix)
+    application.include_router(changes_router, prefix=runtime_settings.api_prefix)
     return application
 
 

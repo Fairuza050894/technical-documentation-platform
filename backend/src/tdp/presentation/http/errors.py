@@ -15,6 +15,11 @@ from tdp.modules.catalog.domain.errors import (
     InvalidSynchronizationIdError,
     SynchronizationNotFoundError,
 )
+from tdp.modules.changes.domain.errors import (
+    ChangeDetectionError,
+    ComparisonRunNotFoundError,
+    InvalidComparisonError,
+)
 from tdp.modules.projects.domain.errors import (
     InvalidProjectDescriptionError,
     InvalidProjectIdError,
@@ -57,6 +62,11 @@ _CATALOG_ERROR_STATUS: Mapping[type[CatalogError], int] = {
     SynchronizationNotFoundError: 404,
 }
 
+_CHANGE_DETECTION_ERROR_STATUS: Mapping[type[ChangeDetectionError], int] = {
+    InvalidComparisonError: 422,
+    ComparisonRunNotFoundError: 404,
+}
+
 _PROJECT_ERROR_STATUS: Mapping[type[ProjectError], int] = {
     InvalidProjectIdError: 422,
     InvalidProjectKeyError: 422,
@@ -92,6 +102,17 @@ async def catalog_error_handler(request: Request, exc: Exception) -> JSONRespons
     if not isinstance(exc, CatalogError):
         raise exc
     return _error_response(request, exc.code, str(exc), _CATALOG_ERROR_STATUS.get(type(exc), 400))
+
+
+async def change_detection_error_handler(request: Request, exc: Exception) -> JSONResponse:
+    if not isinstance(exc, ChangeDetectionError):
+        raise exc
+    return _error_response(
+        request,
+        exc.code,
+        str(exc),
+        _CHANGE_DETECTION_ERROR_STATUS.get(type(exc), 400),
+    )
 
 
 async def project_error_handler(request: Request, exc: Exception) -> JSONResponse:

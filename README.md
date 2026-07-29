@@ -136,3 +136,21 @@ Run the dedicated audit with:
 ```bash
 make audit-catalog
 ```
+
+## Snapshot comparison and change detection
+
+The Changes workspace compares two completed synchronization snapshots. The deterministic comparator classifies operation and schema changes as `ADDED`, `MODIFIED`, or `REMOVED`, with `NON_BREAKING`, `POTENTIALLY_BREAKING`, or `BREAKING` severity.
+
+API endpoint:
+
+```text
+POST /api/projects/{project_id}/comparisons
+```
+
+For a local demonstration, import and synchronize both `fixtures/openapi/commerce-api-v1.yaml` and `fixtures/openapi/commerce-api-v2.yaml`, then compare their completed snapshots in **Changes**.
+
+Run the dedicated audit with:
+
+```bash
+make audit-changes
+```
