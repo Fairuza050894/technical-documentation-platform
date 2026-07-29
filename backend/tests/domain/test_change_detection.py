@@ -92,7 +92,6 @@ def test_comparator_classifies_breaking_and_non_breaking_changes() -> None:
         for item in result.changes
     )
     assert any(
-        item.entity_key == "Order"
-        and item.details["new_required_fields"] == ["deliveryType"]
+        item.entity_key == "Order" and item.details["new_required_fields"] == ["deliveryType"]
         for item in result.changes
     )

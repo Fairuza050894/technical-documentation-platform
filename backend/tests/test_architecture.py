@@ -128,6 +128,7 @@ def test_catalog_application_does_not_import_infrastructure_or_presentation() ->
 
     assert all(not imports for imports in violations.values()), violations
 
+
 _CHANGE_MODULE = _BACKEND_ROOT / "src" / "tdp" / "modules" / "changes"
 
 
