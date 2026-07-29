@@ -1,10 +1,17 @@
+from pathlib import Path
+
 from fastapi.testclient import TestClient
 
+from tdp.config import Settings
 from tdp.main import create_app
 
 
-def test_health_endpoint_returns_service_metadata() -> None:
-    client = TestClient(create_app())
+def build_client(database_path: Path) -> TestClient:
+    return TestClient(create_app(Settings(database_path=database_path)))
+
+
+def test_health_endpoint_returns_service_metadata(tmp_path: Path) -> None:
+    client = build_client(tmp_path / "health.sqlite3")
 
     response = client.get("/api/health")
 
@@ -18,8 +25,8 @@ def test_health_endpoint_returns_service_metadata() -> None:
     assert response.headers["X-Request-ID"]
 
 
-def test_health_endpoint_preserves_supplied_request_id() -> None:
-    client = TestClient(create_app())
+def test_health_endpoint_preserves_supplied_request_id(tmp_path: Path) -> None:
+    client = build_client(tmp_path / "health.sqlite3")
 
     response = client.get("/api/health", headers={"X-Request-ID": "audit-request-001"})
 

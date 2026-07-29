@@ -1,9 +1,9 @@
-from typing import Literal
+from typing import Literal, cast
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from pydantic import BaseModel
 
-from tdp.config import get_settings
+from tdp.config import Settings
 
 router = APIRouter(tags=["system"])
 
@@ -16,8 +16,8 @@ class HealthResponse(BaseModel):
 
 
 @router.get("/health", response_model=HealthResponse)
-async def get_health() -> HealthResponse:
-    settings = get_settings()
+async def get_health(request: Request) -> HealthResponse:
+    settings = cast(Settings, request.app.state.settings)
     return HealthResponse(
         status="ok",
         service=settings.app_name,

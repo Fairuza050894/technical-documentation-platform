@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: help bootstrap dev-backend dev-frontend lint test build verify audit
+.PHONY: help bootstrap dev-backend dev-frontend lint test build verify audit audit-projects
 
 help:
 	@printf '%s\n' \
@@ -12,7 +12,8 @@ help:
 	  '  make test           Run backend and frontend tests' \
 	  '  make build          Build the frontend and validate backend imports' \
 	  '  make verify         Run lint, tests, and build' \
-	  '  make audit          Write one audit report to Downloads'
+	  '  make audit          Write the foundation audit to Downloads' \
+	  '  make audit-projects Write the Project Management audit to Downloads'
 
 bootstrap:
 	bash scripts/bootstrap_macos.sh
@@ -41,3 +42,7 @@ verify: lint test build
 
 audit:
 	bash scripts/audit_foundation.sh
+
+
+audit-projects:
+	bash scripts/audit_project_management.sh

@@ -1,4 +1,5 @@
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -17,6 +18,7 @@ class Settings(BaseSettings):
     environment: str = "development"
     api_prefix: str = "/api"
     allowed_origins: tuple[str, ...] = ("http://127.0.0.1:4173",)
+    database_path: Path = Path(".runtime/tdp.sqlite3")
 
 
 @lru_cache

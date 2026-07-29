@@ -64,3 +64,25 @@ frontend/       React application and internal design system
 docs/           Architecture decisions and engineering standards
 scripts/        Bootstrap and audit automation
 ```
+
+
+## Project Management slice
+
+The first business slice supports creating, listing, viewing, and archiving projects. Local project data is stored in `.runtime/tdp.sqlite3` and is not committed to Git.
+
+After starting both services, open `http://127.0.0.1:4173` and select **Projects**.
+
+API endpoints:
+
+```text
+POST /api/projects
+GET  /api/projects
+GET  /api/projects/{project_id}
+POST /api/projects/{project_id}/archive
+```
+
+Run the dedicated project audit with:
+
+```bash
+make audit-projects
+```
