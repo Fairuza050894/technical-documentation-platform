@@ -86,3 +86,31 @@ Run the dedicated project audit with:
 ```bash
 make audit-projects
 ```
+
+
+## OpenAPI Source Management slice
+
+The Sources workspace imports OpenAPI 3.0.x and 3.1.x JSON/YAML files into an existing active project. Files are validated deterministically, stored under `.runtime/artifacts`, and represented by metadata plus a SHA-256 checksum.
+
+API endpoints:
+
+```text
+POST /api/projects/{project_id}/sources/openapi
+GET  /api/projects/{project_id}/sources
+GET  /api/sources/{source_id}
+POST /api/sources/{source_id}/archive
+```
+
+After applying this slice, refresh dependencies because the backend adds YAML and multipart parsing:
+
+```bash
+make bootstrap
+```
+
+Test the upload flow with `fixtures/openapi/commerce-api-v1.yaml`. Version 2 is reserved for the upcoming snapshot and change-detection slice.
+
+Run the dedicated audit with:
+
+```bash
+make audit-sources
+```

@@ -27,9 +27,7 @@ def test_project_domain_has_no_framework_or_infrastructure_imports() -> None:
 
     violations = {
         str(path.relative_to(_BACKEND_ROOT)): sorted(
-            module
-            for module in imported_modules(path)
-            if module.startswith(forbidden_prefixes)
+            module for module in imported_modules(path) if module.startswith(forbidden_prefixes)
         )
         for path in (_PROJECT_MODULE / "domain").glob("*.py")
     }
@@ -45,11 +43,48 @@ def test_project_application_does_not_import_infrastructure_or_presentation() ->
 
     violations = {
         str(path.relative_to(_BACKEND_ROOT)): sorted(
-            module
-            for module in imported_modules(path)
-            if module.startswith(forbidden_prefixes)
+            module for module in imported_modules(path) if module.startswith(forbidden_prefixes)
         )
         for path in (_PROJECT_MODULE / "application").glob("*.py")
+    }
+
+    assert all(not imports for imports in violations.values()), violations
+
+
+_SOURCE_MODULE = _BACKEND_ROOT / "src" / "tdp" / "modules" / "sources"
+
+
+def test_source_domain_has_no_framework_or_infrastructure_imports() -> None:
+    forbidden_prefixes = (
+        "fastapi",
+        "pydantic",
+        "yaml",
+        "sqlite3",
+        "tdp.modules.sources.infrastructure",
+        "tdp.modules.sources.presentation",
+    )
+
+    violations = {
+        str(path.relative_to(_BACKEND_ROOT)): sorted(
+            module for module in imported_modules(path) if module.startswith(forbidden_prefixes)
+        )
+        for path in (_SOURCE_MODULE / "domain").glob("*.py")
+    }
+
+    assert all(not imports for imports in violations.values()), violations
+
+
+def test_source_application_does_not_import_infrastructure_or_presentation() -> None:
+    forbidden_prefixes = (
+        "tdp.modules.sources.infrastructure",
+        "tdp.modules.sources.presentation",
+    )
+
+    violations = {
+        str(path.relative_to(_BACKEND_ROOT)): sorted(
+            module for module in imported_modules(path) if module.startswith(forbidden_prefixes)
+        )
+        for path in (_SOURCE_MODULE / "application").glob("*.py")
     }
 
     assert all(not imports for imports in violations.values()), violations

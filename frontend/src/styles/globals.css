@@ -573,3 +573,40 @@ textarea:focus-visible {
   color: #912018;
   background: #fef3f2;
 }
+
+.workspace-filter {
+  display: grid;
+  max-width: 520px;
+  gap: 7px;
+  margin-top: 18px;
+}
+
+.workspace-filter label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+input[type="file"] {
+  padding: 6px;
+}
+
+input[type="file"]::file-selector-button {
+  min-height: 28px;
+  margin-right: 10px;
+  padding: 5px 9px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-small);
+  color: var(--color-text-primary);
+  background: var(--color-surface-subtle);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.checksum-text {
+  display: block;
+  margin-top: 4px;
+  color: var(--color-text-muted);
+  font-size: 11px;
+}

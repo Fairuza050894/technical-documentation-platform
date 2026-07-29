@@ -36,3 +36,15 @@ SQLite local adapter
 ```
 
 The SQLite adapter is a local MVP decision. PostgreSQL remains the intended enterprise production database.
+
+
+## Source Management boundary
+
+The source module follows the same dependency rule as Projects:
+
+```text
+presentation -> application -> domain
+infrastructure -> application/domain ports
+```
+
+`DeterministicOpenApiInspector`, `LocalArtifactStore`, and `SqliteSourceRepository` are replaceable infrastructure adapters. The application service does not import FastAPI, SQLite, or PyYAML.

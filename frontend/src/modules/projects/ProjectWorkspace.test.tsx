@@ -9,23 +9,27 @@ afterEach(() => {
 
 describe("ProjectWorkspace", () => {
   it("creates a project and adds it to the registry", async () => {
-    vi.spyOn(globalThis, "fetch").mockImplementation(async (_input, init) => {
+    vi.spyOn(globalThis, "fetch").mockImplementation((_input, init) => {
       if (init?.method === "POST") {
-        return new Response(
-          JSON.stringify({
-            id: "11db0f9f-557f-4b0b-b962-74bb58ca6f4b",
-            key: "DOCS",
-            name: "Documentation Platform",
-            description: "Source-backed documentation",
-            workspace_type: "PERSONAL",
-            status: "ACTIVE",
-            created_at: "2026-07-29T00:00:00+00:00",
-            updated_at: "2026-07-29T00:00:00+00:00",
-          }),
-          { status: 201 },
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              id: "11db0f9f-557f-4b0b-b962-74bb58ca6f4b",
+              key: "DOCS",
+              name: "Documentation Platform",
+              description: "Source-backed documentation",
+              workspace_type: "PERSONAL",
+              status: "ACTIVE",
+              created_at: "2026-07-29T00:00:00+00:00",
+              updated_at: "2026-07-29T00:00:00+00:00",
+            }),
+            { status: 201 },
+          ),
         );
       }
-      return new Response(JSON.stringify({ items: [], total: 0 }), { status: 200 });
+      return Promise.resolve(
+        new Response(JSON.stringify({ items: [], total: 0 }), { status: 200 }),
+      );
     });
 
     render(<ProjectWorkspace />);

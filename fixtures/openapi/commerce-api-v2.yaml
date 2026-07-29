@@ -1,0 +1,72 @@
+openapi: 3.1.0
+info:
+  title: Commerce Demo API
+  version: 1.1.0
+  description: Second deterministic fixture reserved for snapshot comparison.
+servers:
+  - url: https://api.example.test
+paths:
+  /orders:
+    post:
+      operationId: createOrder
+      summary: Create an order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        '201':
+          description: Order created
+        '422':
+          description: Order validation failed
+    get:
+      operationId: listOrders
+      summary: List orders
+      responses:
+        '200':
+          description: Orders returned
+  /orders/validate:
+    post:
+      operationId: validateOrder
+      summary: Validate an order before creation
+      responses:
+        '204':
+          description: Order is valid
+  /orders/{orderId}:
+    parameters:
+      - name: orderId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getOrder
+      summary: Get an order
+      responses:
+        '200':
+          description: Order returned
+        '404':
+          description: Order not found
+components:
+  schemas:
+    CreateOrderRequest:
+      type: object
+      required:
+        - customerId
+        - items
+        - deliveryType
+      properties:
+        customerId:
+          type: string
+        items:
+          type: array
+          minItems: 1
+          items:
+            type: string
+        deliveryType:
+          type: string
+          enum:
+            - DELIVERY
+            - PICKUP

@@ -7,7 +7,14 @@ from tdp.main import create_app
 
 
 def build_client(database_path: Path) -> TestClient:
-    return TestClient(create_app(Settings(database_path=database_path)))
+    return TestClient(
+        create_app(
+            Settings(
+                database_path=database_path,
+                artifact_root_path=database_path.parent / "artifacts",
+            )
+        )
+    )
 
 
 def test_create_list_and_archive_project(tmp_path: Path) -> None:

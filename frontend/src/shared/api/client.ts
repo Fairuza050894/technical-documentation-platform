@@ -19,7 +19,9 @@ export class ApiClientError extends Error {
 
 export async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers);
-  headers.set("Content-Type", "application/json");
+  if (!(init?.body instanceof FormData)) {
+    headers.set("Content-Type", "application/json");
+  }
 
   const response = await fetch(`http://127.0.0.1:8000/api${path}`, {
     ...init,

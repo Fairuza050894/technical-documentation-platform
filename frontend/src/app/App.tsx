@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { ProjectWorkspace } from "../modules/projects/ProjectWorkspace";
+import { SourceWorkspace } from "../modules/sources/SourceWorkspace";
 
 interface HealthResponse {
   status: "ok";
@@ -87,9 +88,9 @@ export function App() {
       </aside>
 
       <main className="main-content">
-        {activeNavigation === "Projects" ? (
-          <ProjectWorkspace />
-        ) : (
+        {activeNavigation === "Projects" && <ProjectWorkspace />}
+        {activeNavigation === "Sources" && <SourceWorkspace />}
+        {activeNavigation !== "Projects" && activeNavigation !== "Sources" && (
           <Overview apiState={apiState} activeNavigation={activeNavigation} />
         )}
       </main>
@@ -159,8 +160,8 @@ function Overview({
 
               <article className="status-card">
                 <span className="status-label">Current vertical slice</span>
-                <strong>Project management</strong>
-                <p>Create, list, and archive source and documentation project boundaries.</p>
+                <strong>Projects and OpenAPI sources</strong>
+                <p>Create project boundaries and import validated OpenAPI JSON/YAML files.</p>
                 <span className="status-indicator status-indicator--success">Implemented</span>
               </article>
             </div>

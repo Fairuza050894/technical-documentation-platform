@@ -15,8 +15,27 @@ from tdp.modules.projects.domain.errors import (
     ProjectKeyAlreadyExistsError,
     ProjectNotFoundError,
 )
+from tdp.modules.sources.domain.errors import (
+    EmptySourceFileError,
+    InvalidArtifactKeyError,
+    InvalidOpenApiDocumentError,
+    InvalidSourceChecksumError,
+    InvalidSourceFileNameError,
+    InvalidSourceIdError,
+    InvalidSourceNameError,
+    InvalidSourceProjectIdError,
+    SourceAlreadyArchivedError,
+    SourceError,
+    SourceFileTooLargeError,
+    SourceNameAlreadyExistsError,
+    SourceNotFoundError,
+    SourceProjectArchivedError,
+    SourceProjectNotFoundError,
+    UnsupportedOpenApiVersionError,
+    UnsupportedSourceFileError,
+)
 
-_ERROR_STATUS: Mapping[type[ProjectError], int] = {
+_PROJECT_ERROR_STATUS: Mapping[type[ProjectError], int] = {
     InvalidProjectIdError: 422,
     InvalidProjectKeyError: 422,
     InvalidProjectNameError: 422,
@@ -27,24 +46,36 @@ _ERROR_STATUS: Mapping[type[ProjectError], int] = {
     ProjectAlreadyArchivedError: 409,
 }
 
+_SOURCE_ERROR_STATUS: Mapping[type[SourceError], int] = {
+    InvalidSourceIdError: 422,
+    InvalidSourceProjectIdError: 422,
+    InvalidSourceNameError: 422,
+    InvalidSourceFileNameError: 422,
+    InvalidSourceChecksumError: 422,
+    InvalidArtifactKeyError: 422,
+    UnsupportedSourceFileError: 415,
+    EmptySourceFileError: 422,
+    SourceFileTooLargeError: 413,
+    InvalidOpenApiDocumentError: 422,
+    UnsupportedOpenApiVersionError: 422,
+    SourceProjectNotFoundError: 404,
+    SourceProjectArchivedError: 409,
+    SourceNameAlreadyExistsError: 409,
+    SourceNotFoundError: 404,
+    SourceAlreadyArchivedError: 409,
+}
+
 
 async def project_error_handler(request: Request, exc: Exception) -> JSONResponse:
     if not isinstance(exc, ProjectError):
         raise exc
+    return _error_response(request, exc.code, str(exc), _PROJECT_ERROR_STATUS.get(type(exc), 400))
 
-    request_id = getattr(request.state, "request_id", "unknown")
-    return JSONResponse(
-        status_code=_ERROR_STATUS.get(type(exc), 400),
-        content={
-            "error": {
-                "code": exc.code,
-                "message": str(exc),
-                "details": [],
-                "requestId": request_id,
-            }
-        },
-        headers={"X-Request-ID": request_id},
-    )
+
+async def source_error_handler(request: Request, exc: Exception) -> JSONResponse:
+    if not isinstance(exc, SourceError):
+        raise exc
+    return _error_response(request, exc.code, str(exc), _SOURCE_ERROR_STATUS.get(type(exc), 400))
 
 
 async def validation_error_handler(request: Request, exc: Exception) -> JSONResponse:
@@ -66,6 +97,22 @@ async def validation_error_handler(request: Request, exc: Exception) -> JSONResp
                 "code": "REQUEST_VALIDATION_ERROR",
                 "message": "The request contains invalid data.",
                 "details": details,
+                "requestId": request_id,
+            }
+        },
+        headers={"X-Request-ID": request_id},
+    )
+
+
+def _error_response(request: Request, code: str, message: str, status_code: int) -> JSONResponse:
+    request_id = getattr(request.state, "request_id", "unknown")
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "error": {
+                "code": code,
+                "message": message,
+                "details": [],
                 "requestId": request_id,
             }
         },
