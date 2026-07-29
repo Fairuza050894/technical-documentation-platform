@@ -84,9 +84,7 @@ components:
     assert source_response.status_code == 201
     source = source_response.json()
 
-    synchronization_response = client.post(
-        f"/api/sources/{source['id']}/synchronizations"
-    )
+    synchronization_response = client.post(f"/api/sources/{source['id']}/synchronizations")
     assert synchronization_response.status_code == 201
     synchronization = synchronization_response.json()
 

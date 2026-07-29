@@ -11,12 +11,7 @@ class DeterministicTechnicalSourceOverviewRenderer:
         operations = sorted(context.operations, key=lambda item: (item.path, item.method))
         schemas = sorted(context.schemas, key=lambda item: item.name)
         security_schemes = sorted(
-            {
-                scheme
-                for operation in operations
-                for scheme in operation.security_schemes
-                if scheme
-            }
+            {scheme for operation in operations for scheme in operation.security_schemes if scheme}
         )
         tags = sorted({tag for operation in operations for tag in operation.tags if tag})
 
@@ -237,9 +232,7 @@ class DeterministicTechnicalSourceOverviewRenderer:
             ]
 
         breaking = [
-            change
-            for change in comparison.changes
-            if change.severity is ChangeSeverity.BREAKING
+            change for change in comparison.changes if change.severity is ChangeSeverity.BREAKING
         ]
         lines.extend(
             [

@@ -1,12 +1,12 @@
 from dataclasses import asdict
-from typing import Annotated, cast
+from typing import Annotated, Self, cast
 
 from fastapi import APIRouter, Depends, Request, status
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 
 from tdp.modules.documents.application.commands import GenerateTechnicalSourceOverviewCommand
-from tdp.modules.documents.application.dto import DocumentDetailDto, DocumentSummaryDto
+from tdp.modules.documents.application.dto import DocumentSummaryDto
 from tdp.modules.documents.application.service import DocumentApplicationService
 
 router = APIRouter(tags=["documents"])
@@ -34,16 +34,12 @@ class DocumentSummaryResponse(BaseModel):
     generated_at: str
 
     @classmethod
-    def from_dto(cls, document: DocumentSummaryDto) -> "DocumentSummaryResponse":
+    def from_dto(cls, document: DocumentSummaryDto) -> Self:
         return cls.model_validate(asdict(document))
 
 
 class DocumentDetailResponse(DocumentSummaryResponse):
     content: str
-
-    @classmethod
-    def from_dto(cls, document: DocumentDetailDto) -> "DocumentDetailResponse":
-        return cls.model_validate(asdict(document))
 
 
 class DocumentCollectionResponse(BaseModel):
