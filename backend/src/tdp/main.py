@@ -3,6 +3,11 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 
 from tdp.config import Settings, get_settings
+from tdp.modules.catalog.application.service import CatalogApplicationService
+from tdp.modules.catalog.domain.errors import CatalogError
+from tdp.modules.catalog.infrastructure.openapi_parser import DeterministicOpenApiCatalogParser
+from tdp.modules.catalog.infrastructure.sqlite_repository import SqliteCatalogRepository
+from tdp.modules.catalog.presentation.http.router import router as catalog_router
 from tdp.modules.projects.application.service import ProjectApplicationService
 from tdp.modules.projects.domain.errors import ProjectError
 from tdp.modules.projects.infrastructure.sqlite_repository import SqliteProjectRepository
@@ -15,6 +20,7 @@ from tdp.modules.sources.infrastructure.project_access import RepositoryBackedPr
 from tdp.modules.sources.infrastructure.sqlite_repository import SqliteSourceRepository
 from tdp.modules.sources.presentation.http.router import router as sources_router
 from tdp.presentation.http.errors import (
+    catalog_error_handler,
     project_error_handler,
     source_error_handler,
     validation_error_handler,
@@ -27,6 +33,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     runtime_settings = settings or get_settings()
     project_repository = SqliteProjectRepository(runtime_settings.database_path)
     source_repository = SqliteSourceRepository(runtime_settings.database_path)
+    catalog_repository = SqliteCatalogRepository(runtime_settings.database_path)
+    project_access = RepositoryBackedProjectAccess(project_repository)
+    artifact_store = LocalArtifactStore(runtime_settings.artifact_root_path)
 
     application = FastAPI(
         title=runtime_settings.app_name,
@@ -39,10 +48,17 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.state.project_service = ProjectApplicationService(project_repository)
     application.state.source_service = SourceApplicationService(
         source_repository,
-        RepositoryBackedProjectAccess(project_repository),
+        project_access,
         DeterministicOpenApiInspector(),
-        LocalArtifactStore(runtime_settings.artifact_root_path),
+        artifact_store,
         max_file_bytes=runtime_settings.max_source_file_bytes,
+    )
+    application.state.catalog_service = CatalogApplicationService(
+        catalog_repository,
+        source_repository,
+        project_access,
+        artifact_store,
+        DeterministicOpenApiCatalogParser(),
     )
     application.add_middleware(RequestIdMiddleware)
     application.add_middleware(
@@ -52,12 +68,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_methods=["GET", "POST", "OPTIONS"],
         allow_headers=["Content-Type", "X-Request-ID"],
     )
+    application.add_exception_handler(CatalogError, catalog_error_handler)
     application.add_exception_handler(ProjectError, project_error_handler)
     application.add_exception_handler(SourceError, source_error_handler)
     application.add_exception_handler(RequestValidationError, validation_error_handler)
     application.include_router(health_router, prefix=runtime_settings.api_prefix)
     application.include_router(projects_router, prefix=runtime_settings.api_prefix)
     application.include_router(sources_router, prefix=runtime_settings.api_prefix)
+    application.include_router(catalog_router, prefix=runtime_settings.api_prefix)
     return application
 
 

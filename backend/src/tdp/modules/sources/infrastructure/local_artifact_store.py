@@ -19,6 +19,9 @@ class LocalArtifactStore:
     ) -> StoredArtifact:
         return await asyncio.to_thread(self._save, source_id, file_name, content)
 
+    async def read(self, artifact_key: str) -> bytes:
+        return await asyncio.to_thread(self._read, artifact_key)
+
     async def delete(self, artifact_key: str) -> None:
         await asyncio.to_thread(self._delete, artifact_key)
 
@@ -35,6 +38,13 @@ class LocalArtifactStore:
         temporary.write_bytes(content)
         temporary.replace(target)
         return StoredArtifact(key=relative_path.as_posix())
+
+    def _read(self, artifact_key: str) -> bytes:
+        root = self._root_path.resolve()
+        target = (root / Path(artifact_key)).resolve()
+        if not target.is_relative_to(root):
+            raise FileNotFoundError(artifact_key)
+        return target.read_bytes()
 
     def _delete(self, artifact_key: str) -> None:
         root = self._root_path.resolve()

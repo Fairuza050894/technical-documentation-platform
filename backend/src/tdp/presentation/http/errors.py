@@ -4,6 +4,17 @@ from fastapi import Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
+from tdp.modules.catalog.domain.errors import (
+    CatalogArtifactIntegrityError,
+    CatalogArtifactNotFoundError,
+    CatalogError,
+    CatalogProjectNotFoundError,
+    CatalogSourceArchivedError,
+    CatalogSourceNotFoundError,
+    InvalidCatalogDocumentError,
+    InvalidSynchronizationIdError,
+    SynchronizationNotFoundError,
+)
 from tdp.modules.projects.domain.errors import (
     InvalidProjectDescriptionError,
     InvalidProjectIdError,
@@ -35,6 +46,17 @@ from tdp.modules.sources.domain.errors import (
     UnsupportedSourceFileError,
 )
 
+_CATALOG_ERROR_STATUS: Mapping[type[CatalogError], int] = {
+    InvalidSynchronizationIdError: 422,
+    CatalogSourceNotFoundError: 404,
+    CatalogSourceArchivedError: 409,
+    CatalogProjectNotFoundError: 404,
+    CatalogArtifactNotFoundError: 404,
+    CatalogArtifactIntegrityError: 409,
+    InvalidCatalogDocumentError: 422,
+    SynchronizationNotFoundError: 404,
+}
+
 _PROJECT_ERROR_STATUS: Mapping[type[ProjectError], int] = {
     InvalidProjectIdError: 422,
     InvalidProjectKeyError: 422,
@@ -64,6 +86,12 @@ _SOURCE_ERROR_STATUS: Mapping[type[SourceError], int] = {
     SourceNotFoundError: 404,
     SourceAlreadyArchivedError: 409,
 }
+
+
+async def catalog_error_handler(request: Request, exc: Exception) -> JSONResponse:
+    if not isinstance(exc, CatalogError):
+        raise exc
+    return _error_response(request, exc.code, str(exc), _CATALOG_ERROR_STATUS.get(type(exc), 400))
 
 
 async def project_error_handler(request: Request, exc: Exception) -> JSONResponse:

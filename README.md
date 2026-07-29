@@ -114,3 +114,25 @@ Run the dedicated audit with:
 ```bash
 make audit-sources
 ```
+
+
+## API Catalog synchronization slice
+
+The API Catalog workspace synchronizes an active OpenAPI source into normalized operations and component schemas. Each synchronization run is stored as a traceable snapshot linked to the source checksum and JSON Pointer evidence.
+
+API endpoints:
+
+```text
+POST /api/sources/{source_id}/synchronizations
+GET  /api/sources/{source_id}/synchronizations
+GET  /api/synchronizations/{run_id}
+GET  /api/projects/{project_id}/api-catalog
+```
+
+The first implementation is synchronous and local by design. The application boundary keeps the parser, repository, and artifact reader replaceable so background workers can be introduced without changing the catalog domain.
+
+Run the dedicated audit with:
+
+```bash
+make audit-catalog
+```

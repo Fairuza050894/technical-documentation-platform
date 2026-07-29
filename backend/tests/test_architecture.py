@@ -88,3 +88,42 @@ def test_source_application_does_not_import_infrastructure_or_presentation() -> 
     }
 
     assert all(not imports for imports in violations.values()), violations
+
+
+_CATALOG_MODULE = _BACKEND_ROOT / "src" / "tdp" / "modules" / "catalog"
+
+
+def test_catalog_domain_has_no_framework_or_infrastructure_imports() -> None:
+    forbidden_prefixes = (
+        "fastapi",
+        "pydantic",
+        "yaml",
+        "sqlite3",
+        "tdp.modules.catalog.infrastructure",
+        "tdp.modules.catalog.presentation",
+    )
+
+    violations = {
+        str(path.relative_to(_BACKEND_ROOT)): sorted(
+            module for module in imported_modules(path) if module.startswith(forbidden_prefixes)
+        )
+        for path in (_CATALOG_MODULE / "domain").glob("*.py")
+    }
+
+    assert all(not imports for imports in violations.values()), violations
+
+
+def test_catalog_application_does_not_import_infrastructure_or_presentation() -> None:
+    forbidden_prefixes = (
+        "tdp.modules.catalog.infrastructure",
+        "tdp.modules.catalog.presentation",
+    )
+
+    violations = {
+        str(path.relative_to(_BACKEND_ROOT)): sorted(
+            module for module in imported_modules(path) if module.startswith(forbidden_prefixes)
+        )
+        for path in (_CATALOG_MODULE / "application").glob("*.py")
+    }
+
+    assert all(not imports for imports in violations.values()), violations

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { ApiCatalogWorkspace } from "../modules/catalog/ApiCatalogWorkspace";
 import { ProjectWorkspace } from "../modules/projects/ProjectWorkspace";
 import { SourceWorkspace } from "../modules/sources/SourceWorkspace";
 
@@ -90,9 +91,12 @@ export function App() {
       <main className="main-content">
         {activeNavigation === "Projects" && <ProjectWorkspace />}
         {activeNavigation === "Sources" && <SourceWorkspace />}
-        {activeNavigation !== "Projects" && activeNavigation !== "Sources" && (
-          <Overview apiState={apiState} activeNavigation={activeNavigation} />
-        )}
+        {activeNavigation === "API Catalog" && <ApiCatalogWorkspace />}
+        {activeNavigation !== "Projects" &&
+          activeNavigation !== "Sources" &&
+          activeNavigation !== "API Catalog" && (
+            <Overview apiState={apiState} activeNavigation={activeNavigation} />
+          )}
       </main>
     </div>
   );
@@ -160,8 +164,8 @@ function Overview({
 
               <article className="status-card">
                 <span className="status-label">Current vertical slice</span>
-                <strong>Projects and OpenAPI sources</strong>
-                <p>Create project boundaries and import validated OpenAPI JSON/YAML files.</p>
+                <strong>Projects, sources, and API catalog</strong>
+                <p>Import OpenAPI files, synchronize normalized operations, and preserve source evidence.</p>
                 <span className="status-indicator status-indicator--success">Implemented</span>
               </article>
             </div>

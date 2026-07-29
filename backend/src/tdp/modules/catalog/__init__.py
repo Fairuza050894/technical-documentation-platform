@@ -1,0 +1,1 @@
+"""API catalog bounded context."""
