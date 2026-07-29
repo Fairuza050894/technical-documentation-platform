@@ -4,14 +4,14 @@ A source-backed platform for turning technical artifacts into structured catalog
 
 ## Current phase
 
-This repository is in **Engineering Foundation**. The first vertical slice will be:
+This repository is in **MVP 1 product hardening**. The source-to-document vertical slice now supports:
 
-1. Create a project.
-2. Import an OpenAPI JSON/YAML file.
-3. Normalize API entities.
-4. Display an API catalog.
-5. Compare two snapshots.
-6. Generate a Technical Source Overview.
+1. Project and OpenAPI source management.
+2. Deterministic synchronization and API catalog normalization.
+3. Snapshot comparison and breaking-change classification.
+4. Versioned Technical Source Overview generation.
+5. Review, approval, workflow history, and version comparison.
+6. A source-backed operational workspace with no demo metrics.
 
 No AI-generated facts are part of the deterministic documentation pipeline.
 
@@ -212,4 +212,33 @@ Run the dedicated lifecycle audit with:
 
 ```bash
 make audit-lifecycle
+```
+
+
+## Product UI foundation and operational overview
+
+The application shell uses grouped navigation, persistent runtime context, dense technical
+tables, semantic status colors, keyboard-visible focus states, and responsive layouts. The
+Overview page assembles live data from existing project, source, synchronization, and document
+APIs; it does not display fabricated metrics.
+
+Operational Overview includes:
+
+```text
+Active projects
+Ready technical sources
+Completed synchronization snapshots
+Pending document reviews
+Attention-required conditions
+Recent source and document activity
+Project health
+```
+
+The previous engineering-foundation cards are available under **System status**, together with
+live backend metadata and deterministic documentation policies.
+
+Run the dedicated audit with:
+
+```bash
+make audit-product-ui
 ```
