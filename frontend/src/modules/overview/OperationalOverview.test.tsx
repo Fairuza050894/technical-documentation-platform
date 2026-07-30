@@ -188,7 +188,7 @@ describe("OperationalOverview", () => {
     expect(within(projectHealth).getByText("5")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /Pending reviews: 1/ }));
-    expect(onNavigate).toHaveBeenCalledWith("Documents");
+    expect(onNavigate).toHaveBeenCalledWith("Documents", "project-1");
   });
 
   it("shows a clear state when no operational issues exist", async () => {

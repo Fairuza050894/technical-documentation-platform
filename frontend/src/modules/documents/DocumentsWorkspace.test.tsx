@@ -189,6 +189,29 @@ describe("DocumentsWorkspace", () => {
     );
   });
 
+  it("uses a neutral label when a replaced version has no known successor", async () => {
+    const previous = documentVersion(versionOneId, "1.0", "SUPERSEDED", runOneId);
+
+    vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      const common = commonResponse(requestUrl(input), [previous]);
+      return Promise.resolve(
+        common ?? new Response(JSON.stringify({ items: [], total: 0 })),
+      );
+    });
+
+    render(<DocumentsWorkspace />);
+
+    await waitFor(() =>
+      expect(
+        screen.getByText("Previous version", { selector: ".status-badge" }),
+      ).toBeInTheDocument(),
+    );
+    expect(screen.getByText("No longer current")).toBeInTheDocument();
+    expect(
+      screen.queryByText("Replaced", { selector: ".status-badge" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("compares document versions and filters structured section changes", async () => {
     const target = documentVersion(versionTwoId, "1.1", "DRAFT", runTwoId);
     const baseline = documentVersion(versionOneId, "1.0", "SUPERSEDED", runOneId);

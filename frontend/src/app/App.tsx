@@ -1,12 +1,16 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
-import { ApiCatalogWorkspace } from "../modules/catalog/ApiCatalogWorkspace";
-import { ChangesWorkspace } from "../modules/changes/ChangesWorkspace";
-import { DocumentsWorkspace } from "../modules/documents/DocumentsWorkspace";
-import { OperationalOverview } from "../modules/overview/OperationalOverview";
+import { OperationalOverview, type OverviewNavigationTarget } from "../modules/overview/OperationalOverview";
 import { ProjectWorkspace } from "../modules/projects/ProjectWorkspace";
-import { SourceWorkspace } from "../modules/sources/SourceWorkspace";
+import type { Project } from "../modules/projects/types";
+import { ProjectWorkbench } from "../modules/workbench/ProjectWorkbench";
 import { Icon, type IconName } from "../shared/ui/Icon";
+import {
+  type AppRoute,
+  type ProjectStage,
+  parseRoute,
+  routePath,
+} from "./router";
 
 interface HealthResponse {
   status: "ok";
@@ -20,53 +24,70 @@ type ApiState =
   | { status: "available"; health: HealthResponse }
   | { status: "unavailable" };
 
-const navigationGroups = [
+type GlobalNavigation = "Home" | "Projects" | "System status";
+
+const navigationGroups: ReadonlyArray<{
+  label: string;
+  items: ReadonlyArray<{
+    id: GlobalNavigation;
+    label: string;
+    icon: IconName;
+    route: AppRoute;
+  }>;
+}> = [
   {
     label: "Workspace",
     items: [
-      { id: "Overview", label: "Overview", icon: "overview" },
-      { id: "Projects", label: "Projects", icon: "projects" },
+      { id: "Home", label: "Home", icon: "overview", route: { name: "home" } },
+      { id: "Projects", label: "Projects", icon: "projects", route: { name: "projects" } },
     ],
-  },
-  {
-    label: "Source intelligence",
-    items: [
-      { id: "Sources", label: "Source registry", icon: "source" },
-      { id: "API Catalog", label: "API catalog", icon: "catalog" },
-      { id: "Changes", label: "Change analysis", icon: "changes" },
-    ],
-  },
-  {
-    label: "Documentation",
-    items: [{ id: "Documents", label: "Documents", icon: "documents" }],
   },
   {
     label: "Platform",
-    items: [{ id: "System status", label: "System status", icon: "server" }],
+    items: [
+      { id: "System status", label: "System status", icon: "server", route: { name: "system" } },
+    ],
   },
-] as const satisfies ReadonlyArray<{
-  label: string;
-  items: ReadonlyArray<{ id: string; label: string; icon: IconName }>;
-}>;
+];
 
-type NavigationItem = (typeof navigationGroups)[number]["items"][number]["id"];
+const projectStageLabels: Record<ProjectStage, string> = {
+  overview: "Overview",
+  sources: "Sources",
+  catalog: "API Catalog",
+  changes: "Changes",
+  documents: "Documents",
+};
 
-const navigationLabels = Object.fromEntries(
-  navigationGroups.flatMap((group) => group.items.map((item) => [item.id, item.label])),
-) as Record<NavigationItem, string>;
-
-const navigationIcons = Object.fromEntries(
-  navigationGroups.flatMap((group) => group.items.map((item) => [item.id, item.icon])),
-) as Record<NavigationItem, IconName>;
+const projectStageIcons: Record<ProjectStage, IconName> = {
+  overview: "overview",
+  sources: "source",
+  catalog: "catalog",
+  changes: "changes",
+  documents: "documents",
+};
 
 export function App() {
   const [apiState, setApiState] = useState<ApiState>({ status: "loading" });
-  const [activeNavigation, setActiveNavigation] = useState<NavigationItem>("Overview");
+  const [route, setRoute] = useState<AppRoute>(() => parseRoute(globalThis.location.pathname));
+  const [activeProject, setActiveProject] = useState<Project | null>(null);
+
+  useEffect(() => {
+    const handlePopState = (): void => {
+      const nextRoute = parseRoute(globalThis.location.pathname);
+      if (nextRoute.name !== "project") {
+        setActiveProject(null);
+      }
+      setRoute(nextRoute);
+    };
+
+    globalThis.addEventListener("popstate", handlePopState);
+    return () => globalThis.removeEventListener("popstate", handlePopState);
+  }, []);
 
   useEffect(() => {
     document.documentElement.scrollTop = 0;
     document.body.scrollTop = 0;
-  }, [activeNavigation]);
+  }, [route]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -93,20 +114,64 @@ export function App() {
     return () => controller.abort();
   }, []);
 
-  function navigate(target: NavigationItem): void {
-    setActiveNavigation(target);
+  const navigate = useCallback((nextRoute: AppRoute, replace = false): void => {
+    const path = routePath(nextRoute);
+    if (replace) {
+      globalThis.history.replaceState({}, "", path);
+    } else {
+      globalThis.history.pushState({}, "", path);
+    }
+    if (nextRoute.name !== "project") {
+      setActiveProject(null);
+    }
+    setRoute(nextRoute);
+  }, []);
+
+  const handleProjectResolved = useCallback((project: Project | null): void => {
+    setActiveProject(project);
+  }, []);
+
+  function navigateFromOverview(
+    target: OverviewNavigationTarget,
+    projectId?: string,
+  ): void {
+    if (target === "Projects") {
+      navigate(
+        projectId
+          ? { name: "project", projectId, stage: "overview" }
+          : { name: "projects" },
+      );
+      return;
+    }
+
+    if (!projectId) {
+      navigate({ name: "projects" });
+      return;
+    }
+
+    const stageByTarget: Record<Exclude<OverviewNavigationTarget, "Projects">, ProjectStage> = {
+      Sources: "sources",
+      "API Catalog": "catalog",
+      Changes: "changes",
+      Documents: "documents",
+    };
+    navigate({ name: "project", projectId, stage: stageByTarget[target] });
   }
 
-  const activeLabel = navigationLabels[activeNavigation];
-  const activeIcon = navigationIcons[activeNavigation];
-  const environment =
-    apiState.status === "available" ? apiState.health.environment : "local";
+  const activeGlobalNavigation = resolveGlobalNavigation(route);
+  const contextLabel =
+    route.name === "project"
+      ? activeProject?.name ?? `Project ${route.projectId.slice(0, 8)}`
+      : "All projects";
+  const contextKicker = route.name === "project" ? "Project" : "Workspace";
+  const environment = apiState.status === "available" ? apiState.health.environment : "local";
   const serviceLabel =
     apiState.status === "loading"
       ? "Checking"
       : apiState.status === "available"
         ? "Connected"
         : "Offline";
+  const pageContext = resolvePageContext(route, activeProject);
 
   return (
     <div className="app-shell">
@@ -121,16 +186,22 @@ export function App() {
           </span>
         </div>
 
-        <div className="workspace-context" aria-label="Current workspace context">
+        <button
+          type="button"
+          className="workspace-context"
+          title={contextLabel}
+          aria-label={`Current ${contextKicker.toLowerCase()}: ${contextLabel}. Open projects.`}
+          onClick={() => navigate({ name: "projects" })}
+        >
           <span className="workspace-context__icon" aria-hidden="true">
             <Icon name="folder" size={16} />
           </span>
           <span className="workspace-context__copy">
-            <small>Workspace</small>
-            <strong>All projects</strong>
+            <small>{contextKicker}</small>
+            <strong>{contextLabel}</strong>
           </span>
           <Icon className="workspace-context__chevron" name="chevron-down" size={14} />
-        </div>
+        </button>
 
         <nav className="primary-navigation">
           {navigationGroups.map((group) => (
@@ -146,12 +217,12 @@ export function App() {
                     <button
                       type="button"
                       className={
-                        item.id === activeNavigation
+                        item.id === activeGlobalNavigation
                           ? "navigation-item is-active"
                           : "navigation-item"
                       }
-                      aria-current={item.id === activeNavigation ? "page" : undefined}
-                      onClick={() => navigate(item.id)}
+                      aria-current={item.id === activeGlobalNavigation ? "page" : undefined}
+                      onClick={() => navigate(item.route)}
                     >
                       <span className="navigation-item__icon" aria-hidden="true">
                         <Icon name={item.icon} size={17} />
@@ -191,18 +262,25 @@ export function App() {
       <div className="application-frame">
         <header className="utility-bar">
           <div className="breadcrumb" aria-label="Breadcrumb">
-            <span>Workspace</span>
-            <span aria-hidden="true">/</span>
-            <strong>
-              <Icon name={activeIcon} size={15} />
-              {activeLabel}
-            </strong>
+            {pageContext.breadcrumb.map((item, index) => (
+              <span className="breadcrumb__segment" key={`${item}-${index}`}>
+                {index > 0 && <span aria-hidden="true">/</span>}
+                {index === pageContext.breadcrumb.length - 1 ? (
+                  <strong>
+                    <Icon name={pageContext.icon} size={15} />
+                    {item}
+                  </strong>
+                ) : (
+                  <span>{item}</span>
+                )}
+              </span>
+            ))}
           </div>
 
           <div className="utility-status" aria-label="Runtime context">
             <span className="utility-status__item">
               <span className="utility-status__label">Scope</span>
-              <strong>All projects</strong>
+              <strong>{route.name === "project" ? activeProject?.key ?? "Project" : "All projects"}</strong>
             </span>
             <span className="utility-status__divider" aria-hidden="true" />
             <span className="utility-status__item">
@@ -227,25 +305,94 @@ export function App() {
 
         <main className="main-content">
           <div className="workspace-canvas">
-            {activeNavigation === "Overview" && (
+            {route.name === "home" && (
               <OperationalOverview
                 serviceState={apiState.status}
-                serviceVersion={
-                  apiState.status === "available" ? apiState.health.version : undefined
-                }
-                onNavigate={navigate}
+                serviceVersion={apiState.status === "available" ? apiState.health.version : undefined}
+                onNavigate={navigateFromOverview}
               />
             )}
-            {activeNavigation === "Projects" && <ProjectWorkspace />}
-            {activeNavigation === "Sources" && <SourceWorkspace />}
-            {activeNavigation === "API Catalog" && <ApiCatalogWorkspace />}
-            {activeNavigation === "Changes" && <ChangesWorkspace />}
-            {activeNavigation === "Documents" && <DocumentsWorkspace />}
-            {activeNavigation === "System status" && <SystemStatus apiState={apiState} />}
+            {route.name === "projects" && (
+              <ProjectWorkspace
+                onOpenProject={(project) =>
+                  navigate({ name: "project", projectId: project.id, stage: "overview" })
+                }
+              />
+            )}
+            {route.name === "project" && (
+              <ProjectWorkbench
+                projectId={route.projectId}
+                stage={route.stage}
+                onNavigateStage={(stage) =>
+                  navigate({ name: "project", projectId: route.projectId, stage })
+                }
+                onBackToProjects={() => navigate({ name: "projects" })}
+                onProjectResolved={handleProjectResolved}
+              />
+            )}
+            {route.name === "system" && <SystemStatus apiState={apiState} />}
+            {route.name === "not-found" && (
+              <RouteNotFound
+                pathname={route.pathname}
+                onGoHome={() => navigate({ name: "home" }, true)}
+              />
+            )}
           </div>
         </main>
       </div>
     </div>
+  );
+}
+
+function resolveGlobalNavigation(route: AppRoute): GlobalNavigation | null {
+  switch (route.name) {
+    case "home":
+      return "Home";
+    case "projects":
+    case "project":
+      return "Projects";
+    case "system":
+      return "System status";
+    case "not-found":
+      return null;
+  }
+}
+
+function resolvePageContext(
+  route: AppRoute,
+  project: Project | null,
+): { breadcrumb: string[]; icon: IconName } {
+  switch (route.name) {
+    case "home":
+      return { breadcrumb: ["Workspace", "Home"], icon: "overview" };
+    case "projects":
+      return { breadcrumb: ["Workspace", "Projects"], icon: "projects" };
+    case "system":
+      return { breadcrumb: ["Platform", "System status"], icon: "server" };
+    case "project":
+      return {
+        breadcrumb: ["Projects", project?.key ?? "Project", projectStageLabels[route.stage]],
+        icon: projectStageIcons[route.stage],
+      };
+    case "not-found":
+      return { breadcrumb: ["Workspace", "Not found"], icon: "alert" };
+  }
+}
+
+function RouteNotFound({ pathname, onGoHome }: { pathname: string; onGoHome: () => void }) {
+  return (
+    <section className="content-section project-workbench-state" aria-labelledby="route-not-found-title">
+      <span className="project-workbench-state__icon" aria-hidden="true">
+        <Icon name="alert" size={22} />
+      </span>
+      <h1 id="route-not-found-title">Page not found</h1>
+      <p>
+        No workspace route matches <code>{pathname}</code>.
+      </p>
+      <button type="button" className="button button--primary" onClick={onGoHome}>
+        Return home
+      </button>
+    </section>
   );
 }
 
@@ -303,9 +450,7 @@ function SystemStatus({ apiState }: { apiState: ApiState }) {
           </div>
           <div>
             <dt>Environment</dt>
-            <dd>
-              {apiState.status === "available" ? apiState.health.environment : "Local"}
-            </dd>
+            <dd>{apiState.status === "available" ? apiState.health.environment : "Local"}</dd>
           </div>
         </dl>
       </section>

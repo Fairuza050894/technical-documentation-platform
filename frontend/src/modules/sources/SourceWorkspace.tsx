@@ -8,9 +8,14 @@ import type { TechnicalSource } from "./types";
 
 type LoadState = "loading" | "ready" | "error";
 
-export function SourceWorkspace() {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [selectedProjectId, setSelectedProjectId] = useState("");
+interface SourceWorkspaceProps {
+  project?: Project;
+  embedded?: boolean;
+}
+
+export function SourceWorkspace({ project, embedded = false }: SourceWorkspaceProps = {}) {
+  const [projects, setProjects] = useState<Project[]>(project ? [project] : []);
+  const [selectedProjectId, setSelectedProjectId] = useState(project?.id ?? "");
   const [sources, setSources] = useState<TechnicalSource[]>([]);
   const [loadState, setLoadState] = useState<LoadState>("loading");
   const [loadError, setLoadError] = useState("");
@@ -63,10 +68,15 @@ export function SourceWorkspace() {
   }, []);
 
   useEffect(() => {
+    if (project) {
+      setProjects([project]);
+      setSelectedProjectId(project.id);
+      return;
+    }
     const controller = new AbortController();
     void loadProjects(controller.signal);
     return () => controller.abort();
-  }, [loadProjects]);
+  }, [loadProjects, project]);
 
   useEffect(() => {
     if (!selectedProjectId) {
@@ -120,13 +130,15 @@ export function SourceWorkspace() {
 
   return (
     <>
-      <header className="topbar">
-        <div>
-          <p className="eyebrow">Source intake</p>
-          <h1>Sources</h1>
-        </div>
-        <span className="environment-badge">Local artifacts</span>
-      </header>
+      {!embedded && (
+        <header className="topbar">
+          <div>
+            <p className="eyebrow">Source intake</p>
+            <h1>Sources</h1>
+          </div>
+          <span className="environment-badge">Local artifacts</span>
+        </header>
+      )}
 
       <section className="content-section" aria-labelledby="source-registry-title">
         <div className="section-heading section-heading--split">
@@ -139,22 +151,24 @@ export function SourceWorkspace() {
           </span>
         </div>
 
-        <div className="workspace-filter">
-          <label htmlFor="source-project">Project</label>
-          <select
-            id="source-project"
-            value={selectedProjectId}
-            onChange={(event) => setSelectedProjectId(event.target.value)}
-            disabled={projects.length === 0}
-          >
-            {projects.length === 0 && <option value="">No projects available</option>}
-            {projects.map((project) => (
-              <option key={project.id} value={project.id}>
-                {project.key} — {project.name} {project.status === "ARCHIVED" ? "(Archived)" : ""}
-              </option>
-            ))}
-          </select>
-        </div>
+        {!project && (
+          <div className="workspace-filter">
+            <label htmlFor="source-project">Project</label>
+            <select
+              id="source-project"
+              value={selectedProjectId}
+              onChange={(event) => setSelectedProjectId(event.target.value)}
+              disabled={projects.length === 0}
+            >
+              {projects.length === 0 && <option value="">No projects available</option>}
+              {projects.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.key} — {item.name} {item.status === "ARCHIVED" ? "(Archived)" : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {loadState === "error" && (
           <div className="notice notice--error" role="alert">

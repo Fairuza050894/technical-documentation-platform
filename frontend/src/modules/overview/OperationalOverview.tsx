@@ -20,7 +20,7 @@ export type OverviewNavigationTarget =
 interface OperationalOverviewProps {
   serviceState: "loading" | "available" | "unavailable";
   serviceVersion: string | undefined;
-  onNavigate: (target: OverviewNavigationTarget) => void;
+  onNavigate: (target: OverviewNavigationTarget, projectId?: string) => void;
 }
 
 interface OverviewData {
@@ -110,6 +110,7 @@ export function OperationalOverview({
   }, []);
 
   const dashboard = useMemo(() => buildDashboard(data), [data]);
+  const preferredProjectId = data.projects[0]?.id;
 
   return (
     <>
@@ -125,7 +126,7 @@ export function OperationalOverview({
           <button
             type="button"
             className="button button--secondary"
-            onClick={() => onNavigate("Sources")}
+            onClick={() => onNavigate("Sources", preferredProjectId)}
           >
             <Icon name="upload" size={15} />
             Import source
@@ -133,7 +134,7 @@ export function OperationalOverview({
           <button
             type="button"
             className="button button--primary"
-            onClick={() => onNavigate("Documents")}
+            onClick={() => onNavigate("Documents", preferredProjectId)}
           >
             <Icon name="documents" size={15} />
             Generate document
@@ -208,14 +209,14 @@ export function OperationalOverview({
                 label="Ready sources"
                 value={dashboard.readySources}
                 detail="Validated artifacts"
-                onClick={() => onNavigate("Sources")}
+                onClick={() => onNavigate("Sources", preferredProjectId)}
               />
               <SignalItem
                 icon="sync"
                 label="Completed snapshots"
                 value={dashboard.completedSnapshots}
                 detail="Successful sync runs"
-                onClick={() => onNavigate("API Catalog")}
+                onClick={() => onNavigate("API Catalog", preferredProjectId)}
               />
               <SignalItem
                 icon="review"
@@ -223,7 +224,7 @@ export function OperationalOverview({
                 value={dashboard.pendingReviews}
                 detail="Lifecycle actions"
                 tone={dashboard.pendingReviews > 0 ? "warning" : "neutral"}
-                onClick={() => onNavigate("Documents")}
+                onClick={() => onNavigate("Documents", preferredProjectId)}
               />
             </div>
           </section>
@@ -327,8 +328,14 @@ export function OperationalOverview({
                         {dashboard.projectRows.map((row) => (
                           <tr key={row.project.id}>
                             <td>
-                              <strong>{row.project.name}</strong>
-                              <span className="table-secondary-text">{row.project.key}</span>
+                              <button
+                                type="button"
+                                className="project-link"
+                                onClick={() => onNavigate("Projects", row.project.id)}
+                              >
+                                <strong>{row.project.name}</strong>
+                                <span className="table-secondary-text">{row.project.key}</span>
+                              </button>
                             </td>
                             <td className="numeric-cell">{row.sourceCount}</td>
                             <td className="numeric-cell">{row.operationCount}</td>
@@ -392,7 +399,7 @@ export function OperationalOverview({
                           type="button"
                           className="icon-action"
                           aria-label={`Review ${item.label}`}
-                          onClick={() => onNavigate(item.target)}
+                          onClick={() => onNavigate(item.target, preferredProjectId)}
                         >
                           <Icon name="arrow-right" size={15} />
                         </button>
@@ -424,19 +431,19 @@ export function OperationalOverview({
                     icon="upload"
                     title="Import OpenAPI"
                     detail="Register a JSON or YAML artifact."
-                    onClick={() => onNavigate("Sources")}
+                    onClick={() => onNavigate("Sources", preferredProjectId)}
                   />
                   <QuickAction
                     icon="sync"
                     title="Synchronize catalog"
                     detail="Create a normalized snapshot."
-                    onClick={() => onNavigate("API Catalog")}
+                    onClick={() => onNavigate("API Catalog", preferredProjectId)}
                   />
                   <QuickAction
                     icon="review"
                     title="Review documents"
                     detail="Open approval and revision history."
-                    onClick={() => onNavigate("Documents")}
+                    onClick={() => onNavigate("Documents", preferredProjectId)}
                   />
                 </div>
               </section>

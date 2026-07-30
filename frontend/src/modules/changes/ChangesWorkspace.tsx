@@ -14,9 +14,19 @@ interface SnapshotOption {
   source: TechnicalSource;
 }
 
-export function ChangesWorkspace() {
-  const [projects, setProjects] = useState<ProjectCollection>({ items: [], total: 0 });
-  const [projectId, setProjectId] = useState("");
+interface ChangesWorkspaceProps {
+  project?: ProjectCollection["items"][number];
+  embedded?: boolean;
+}
+
+export function ChangesWorkspace({
+  project,
+  embedded = false,
+}: ChangesWorkspaceProps = {}) {
+  const [projects, setProjects] = useState<ProjectCollection>(
+    project ? { items: [project], total: 1 } : { items: [], total: 0 },
+  );
+  const [projectId, setProjectId] = useState(project?.id ?? "");
   const [snapshots, setSnapshots] = useState<SnapshotOption[]>([]);
   const [baselineId, setBaselineId] = useState("");
   const [targetId, setTargetId] = useState("");
@@ -24,11 +34,16 @@ export function ChangesWorkspace() {
   const [message, setMessage] = useState("Select two completed snapshots.");
 
   useEffect(() => {
+    if (project) {
+      setProjects({ items: [project], total: 1 });
+      setProjectId(project.id);
+      return;
+    }
     void requestJson<ProjectCollection>("/projects").then((collection) => {
       setProjects(collection);
       setProjectId(collection.items.find((item) => item.status === "ACTIVE")?.id ?? "");
     });
-  }, []);
+  }, [project]);
 
   useEffect(() => {
     if (!projectId) {
@@ -79,13 +94,15 @@ export function ChangesWorkspace() {
 
   return (
     <>
-      <header className="topbar">
-        <div>
-          <p className="eyebrow">Deterministic comparison</p>
-          <h1>Changes</h1>
-        </div>
-        <span className="environment-badge">Snapshot evidence</span>
-      </header>
+      {!embedded && (
+        <header className="topbar">
+          <div>
+            <p className="eyebrow">Deterministic comparison</p>
+            <h1>Changes</h1>
+          </div>
+          <span className="environment-badge">Snapshot evidence</span>
+        </header>
+      )}
 
       <section className="content-section" aria-labelledby="comparison-title">
         <div className="section-heading">
@@ -97,12 +114,22 @@ export function ChangesWorkspace() {
 
         <div className="form-panel">
           <div className="form-grid">
-            <div className="field">
-              <label htmlFor="change-project">Project</label>
-              <select id="change-project" value={projectId} onChange={(event) => setProjectId(event.target.value)}>
-                {projects.items.map((project) => <option key={project.id} value={project.id}>{project.key} — {project.name}</option>)}
-              </select>
-            </div>
+            {!project && (
+              <div className="field">
+                <label htmlFor="change-project">Project</label>
+                <select
+                  id="change-project"
+                  value={projectId}
+                  onChange={(event) => setProjectId(event.target.value)}
+                >
+                  {projects.items.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.key} — {item.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <SnapshotSelect id="baseline-snapshot" label="Baseline" value={baselineId} options={snapshots} onChange={setBaselineId} />
             <SnapshotSelect id="target-snapshot" label="Target" value={targetId} options={snapshots} onChange={setTargetId} />
           </div>

@@ -259,3 +259,24 @@ Run the dedicated audit with:
 ```bash
 make audit-visual-refinement
 ```
+
+## Project-Centric Workbench
+
+The frontend keeps project and workflow-stage context in browser URLs. Open an active project from the Project Registry, then move through Overview, Sources, API Catalog, Changes, and Documents without selecting the project again.
+
+Representative routes:
+
+```text
+/projects
+/projects/:projectId/workbench/overview
+/projects/:projectId/workbench/sources
+/projects/:projectId/workbench/catalog
+/projects/:projectId/workbench/changes
+/projects/:projectId/workbench/documents
+```
+
+Run the dedicated audit with:
+
+```bash
+make audit-workbench
+```

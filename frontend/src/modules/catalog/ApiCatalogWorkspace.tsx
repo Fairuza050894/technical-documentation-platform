@@ -17,11 +17,19 @@ const emptyCatalog: ApiCatalog = {
   schema_total: 0,
 };
 
-export function ApiCatalogWorkspace() {
-  const [projects, setProjects] = useState<Project[]>([]);
+interface ApiCatalogWorkspaceProps {
+  project?: Project;
+  embedded?: boolean;
+}
+
+export function ApiCatalogWorkspace({
+  project,
+  embedded = false,
+}: ApiCatalogWorkspaceProps = {}) {
+  const [projects, setProjects] = useState<Project[]>(project ? [project] : []);
   const [sources, setSources] = useState<TechnicalSource[]>([]);
   const [catalog, setCatalog] = useState<ApiCatalog>(emptyCatalog);
-  const [selectedProjectId, setSelectedProjectId] = useState("");
+  const [selectedProjectId, setSelectedProjectId] = useState(project?.id ?? "");
   const [selectedSourceId, setSelectedSourceId] = useState("");
   const [selectedOperationKey, setSelectedOperationKey] = useState("");
   const [loadState, setLoadState] = useState<LoadState>("loading");
@@ -73,10 +81,21 @@ export function ApiCatalogWorkspace() {
 
     async function loadInitialState(): Promise<void> {
       setLoadState("loading");
+      setLoadError("");
       try {
+        if (project) {
+          setProjects([project]);
+          setSelectedProjectId(project.id);
+          await loadProjectData(project.id, null, controller.signal);
+          return;
+        }
+
         const projectResponse = await listProjects(controller.signal);
         setProjects(projectResponse.items);
-        const firstProjectId = projectResponse.items[0]?.id ?? "";
+        const firstProjectId =
+          projectResponse.items.find((item) => item.status === "ACTIVE")?.id ??
+          projectResponse.items[0]?.id ??
+          "";
         setSelectedProjectId(firstProjectId);
         if (!firstProjectId) {
           setSources([]);
@@ -96,7 +115,7 @@ export function ApiCatalogWorkspace() {
 
     void loadInitialState();
     return () => controller.abort();
-  }, [loadProjectData]);
+  }, [loadProjectData, project]);
 
   async function handleProjectChange(projectId: string): Promise<void> {
     setSelectedProjectId(projectId);
@@ -156,13 +175,15 @@ export function ApiCatalogWorkspace() {
 
   return (
     <>
-      <header className="topbar">
-        <div>
-          <p className="eyebrow">Normalized technical catalog</p>
-          <h1>API Catalog</h1>
-        </div>
-        <span className="environment-badge">Source-backed</span>
-      </header>
+      {!embedded && (
+        <header className="topbar">
+          <div>
+            <p className="eyebrow">Normalized technical catalog</p>
+            <h1>API Catalog</h1>
+          </div>
+          <span className="environment-badge">Source-backed</span>
+        </header>
+      )}
 
       <section className="content-section" aria-labelledby="catalog-controls-title">
         <div className="section-heading">
@@ -173,22 +194,24 @@ export function ApiCatalogWorkspace() {
         </div>
 
         <div className="catalog-toolbar">
-          <div className="field">
-            <label htmlFor="catalog-project">Project</label>
-            <select
-              id="catalog-project"
-              value={selectedProjectId}
-              disabled={projects.length === 0}
-              onChange={(event) => void handleProjectChange(event.target.value)}
-            >
-              {projects.length === 0 && <option value="">No projects available</option>}
-              {projects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.key} — {project.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          {!project && (
+            <div className="field">
+              <label htmlFor="catalog-project">Project</label>
+              <select
+                id="catalog-project"
+                value={selectedProjectId}
+                disabled={projects.length === 0}
+                onChange={(event) => void handleProjectChange(event.target.value)}
+              >
+                {projects.length === 0 && <option value="">No projects available</option>}
+                {projects.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.key} — {item.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className="field">
             <label htmlFor="catalog-source">Source</label>
             <select
@@ -209,7 +232,7 @@ export function ApiCatalogWorkspace() {
             <button
               type="button"
               className="button button--primary"
-              disabled={!selectedSource || syncState === "running"}
+              disabled={!selectedSource || syncState === "running" || project?.status === "ARCHIVED"}
               onClick={() => void handleSynchronize()}
             >
               {syncState === "running" ? "Synchronizing…" : "Synchronize source"}

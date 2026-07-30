@@ -34,9 +34,19 @@ interface SnapshotOption {
 type WorkflowAction = "submit-review" | "request-changes" | "approve" | "supersede";
 type ChangeFilter = "ALL" | DocumentSectionChangeKind;
 
-export function DocumentsWorkspace() {
-  const [projects, setProjects] = useState<ProjectCollection>({ items: [], total: 0 });
-  const [projectId, setProjectId] = useState("");
+interface DocumentsWorkspaceProps {
+  project?: ProjectCollection["items"][number];
+  embedded?: boolean;
+}
+
+export function DocumentsWorkspace({
+  project,
+  embedded = false,
+}: DocumentsWorkspaceProps = {}) {
+  const [projects, setProjects] = useState<ProjectCollection>(
+    project ? { items: [project], total: 1 } : { items: [], total: 0 },
+  );
+  const [projectId, setProjectId] = useState(project?.id ?? "");
   const [snapshots, setSnapshots] = useState<SnapshotOption[]>([]);
   const [targetRunId, setTargetRunId] = useState("");
   const [baselineRunId, setBaselineRunId] = useState("");
@@ -55,11 +65,16 @@ export function DocumentsWorkspace() {
   const [isBusy, setIsBusy] = useState(false);
 
   useEffect(() => {
+    if (project) {
+      setProjects({ items: [project], total: 1 });
+      setProjectId(project.id);
+      return;
+    }
     void listProjects().then((collection) => {
       setProjects(collection);
       setProjectId(collection.items.find((item) => item.status === "ACTIVE")?.id ?? "");
     });
-  }, []);
+  }, [project]);
 
   useEffect(() => {
     let isCurrent = true;
@@ -135,6 +150,8 @@ export function DocumentsWorkspace() {
   const currentVersionId = selectedSeriesVersions[0]?.id ?? null;
   const approvedVersionId =
     selectedSeriesVersions.find((version) => version.status === "APPROVED")?.id ?? null;
+  const selectedReplacement =
+    selectedVersion === null ? null : findReplacementVersion(selectedVersion, versions);
 
   const comparisonVersions = useMemo(() => {
     const documentId =
@@ -281,13 +298,15 @@ export function DocumentsWorkspace() {
 
   return (
     <>
-      <header className="topbar topbar--documents">
-        <div>
-          <p className="eyebrow">Governed document lifecycle</p>
-          <h1>Documents</h1>
-        </div>
-        <span className="environment-badge">Versioned Markdown</span>
-      </header>
+      {!embedded && (
+        <header className="topbar topbar--documents">
+          <div>
+            <p className="eyebrow">Governed document lifecycle</p>
+            <h1>Documents</h1>
+          </div>
+          <span className="environment-badge">Versioned Markdown</span>
+        </header>
+      )}
 
       <section
         className="content-section document-section document-section--generator"
@@ -311,20 +330,22 @@ export function DocumentsWorkspace() {
         ) : (
           <div className="form-panel document-generation-form">
             <div className="form-grid">
-              <div className="field">
-                <label htmlFor="document-project">Project</label>
-                <select
-                  id="document-project"
-                  value={projectId}
-                  onChange={(event) => setProjectId(event.target.value)}
-                >
-                  {projects.items.map((project) => (
-                    <option key={project.id} value={project.id}>
-                      {project.key} — {project.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {!project && (
+                <div className="field">
+                  <label htmlFor="document-project">Project</label>
+                  <select
+                    id="document-project"
+                    value={projectId}
+                    onChange={(event) => setProjectId(event.target.value)}
+                  >
+                    {projects.items.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.key} — {item.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <SnapshotSelect
                 id="document-target"
@@ -375,7 +396,7 @@ export function DocumentsWorkspace() {
               <button
                 className="button button--primary"
                 type="button"
-                disabled={!targetRunId || generationActor.trim().length < 2 || isBusy}
+                disabled={!targetRunId || generationActor.trim().length < 2 || isBusy || project?.status === "ARCHIVED"}
                 onClick={() => void generate()}
               >
                 {isBusy ? "Working…" : "Generate version"}
@@ -430,7 +451,14 @@ export function DocumentsWorkspace() {
                       <span className="table-secondary-text">{version.title}</span>
                     </td>
                     <td>
-                      <StatusBadge status={version.status} />
+                      <StatusBadge
+                        status={version.status}
+                        label={
+                          version.status === "SUPERSEDED" && replacement === null
+                            ? "Previous version"
+                            : undefined
+                        }
+                      />
                       {isLatestVersion && (
                         <span className="table-secondary-text">Latest version</span>
                       )}
@@ -482,7 +510,14 @@ export function DocumentsWorkspace() {
               <p className="eyebrow">Version {selectedVersion.version}</p>
               <h2 id="document-detail-title">{selectedVersion.title}</h2>
               <div className="document-detail-badges">
-                <StatusBadge status={selectedVersion.status} />
+                <StatusBadge
+                  status={selectedVersion.status}
+                  label={
+                    selectedVersion.status === "SUPERSEDED" && selectedReplacement === null
+                      ? "Previous version"
+                      : undefined
+                  }
+                />
                 {selectedVersion.id === currentVersionId &&
                   selectedVersion.status !== "SUPERSEDED" && (
                     <span className="status-badge">Latest version</span>
@@ -866,10 +901,16 @@ function WorkflowActions({
   );
 }
 
-function StatusBadge({ status }: { status: GeneratedDocumentSummary["status"] }) {
+function StatusBadge({
+  status,
+  label,
+}: {
+  status: GeneratedDocumentSummary["status"];
+  label?: string;
+}) {
   return (
     <span className={`status-badge status-badge--${status.toLowerCase()}`}>
-      {formatStatus(status)}
+      {label ?? formatStatus(status)}
     </span>
   );
 }

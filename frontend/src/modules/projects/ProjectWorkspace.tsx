@@ -13,7 +13,11 @@ const initialForm: CreateProjectInput = {
 
 type LoadState = "loading" | "ready" | "error";
 
-export function ProjectWorkspace() {
+interface ProjectWorkspaceProps {
+  onOpenProject?: (project: Project) => void;
+}
+
+export function ProjectWorkspace({ onOpenProject }: ProjectWorkspaceProps = {}) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loadState, setLoadState] = useState<LoadState>("loading");
   const [loadError, setLoadError] = useState("");
@@ -167,33 +171,44 @@ export function ProjectWorkspace() {
                       </span>
                     </td>
                     <td className="table-action-column">
-                      {pendingArchiveId === project.id ? (
-                        <span className="inline-actions">
-                          <button
-                            type="button"
-                            className="button button--danger-quiet"
-                            onClick={() => void handleArchive(project)}
-                          >
-                            Confirm archive
-                          </button>
+                      <span className="project-row-actions">
+                        <button
+                          type="button"
+                          className="button button--secondary"
+                          aria-label={`Open ${project.name} workbench`}
+                          disabled={project.status === "ARCHIVED" || onOpenProject === undefined}
+                          onClick={() => onOpenProject?.(project)}
+                        >
+                          Open workbench
+                        </button>
+                        {pendingArchiveId === project.id ? (
+                          <span className="inline-actions">
+                            <button
+                              type="button"
+                              className="button button--danger-quiet"
+                              onClick={() => void handleArchive(project)}
+                            >
+                              Confirm archive
+                            </button>
+                            <button
+                              type="button"
+                              className="button button--quiet"
+                              onClick={() => setPendingArchiveId(null)}
+                            >
+                              Cancel
+                            </button>
+                          </span>
+                        ) : (
                           <button
                             type="button"
                             className="button button--quiet"
-                            onClick={() => setPendingArchiveId(null)}
+                            disabled={project.status === "ARCHIVED"}
+                            onClick={() => setPendingArchiveId(project.id)}
                           >
-                            Cancel
+                            {project.status === "ARCHIVED" ? "Archived" : "Archive"}
                           </button>
-                        </span>
-                      ) : (
-                        <button
-                          type="button"
-                          className="button button--quiet"
-                          disabled={project.status === "ARCHIVED"}
-                          onClick={() => setPendingArchiveId(project.id)}
-                        >
-                          {project.status === "ARCHIVED" ? "Archived" : "Archive"}
-                        </button>
-                      )}
+                        )}
+                      </span>
                     </td>
                   </tr>
                 ))}
