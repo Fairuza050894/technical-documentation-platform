@@ -281,7 +281,7 @@ export function DocumentsWorkspace() {
 
   return (
     <>
-      <header className="topbar">
+      <header className="topbar topbar--documents">
         <div>
           <p className="eyebrow">Governed document lifecycle</p>
           <h1>Documents</h1>
@@ -289,7 +289,10 @@ export function DocumentsWorkspace() {
         <span className="environment-badge">Versioned Markdown</span>
       </header>
 
-      <section className="content-section" aria-labelledby="document-generator-title">
+      <section
+        className="content-section document-section document-section--generator"
+        aria-labelledby="document-generator-title"
+      >
         <div className="section-heading">
           <div>
             <h2 id="document-generator-title">Generate Technical Source Overview</h2>
@@ -306,7 +309,7 @@ export function DocumentsWorkspace() {
             <p>Generated documents require a project and a completed synchronization.</p>
           </div>
         ) : (
-          <div className="form-panel">
+          <div className="form-panel document-generation-form">
             <div className="form-grid">
               <div className="field">
                 <label htmlFor="document-project">Project</label>
@@ -358,6 +361,7 @@ export function DocumentsWorkspace() {
               <div className="field field--wide">
                 <label htmlFor="revision-reason">Revision reason</label>
                 <textarea
+                  className="document-revision-reason"
                   id="revision-reason"
                   value={revisionReason}
                   maxLength={500}
@@ -379,18 +383,21 @@ export function DocumentsWorkspace() {
             </div>
           </div>
         )}
-        <p className="loading-state" role="status">
+        <p className="loading-state document-generation-status" role="status">
           {message}
         </p>
       </section>
 
-      <section className="content-section" aria-labelledby="document-history-title">
+      <section
+        className="content-section document-section document-section--history"
+        aria-labelledby="document-history-title"
+      >
         <div className="section-heading section-heading--split">
           <div>
             <h2 id="document-history-title">Version history</h2>
             <p>Every distinct checksum is stored as an immutable document version.</p>
           </div>
-          <span className="record-count">{versions.length} versions</span>
+          <span className="record-count">{formatCount(versions.length, "version")}</span>
         </div>
 
         {versions.length === 0 ? (
@@ -412,7 +419,11 @@ export function DocumentsWorkspace() {
                 </tr>
               </thead>
               <tbody>
-                {versions.map((version) => (
+                {versions.map((version) => {
+                  const replacement = findReplacementVersion(version, versions);
+                  const isLatestVersion =
+                    version.id === currentVersionId && version.status !== "SUPERSEDED";
+                  return (
                   <tr key={version.id} className={selectedVersion?.id === version.id ? "is-selected" : undefined}>
                     <td>
                       <strong>v{version.version}</strong>
@@ -420,8 +431,13 @@ export function DocumentsWorkspace() {
                     </td>
                     <td>
                       <StatusBadge status={version.status} />
-                      {version.id === currentVersionId && (
-                        <span className="table-secondary-text">Current version</span>
+                      {isLatestVersion && (
+                        <span className="table-secondary-text">Latest version</span>
+                      )}
+                      {version.status === "SUPERSEDED" && (
+                        <span className="table-secondary-text">
+                          {replacement ? `Replaced by v${replacement.version}` : "No longer current"}
+                        </span>
                       )}
                       {version.id === approvedVersionId && (
                         <span className="table-secondary-text">Current approved</span>
@@ -448,7 +464,8 @@ export function DocumentsWorkspace() {
                       </button>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -456,14 +473,20 @@ export function DocumentsWorkspace() {
       </section>
 
       {selectedVersion !== null && (
-        <section className="content-section" aria-labelledby="document-detail-title">
+        <section
+          className="content-section document-section document-section--detail"
+          aria-labelledby="document-detail-title"
+        >
           <div className="section-heading section-heading--split">
             <div>
               <p className="eyebrow">Version {selectedVersion.version}</p>
               <h2 id="document-detail-title">{selectedVersion.title}</h2>
               <div className="document-detail-badges">
                 <StatusBadge status={selectedVersion.status} />
-                {selectedVersion.id === currentVersionId && <span className="status-badge">Current</span>}
+                {selectedVersion.id === currentVersionId &&
+                  selectedVersion.status !== "SUPERSEDED" && (
+                    <span className="status-badge">Latest version</span>
+                  )}
                 {selectedVersion.id === approvedVersionId && <span className="status-badge status-badge--approved">Official approved</span>}
               </div>
             </div>
@@ -555,7 +578,10 @@ export function DocumentsWorkspace() {
         </section>
       )}
 
-      <section className="content-section" aria-labelledby="version-comparison-title">
+      <section
+        className="content-section document-section document-section--comparison"
+        aria-labelledby="version-comparison-title"
+      >
         <div className="section-heading">
           <div>
             <h2 id="version-comparison-title">Compare document versions</h2>
@@ -827,7 +853,7 @@ function WorkflowActions({
         disabled={disabled || actorInvalid}
         onClick={() => onAction("supersede")}
       >
-        Supersede approved version
+        Mark as replaced
       </button>
     );
   }
@@ -835,7 +861,7 @@ function WorkflowActions({
     <p className="loading-state">
       {version.status === "CHANGES_REQUESTED"
         ? "Generate a revised version to address the requested changes."
-        : "Superseded versions are read-only."}
+        : "Replaced versions are read-only."}
     </p>
   );
 }
@@ -874,7 +900,33 @@ function SummaryMetric({ label, value }: { label: string; value: number }) {
   );
 }
 
+function findReplacementVersion(
+  version: GeneratedDocumentSummary,
+  versions: GeneratedDocumentSummary[],
+): GeneratedDocumentSummary | null {
+  const newerVersions = versions
+    .filter(
+      (candidate) =>
+        candidate.document_id === version.document_id &&
+        versionNumber(candidate.version) > versionNumber(version.version),
+    )
+    .sort((left, right) => versionNumber(left.version) - versionNumber(right.version));
+  return newerVersions[0] ?? null;
+}
+
+function versionNumber(value: string): number {
+  const [major = "0", minor = "0"] = value.split(".");
+  return Number(major) * 1000 + Number(minor);
+}
+
+function formatCount(value: number, singular: string): string {
+  return `${value} ${value === 1 ? singular : `${singular}s`}`;
+}
+
 function formatStatus(value: string): string {
+  if (value === "SUPERSEDED") {
+    return "Replaced";
+  }
   return value
     .toLowerCase()
     .split("_")

@@ -242,3 +242,20 @@ Run the dedicated audit with:
 ```bash
 make audit-product-ui
 ```
+
+## Visual refinement and product polish
+
+The application chrome and Operational Overview use a compact enterprise workbench pattern
+rather than a repeated card grid. Primary navigation includes consistent inline SVG icons,
+while the Overview combines a flat operational signal strip, activity stream, project health
+matrix, and an action rail.
+
+The visual system keeps native form controls and semantic HTML, but applies consistent control
+height, label hierarchy, table density, status semantics, focus behavior, and responsive
+navigation. No gradient, glass effect, decorative illustration, or fabricated chart is used.
+
+Run the dedicated audit with:
+
+```bash
+make audit-visual-refinement
+```

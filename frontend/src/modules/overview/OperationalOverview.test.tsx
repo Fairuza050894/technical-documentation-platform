@@ -171,7 +171,15 @@ describe("OperationalOverview", () => {
     expect(
       screen.getByText("Breaking findings in current document versions"),
     ).toBeInTheDocument();
+    expect(screen.getByText("3 conditions")).toBeInTheDocument();
     expect(screen.getByText("Document v1.1")).toBeInTheDocument();
+    expect(
+      screen.getByRole("list", {
+        name: "Recent synchronization and document activities",
+      }),
+    ).toBeInTheDocument();
+    expect(document.querySelector(".signal-strip")).not.toBeNull();
+    expect(document.querySelector(".metric-card")).toBeNull();
 
     const projectHealth = screen.getByRole("table", {
       name: "Active project operational health",

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
+import { Icon, type IconName } from "../../shared/ui/Icon";
 import { listSynchronizations } from "../catalog/api";
 import type { SynchronizationRun } from "../catalog/types";
 import { listGeneratedDocuments } from "../documents/api";
@@ -117,8 +118,7 @@ export function OperationalOverview({
           <p className="eyebrow">Operational workspace</p>
           <h1>Overview</h1>
           <p className="page-summary">
-            Source-backed status across projects, technical sources, snapshots, and document
-            reviews.
+            Current source, synchronization, and documentation state across the workspace.
           </p>
         </div>
         <div className="page-actions" aria-label="Quick actions">
@@ -127,6 +127,7 @@ export function OperationalOverview({
             className="button button--secondary"
             onClick={() => onNavigate("Sources")}
           >
+            <Icon name="upload" size={15} />
             Import source
           </button>
           <button
@@ -134,6 +135,7 @@ export function OperationalOverview({
             className="button button--primary"
             onClick={() => onNavigate("Documents")}
           >
+            <Icon name="documents" size={15} />
             Generate document
           </button>
         </div>
@@ -141,7 +143,13 @@ export function OperationalOverview({
 
       {serviceState === "unavailable" && (
         <div className="notice notice--error" role="alert">
-          <span>The backend API is offline. Operational data may be unavailable.</span>
+          <span className="notice__icon" aria-hidden="true">
+            <Icon name="alert" size={17} />
+          </span>
+          <span className="notice__body">
+            <strong>Backend API is offline</strong>
+            <small>Operational data may be unavailable until the service is started.</small>
+          </span>
           <code>make dev-backend</code>
         </div>
       )}
@@ -155,254 +163,308 @@ export function OperationalOverview({
 
       {loadState === "error" && (
         <div className="notice notice--error" role="alert">
-          <span>{loadError}</span>
+          <span className="notice__icon" aria-hidden="true">
+            <Icon name="alert" size={17} />
+          </span>
+          <span className="notice__body">
+            <strong>Operational overview could not load</strong>
+            <small>{loadError}</small>
+          </span>
           <button
             type="button"
             className="button button--secondary"
             onClick={() => globalThis.location.reload()}
           >
+            <Icon name="refresh" size={15} />
             Reload
           </button>
         </div>
       )}
 
       {loadState === "ready" && (
-        <>
-          <section className="content-section" aria-labelledby="workspace-metrics-title">
-            <div className="section-heading section-heading--split">
+        <div className="operational-dashboard">
+          <section className="signal-region" aria-labelledby="workspace-metrics-title">
+            <div className="signal-region__heading">
               <div>
                 <h2 id="workspace-metrics-title">Workspace metrics</h2>
-                <p>Current counts assembled from existing platform APIs.</p>
+                <p>Live operational signals from existing platform APIs.</p>
               </div>
               <span className="data-provenance">
+                <span className="data-provenance__dot" aria-hidden="true" />
                 Live data {serviceVersion ? `· API v${serviceVersion}` : ""}
               </span>
             </div>
 
-            <div className="metric-grid">
-              <MetricCard
+            <div className="signal-strip">
+              <SignalItem
+                icon="projects"
                 label="Active projects"
                 value={dashboard.activeProjects}
-                detail="Project boundaries available for technical sources."
+                detail="Workspace boundaries"
                 onClick={() => onNavigate("Projects")}
               />
-              <MetricCard
+              <SignalItem
+                icon="source"
                 label="Ready sources"
                 value={dashboard.readySources}
-                detail="Validated OpenAPI artifacts currently available."
+                detail="Validated artifacts"
                 onClick={() => onNavigate("Sources")}
               />
-              <MetricCard
+              <SignalItem
+                icon="sync"
                 label="Completed snapshots"
                 value={dashboard.completedSnapshots}
-                detail="Successful deterministic synchronization runs."
+                detail="Successful sync runs"
                 onClick={() => onNavigate("API Catalog")}
               />
-              <MetricCard
+              <SignalItem
+                icon="review"
                 label="Pending reviews"
                 value={dashboard.pendingReviews}
-                detail="Versions in review or waiting for changes."
+                detail="Lifecycle actions"
                 tone={dashboard.pendingReviews > 0 ? "warning" : "neutral"}
                 onClick={() => onNavigate("Documents")}
               />
             </div>
           </section>
 
-          <div className="overview-layout">
-            <section className="content-section overview-panel" aria-labelledby="attention-title">
-              <div className="section-heading">
-                <div>
-                  <h2 id="attention-title">Attention required</h2>
-                  <p>Conditions that may block publication or source accuracy.</p>
+          <div className="operations-workbench">
+            <div className="operations-main">
+              <section className="operations-section" aria-labelledby="recent-activity-title">
+                <div className="operations-section__heading">
+                  <div>
+                    <p className="section-kicker">Event stream</p>
+                    <h2 id="recent-activity-title">Recent activity</h2>
+                    <p>Latest synchronization and document lifecycle events.</p>
+                  </div>
+                  <span className="record-count">{dashboard.activities.length} activities</span>
                 </div>
-              </div>
 
-              {dashboard.attention.length === 0 ? (
-                <div className="attention-clear">
-                  <span className="service-dot service-dot--available" aria-hidden="true" />
-                  <span>
-                    <strong>No operational issues detected</strong>
-                    <small>All available source-backed checks are clear.</small>
-                  </span>
-                </div>
-              ) : (
-                <ul className="attention-list">
-                  {dashboard.attention.map((item) => (
-                    <li key={item.label}>
-                      <span className={`attention-severity attention-severity--${item.tone}`}>
-                        {item.value}
-                      </span>
-                      <span>
-                        <strong>{item.label}</strong>
-                        <small>{item.detail}</small>
-                      </span>
-                      <button
-                        type="button"
-                        className="button button--quiet"
-                        onClick={() => onNavigate(item.target)}
-                      >
-                        Review
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-
-            <section className="content-section overview-panel" aria-labelledby="quick-actions-title">
-              <div className="section-heading">
-                <div>
-                  <h2 id="quick-actions-title">Quick actions</h2>
-                  <p>Continue the source-to-document workflow.</p>
-                </div>
-              </div>
-
-              <div className="quick-action-list">
-                <QuickAction
-                  title="Manage projects"
-                  detail="Create or archive project boundaries."
-                  onClick={() => onNavigate("Projects")}
-                />
-                <QuickAction
-                  title="Import OpenAPI"
-                  detail="Register a JSON or YAML source artifact."
-                  onClick={() => onNavigate("Sources")}
-                />
-                <QuickAction
-                  title="Synchronize catalog"
-                  detail="Create a normalized source snapshot."
-                  onClick={() => onNavigate("API Catalog")}
-                />
-                <QuickAction
-                  title="Review documents"
-                  detail="Open lifecycle status and approval history."
-                  onClick={() => onNavigate("Documents")}
-                />
-              </div>
-            </section>
-          </div>
-
-          <section className="content-section" aria-labelledby="recent-activity-title">
-            <div className="section-heading section-heading--split">
-              <div>
-                <h2 id="recent-activity-title">Recent activity</h2>
-                <p>Latest synchronization and document lifecycle events.</p>
-              </div>
-              <span className="record-count">{dashboard.activities.length} activities</span>
-            </div>
-
-            {dashboard.activities.length === 0 ? (
-              <div className="empty-state empty-state--compact">
-                <h3>No activity yet</h3>
-                <p>Import and synchronize a source to begin the traceable workflow.</p>
-              </div>
-            ) : (
-              <div className="table-frame table-frame--dense">
-                <table>
-                  <caption className="visually-hidden">
-                    Recent synchronization and document activities
-                  </caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">Time</th>
-                      <th scope="col">Activity</th>
-                      <th scope="col">Context</th>
-                      <th scope="col">Result</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                {dashboard.activities.length === 0 ? (
+                  <div className="empty-state empty-state--compact">
+                    <span className="empty-state__icon" aria-hidden="true">
+                      <Icon name="activity" size={19} />
+                    </span>
+                    <div>
+                      <h3>No activity yet</h3>
+                      <p>Import and synchronize a source to begin the traceable workflow.</p>
+                    </div>
+                  </div>
+                ) : (
+                  <ol className="activity-stream" aria-label="Recent synchronization and document activities">
                     {dashboard.activities.map((activity) => (
-                      <tr key={activity.id}>
-                        <td>
-                          <time dateTime={activity.timestamp}>
-                            {formatDateTime(activity.timestamp)}
-                          </time>
-                        </td>
-                        <td>
+                      <li key={activity.id}>
+                        <span
+                          className={`activity-stream__icon activity-stream__icon--${activity.tone}`}
+                          aria-hidden="true"
+                        >
+                          <Icon
+                            name={activity.action.startsWith("Document") ? "documents" : "sync"}
+                            size={16}
+                          />
+                        </span>
+                        <span className="activity-stream__content">
                           <strong>{activity.action}</strong>
-                        </td>
-                        <td>{activity.context}</td>
-                        <td>
+                          <small>{activity.context}</small>
+                        </span>
+                        <span className="activity-stream__meta">
                           <span className={`result-label result-label--${activity.tone}`}>
                             {activity.result}
                           </span>
-                        </td>
-                      </tr>
+                          <time dateTime={activity.timestamp}>
+                            {formatDateTime(activity.timestamp)}
+                          </time>
+                        </span>
+                      </li>
                     ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
+                  </ol>
+                )}
+              </section>
 
-          <section className="content-section" aria-labelledby="project-health-title">
-            <div className="section-heading section-heading--split">
-              <div>
-                <h2 id="project-health-title">Project health</h2>
-                <p>Latest source, snapshot, and document status by active project.</p>
-              </div>
-              <button
-                type="button"
-                className="button button--secondary"
-                onClick={() => onNavigate("Projects")}
-              >
-                Open projects
-              </button>
+              <section className="operations-section" aria-labelledby="project-health-title">
+                <div className="operations-section__heading">
+                  <div>
+                    <p className="section-kicker">Coverage matrix</p>
+                    <h2 id="project-health-title">Project health</h2>
+                    <p>Latest source, snapshot, and document state by active project.</p>
+                  </div>
+                  <button
+                    type="button"
+                    className="text-action"
+                    onClick={() => onNavigate("Projects")}
+                  >
+                    Open projects
+                    <Icon name="arrow-right" size={14} />
+                  </button>
+                </div>
+
+                {dashboard.projectRows.length === 0 ? (
+                  <div className="empty-state empty-state--compact">
+                    <span className="empty-state__icon" aria-hidden="true">
+                      <Icon name="projects" size={19} />
+                    </span>
+                    <div>
+                      <h3>No active projects</h3>
+                      <p>Create a project before importing technical sources.</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="table-frame table-frame--dense health-table">
+                    <table>
+                      <caption className="visually-hidden">
+                        Active project operational health
+                      </caption>
+                      <thead>
+                        <tr>
+                          <th scope="col">Project</th>
+                          <th scope="col">Sources</th>
+                          <th scope="col">Operations</th>
+                          <th scope="col">Latest sync</th>
+                          <th scope="col">Document</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {dashboard.projectRows.map((row) => (
+                          <tr key={row.project.id}>
+                            <td>
+                              <strong>{row.project.name}</strong>
+                              <span className="table-secondary-text">{row.project.key}</span>
+                            </td>
+                            <td className="numeric-cell">{row.sourceCount}</td>
+                            <td className="numeric-cell">{row.operationCount}</td>
+                            <td>
+                              <span className={`result-label result-label--${row.syncTone}`}>
+                                {row.latestSync}
+                              </span>
+                            </td>
+                            <td>{row.documentState}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </section>
             </div>
 
-            {dashboard.projectRows.length === 0 ? (
-              <div className="empty-state empty-state--compact">
-                <h3>No active projects</h3>
-                <p>Create a project before importing technical sources.</p>
-              </div>
-            ) : (
-              <div className="table-frame table-frame--dense">
-                <table>
-                  <caption className="visually-hidden">Active project operational health</caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">Project</th>
-                      <th scope="col">Sources</th>
-                      <th scope="col">Operations</th>
-                      <th scope="col">Latest sync</th>
-                      <th scope="col">Document</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {dashboard.projectRows.map((row) => (
-                      <tr key={row.project.id}>
-                        <td>
-                          <strong>{row.project.name}</strong>
-                          <span className="table-secondary-text">{row.project.key}</span>
-                        </td>
-                        <td>{row.sourceCount}</td>
-                        <td>{row.operationCount}</td>
-                        <td>
-                          <span className={`result-label result-label--${row.syncTone}`}>
-                            {row.latestSync}
-                          </span>
-                        </td>
-                        <td>{row.documentState}</td>
-                      </tr>
+            <aside className="operations-rail" aria-label="Operational actions">
+              <section className="rail-section" aria-labelledby="attention-title">
+                <div className="rail-section__heading">
+                  <span className="rail-section__icon rail-section__icon--warning" aria-hidden="true">
+                    <Icon name="alert" size={16} />
+                  </span>
+                  <div>
+                    <h2 id="attention-title">Attention required</h2>
+                    <p>Conditions that may block publication.</p>
+                  </div>
+                  {dashboard.attention.length > 0 && (
+                    <span className="rail-count">
+                      {formatCount(dashboard.attention.length, "condition")}
+                    </span>
+                  )}
+                </div>
+
+                {dashboard.attention.length === 0 ? (
+                  <div className="attention-clear">
+                    <span className="attention-clear__icon" aria-hidden="true">
+                      <Icon name="check" size={17} />
+                    </span>
+                    <span>
+                      <strong>No operational issues detected</strong>
+                      <small>Available source-backed checks are clear.</small>
+                    </span>
+                  </div>
+                ) : (
+                  <ul className="attention-list">
+                    {dashboard.attention.map((item) => (
+                      <li key={item.label}>
+                        <span
+                          className={`attention-severity attention-severity--${item.tone}`}
+                          aria-label={`${item.value} ${item.label.toLowerCase()}`}
+                        >
+                          {item.value}
+                        </span>
+                        <span className="attention-list__copy">
+                          <strong>{item.label}</strong>
+                          <small>{item.detail}</small>
+                        </span>
+                        <button
+                          type="button"
+                          className="icon-action"
+                          aria-label={`Review ${item.label}`}
+                          onClick={() => onNavigate(item.target)}
+                        >
+                          <Icon name="arrow-right" size={15} />
+                        </button>
+                      </li>
                     ))}
-                  </tbody>
-                </table>
+                  </ul>
+                )}
+              </section>
+
+              <section className="rail-section" aria-labelledby="quick-actions-title">
+                <div className="rail-section__heading">
+                  <span className="rail-section__icon" aria-hidden="true">
+                    <Icon name="activity" size={16} />
+                  </span>
+                  <div>
+                    <h2 id="quick-actions-title">Quick actions</h2>
+                    <p>Continue the source-to-document workflow.</p>
+                  </div>
+                </div>
+
+                <div className="quick-action-list">
+                  <QuickAction
+                    icon="projects"
+                    title="Manage projects"
+                    detail="Create or archive boundaries."
+                    onClick={() => onNavigate("Projects")}
+                  />
+                  <QuickAction
+                    icon="upload"
+                    title="Import OpenAPI"
+                    detail="Register a JSON or YAML artifact."
+                    onClick={() => onNavigate("Sources")}
+                  />
+                  <QuickAction
+                    icon="sync"
+                    title="Synchronize catalog"
+                    detail="Create a normalized snapshot."
+                    onClick={() => onNavigate("API Catalog")}
+                  />
+                  <QuickAction
+                    icon="review"
+                    title="Review documents"
+                    detail="Open approval and revision history."
+                    onClick={() => onNavigate("Documents")}
+                  />
+                </div>
+              </section>
+
+              <div className="rail-footnote">
+                <Icon name="server" size={14} />
+                <span>
+                  Data is assembled from deterministic project, source, synchronization,
+                  and document APIs.
+                </span>
               </div>
-            )}
-          </section>
-        </>
+            </aside>
+          </div>
+        </div>
       )}
     </>
   );
 }
 
-function MetricCard({
+function SignalItem({
+  icon,
   label,
   value,
   detail,
   tone = "neutral",
   onClick,
 }: {
+  icon: IconName;
   label: string;
   value: number;
   detail: string;
@@ -412,33 +474,43 @@ function MetricCard({
   return (
     <button
       type="button"
-      className={`metric-card metric-card--${tone}`}
+      className={`signal-item signal-item--${tone}`}
       onClick={onClick}
       aria-label={`${label}: ${value}. ${detail}`}
     >
-      <span>{label}</span>
+      <span className="signal-item__icon" aria-hidden="true">
+        <Icon name={icon} size={17} />
+      </span>
+      <span className="signal-item__copy">
+        <span>{label}</span>
+        <small>{detail}</small>
+      </span>
       <strong>{value}</strong>
-      <small>{detail}</small>
     </button>
   );
 }
 
 function QuickAction({
+  icon,
   title,
   detail,
   onClick,
 }: {
+  icon: IconName;
   title: string;
   detail: string;
   onClick: () => void;
 }) {
   return (
     <button type="button" className="quick-action" onClick={onClick}>
-      <span>
+      <span className="quick-action__icon" aria-hidden="true">
+        <Icon name={icon} size={16} />
+      </span>
+      <span className="quick-action__copy">
         <strong>{title}</strong>
         <small>{detail}</small>
       </span>
-      <span aria-hidden="true">→</span>
+      <Icon className="quick-action__arrow" name="arrow-right" size={14} />
     </button>
   );
 }
@@ -647,7 +719,14 @@ function formatDateTime(value: string): string {
   }).format(timestamp);
 }
 
+function formatCount(value: number, singular: string): string {
+  return `${value} ${value === 1 ? singular : `${singular}s`}`;
+}
+
 function formatStatus(value: string): string {
+  if (value === "SUPERSEDED") {
+    return "Replaced";
+  }
   return value
     .toLowerCase()
     .split("_")

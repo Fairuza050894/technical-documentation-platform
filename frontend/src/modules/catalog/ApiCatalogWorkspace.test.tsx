@@ -117,6 +117,8 @@ describe("ApiCatalogWorkspace", () => {
 
     await waitFor(() => expect(screen.getByText("/orders")).toBeInTheDocument());
     expect(screen.getByText("Create order")).toBeInTheDocument();
+    expect(screen.getAllByText("Commerce OpenAPI").length).toBeGreaterThan(0);
+    expect(screen.getByLabelText("Source")).toHaveValue(source.id);
     expect(screen.getByText("#/paths/~1orders/post")).toBeInTheDocument();
     expect(screen.getByText("Order")).toBeInTheDocument();
   });

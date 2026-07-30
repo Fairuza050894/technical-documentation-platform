@@ -43,6 +43,9 @@ describe("App", () => {
     render(<App />);
 
     expect(screen.getByRole("heading", { name: "Overview" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Overview" }).querySelector("svg"),
+    ).not.toBeNull();
     await waitFor(() => {
       expect(
         screen.getByRole("button", { name: /Active projects: 0/ }),

@@ -30,6 +30,10 @@ export function ApiCatalogWorkspace() {
   const [syncError, setSyncError] = useState("");
 
   const selectedSource = sources.find((source) => source.id === selectedSourceId);
+  const sourceNameById = useMemo(
+    () => new Map(sources.map((source) => [source.id, source.name])),
+    [sources],
+  );
   const selectedOperation = useMemo(
     () =>
       catalog.operations.find(
@@ -41,14 +45,20 @@ export function ApiCatalogWorkspace() {
   const loadProjectData = useCallback(
     async (
       projectId: string,
-      sourceId: string,
+      sourceId: string | null,
       signal?: AbortSignal,
     ): Promise<void> => {
-      const [sourceResponse, catalogResponse] = await Promise.all([
-        listSources(projectId, signal),
-        getApiCatalog(projectId, sourceId || undefined, signal),
-      ]);
+      const sourceResponse = await listSources(projectId, signal);
+      const readySources = sourceResponse.items.filter((source) => source.status === "READY");
+      const resolvedSourceId =
+        sourceId === null ? latestSourceId(readySources) : sourceId;
+      const catalogResponse = await getApiCatalog(
+        projectId,
+        resolvedSourceId || undefined,
+        signal,
+      );
       setSources(sourceResponse.items);
+      setSelectedSourceId(resolvedSourceId);
       setCatalog(catalogResponse);
       setSelectedOperationKey(
         catalogResponse.operations[0] ? operationKey(catalogResponse.operations[0]) : "",
@@ -74,7 +84,7 @@ export function ApiCatalogWorkspace() {
           setLoadState("ready");
           return;
         }
-        await loadProjectData(firstProjectId, "", controller.signal);
+        await loadProjectData(firstProjectId, null, controller.signal);
       } catch (error: unknown) {
         if (error instanceof DOMException && error.name === "AbortError") {
           return;
@@ -94,7 +104,7 @@ export function ApiCatalogWorkspace() {
     setLoadState("loading");
     setLoadError("");
     try {
-      await loadProjectData(projectId, "");
+      await loadProjectData(projectId, null);
     } catch (error: unknown) {
       setLoadError(error instanceof Error ? error.message : "The API catalog could not be loaded.");
       setLoadState("error");
@@ -261,6 +271,7 @@ export function ApiCatalogWorkspace() {
                       <th scope="col">Method</th>
                       <th scope="col">Path</th>
                       <th scope="col">Summary</th>
+                      <th scope="col">Source</th>
                       <th scope="col">Security</th>
                     </tr>
                   </thead>
@@ -286,6 +297,11 @@ export function ApiCatalogWorkspace() {
                           </button>
                         </td>
                         <td>{operation.summary || operation.operation_id || "No summary"}</td>
+                        <td>
+                          <span className="source-reference">
+                            {sourceNameById.get(operation.source_id) ?? operation.source_id.slice(0, 8)}
+                          </span>
+                        </td>
                         <td>{operation.security_schemes.join(", ") || "None declared"}</td>
                       </tr>
                     ))}
@@ -362,6 +378,16 @@ function OperationEvidence({ operation }: { operation: ApiOperation }) {
       </dl>
     </aside>
   );
+}
+
+function latestSourceId(sources: TechnicalSource[]): string {
+  return [...sources]
+    .sort((left, right) => timestampValue(right.updated_at) - timestampValue(left.updated_at))[0]?.id ?? "";
+}
+
+function timestampValue(value: string): number {
+  const timestamp = new Date(value).getTime();
+  return Number.isNaN(timestamp) ? 0 : timestamp;
 }
 
 function operationKey(operation: ApiOperation): string {

@@ -3,12 +3,10 @@ import { useEffect, useState } from "react";
 import { ApiCatalogWorkspace } from "../modules/catalog/ApiCatalogWorkspace";
 import { ChangesWorkspace } from "../modules/changes/ChangesWorkspace";
 import { DocumentsWorkspace } from "../modules/documents/DocumentsWorkspace";
-import {
-  OperationalOverview,
-  type OverviewNavigationTarget,
-} from "../modules/overview/OperationalOverview";
+import { OperationalOverview } from "../modules/overview/OperationalOverview";
 import { ProjectWorkspace } from "../modules/projects/ProjectWorkspace";
 import { SourceWorkspace } from "../modules/sources/SourceWorkspace";
+import { Icon, type IconName } from "../shared/ui/Icon";
 
 interface HealthResponse {
   status: "ok";
@@ -26,27 +24,30 @@ const navigationGroups = [
   {
     label: "Workspace",
     items: [
-      { id: "Overview", label: "Overview" },
-      { id: "Projects", label: "Projects" },
+      { id: "Overview", label: "Overview", icon: "overview" },
+      { id: "Projects", label: "Projects", icon: "projects" },
     ],
   },
   {
-    label: "Sources",
+    label: "Source intelligence",
     items: [
-      { id: "Sources", label: "Source registry" },
-      { id: "API Catalog", label: "API catalog" },
-      { id: "Changes", label: "Change analysis" },
+      { id: "Sources", label: "Source registry", icon: "source" },
+      { id: "API Catalog", label: "API catalog", icon: "catalog" },
+      { id: "Changes", label: "Change analysis", icon: "changes" },
     ],
   },
   {
     label: "Documentation",
-    items: [{ id: "Documents", label: "Documents" }],
+    items: [{ id: "Documents", label: "Documents", icon: "documents" }],
   },
   {
-    label: "System",
-    items: [{ id: "System status", label: "System status" }],
+    label: "Platform",
+    items: [{ id: "System status", label: "System status", icon: "server" }],
   },
-] as const;
+] as const satisfies ReadonlyArray<{
+  label: string;
+  items: ReadonlyArray<{ id: string; label: string; icon: IconName }>;
+}>;
 
 type NavigationItem = (typeof navigationGroups)[number]["items"][number]["id"];
 
@@ -54,9 +55,18 @@ const navigationLabels = Object.fromEntries(
   navigationGroups.flatMap((group) => group.items.map((item) => [item.id, item.label])),
 ) as Record<NavigationItem, string>;
 
+const navigationIcons = Object.fromEntries(
+  navigationGroups.flatMap((group) => group.items.map((item) => [item.id, item.icon])),
+) as Record<NavigationItem, IconName>;
+
 export function App() {
   const [apiState, setApiState] = useState<ApiState>({ status: "loading" });
   const [activeNavigation, setActiveNavigation] = useState<NavigationItem>("Overview");
+
+  useEffect(() => {
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, [activeNavigation]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -83,34 +93,53 @@ export function App() {
     return () => controller.abort();
   }, []);
 
-  function navigate(target: OverviewNavigationTarget): void {
+  function navigate(target: NavigationItem): void {
     setActiveNavigation(target);
   }
 
   const activeLabel = navigationLabels[activeNavigation];
+  const activeIcon = navigationIcons[activeNavigation];
+  const environment =
+    apiState.status === "available" ? apiState.health.environment : "local";
+  const serviceLabel =
+    apiState.status === "loading"
+      ? "Checking"
+      : apiState.status === "available"
+        ? "Connected"
+        : "Offline";
 
   return (
     <div className="app-shell">
       <aside className="sidebar" aria-label="Primary navigation">
         <div className="product-mark" aria-label="Technical Documentation Platform">
           <span className="product-mark__symbol" aria-hidden="true">
-            TD
+            <Icon name="documents" size={17} />
           </span>
-          <span>
+          <span className="product-mark__copy">
             <strong>Technical Docs</strong>
             <small>Documentation platform</small>
           </span>
         </div>
 
         <div className="workspace-context" aria-label="Current workspace context">
-          <span>Workspace</span>
-          <strong>All projects</strong>
+          <span className="workspace-context__icon" aria-hidden="true">
+            <Icon name="folder" size={16} />
+          </span>
+          <span className="workspace-context__copy">
+            <small>Workspace</small>
+            <strong>All projects</strong>
+          </span>
+          <Icon className="workspace-context__chevron" name="chevron-down" size={14} />
         </div>
 
         <nav className="primary-navigation">
           {navigationGroups.map((group) => (
-            <section className="navigation-group" aria-labelledby={`nav-${group.label}`} key={group.label}>
-              <h2 id={`nav-${group.label}`}>{group.label}</h2>
+            <section
+              className="navigation-group"
+              aria-labelledby={`nav-${group.label.replaceAll(" ", "-")}`}
+              key={group.label}
+            >
+              <h2 id={`nav-${group.label.replaceAll(" ", "-")}`}>{group.label}</h2>
               <ul className="navigation-list">
                 {group.items.map((item) => (
                   <li key={item.id}>
@@ -122,10 +151,12 @@ export function App() {
                           : "navigation-item"
                       }
                       aria-current={item.id === activeNavigation ? "page" : undefined}
-                      onClick={() => setActiveNavigation(item.id)}
+                      onClick={() => navigate(item.id)}
                     >
-                      <span className="navigation-item__marker" aria-hidden="true" />
-                      {item.label}
+                      <span className="navigation-item__icon" aria-hidden="true">
+                        <Icon name={item.icon} size={17} />
+                      </span>
+                      <span className="navigation-item__label">{item.label}</span>
                     </button>
                   </li>
                 ))}
@@ -134,7 +165,18 @@ export function App() {
           ))}
         </nav>
 
-        <div className="sidebar-service">
+        <div className="sidebar-service" aria-label={`Backend API ${serviceLabel}`}>
+          <span className="sidebar-service__icon" aria-hidden="true">
+            <Icon name="server" size={16} />
+          </span>
+          <span className="sidebar-service__copy">
+            <strong>Backend API</strong>
+            <small>
+              {apiState.status === "loading" && "Checking service"}
+              {apiState.status === "available" && `v${apiState.health.version}`}
+              {apiState.status === "unavailable" && "Not connected"}
+            </small>
+          </span>
           <span
             className={
               apiState.status === "available"
@@ -143,14 +185,6 @@ export function App() {
             }
             aria-hidden="true"
           />
-          <span>
-            <strong>Backend API</strong>
-            <small>
-              {apiState.status === "loading" && "Checking service"}
-              {apiState.status === "available" && `v${apiState.health.version}`}
-              {apiState.status === "unavailable" && "Offline"}
-            </small>
-          </span>
         </div>
       </aside>
 
@@ -159,24 +193,34 @@ export function App() {
           <div className="breadcrumb" aria-label="Breadcrumb">
             <span>Workspace</span>
             <span aria-hidden="true">/</span>
-            <strong>{activeLabel}</strong>
+            <strong>
+              <Icon name={activeIcon} size={15} />
+              {activeLabel}
+            </strong>
           </div>
 
           <div className="utility-status" aria-label="Runtime context">
-            <span className="context-chip">All projects</span>
-            <span className="context-chip">
-              {apiState.status === "available" ? apiState.health.environment : "local"}
+            <span className="utility-status__item">
+              <span className="utility-status__label">Scope</span>
+              <strong>All projects</strong>
             </span>
+            <span className="utility-status__divider" aria-hidden="true" />
+            <span className="utility-status__item">
+              <span className="utility-status__label">Environment</span>
+              <strong>{environment}</strong>
+            </span>
+            <span className="utility-status__divider" aria-hidden="true" />
             <span
               className={
                 apiState.status === "available"
-                  ? "context-chip context-chip--success"
-                  : "context-chip context-chip--warning"
+                  ? "runtime-state runtime-state--success"
+                  : apiState.status === "unavailable"
+                    ? "runtime-state runtime-state--danger"
+                    : "runtime-state"
               }
             >
-              {apiState.status === "loading" && "API checking"}
-              {apiState.status === "available" && "API available"}
-              {apiState.status === "unavailable" && "API offline"}
+              <span className="runtime-state__dot" aria-hidden="true" />
+              {serviceLabel}
             </span>
           </div>
         </header>
@@ -210,7 +254,7 @@ function SystemStatus({ apiState }: { apiState: ApiState }) {
     <>
       <header className="topbar">
         <div>
-          <p className="eyebrow">System</p>
+          <p className="eyebrow">Platform runtime</p>
           <h1>System status</h1>
           <p className="page-summary">
             Runtime metadata and deterministic documentation policies.
@@ -223,6 +267,7 @@ function SystemStatus({ apiState }: { apiState: ApiState }) {
               : "environment-badge environment-badge--warning"
           }
         >
+          <span className="environment-badge__dot" aria-hidden="true" />
           {apiState.status === "available" ? "Operational" : "Service unavailable"}
         </span>
       </header>

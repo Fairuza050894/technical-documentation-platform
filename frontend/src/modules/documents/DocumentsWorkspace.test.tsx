@@ -191,7 +191,7 @@ describe("DocumentsWorkspace", () => {
 
   it("compares document versions and filters structured section changes", async () => {
     const target = documentVersion(versionTwoId, "1.1", "DRAFT", runTwoId);
-    const baseline = documentVersion(versionOneId, "1.0", "APPROVED", runOneId);
+    const baseline = documentVersion(versionOneId, "1.0", "SUPERSEDED", runOneId);
 
     vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
       const url = requestUrl(input);
@@ -242,6 +242,8 @@ describe("DocumentsWorkspace", () => {
     await waitFor(() =>
       expect(screen.getByRole("button", { name: "Compare versions" })).toBeEnabled(),
     );
+    expect(screen.getByText("Replaced", { selector: ".status-badge" })).toBeInTheDocument();
+    expect(screen.getByText("Replaced by v1.1")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Compare versions" }));
 
     await waitFor(() => expect(screen.getByText("Endpoint catalog")).toBeInTheDocument());
