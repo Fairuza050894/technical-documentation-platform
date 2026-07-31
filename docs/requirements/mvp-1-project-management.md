@@ -13,13 +13,13 @@ The user can create a project with:
 - Name
 - Stable project key
 - Optional description
-- Workspace type: Demo, Personal, or Enterprise
+- Ownership: Personal or Team
 
 The project key is normalized to uppercase and must be unique.
 
 ### FR-PROJ-002 List projects
 
-The user can view all projects with their name, key, workspace type, and lifecycle status.
+The user can view all projects with their name, key, ownership, workspace assignment, and lifecycle status.
 
 ### FR-PROJ-003 View project
 

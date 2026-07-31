@@ -28,7 +28,8 @@ class DeterministicTechnicalSourceOverviewRenderer:
                 f"| Project | {self._cell(str(context.project.key))} — "
                 f"{self._cell(str(context.project.name))} |"
             ),
-            f"| Workspace type | {self._cell(context.project.workspace_type.value)} |",
+            f"| Workspace ID | `{context.project.workspace_id}` |",
+            f"| Ownership | {self._cell(context.project.ownership_type.value.title())} |",
             f"| Source | {self._cell(str(context.source.name))} |",
             f"| Source type | {self._cell(context.source.source_type.value)} |",
             f"| Original file | {self._cell(str(context.source.original_file_name))} |",

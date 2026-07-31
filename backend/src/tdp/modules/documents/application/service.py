@@ -22,6 +22,7 @@ from tdp.modules.documents.application.ports import (
 from tdp.modules.documents.domain.comparison import DeterministicMarkdownSectionComparator
 from tdp.modules.documents.domain.errors import (
     DocumentNotFoundError,
+    DocumentProjectArchivedError,
     DocumentProjectNotFoundError,
     DocumentSnapshotNotFoundError,
     DocumentSourceNotFoundError,
@@ -38,10 +39,12 @@ from tdp.modules.documents.domain.model import (
     DocumentVersionNumber,
 )
 from tdp.modules.documents.domain.repository import DocumentRepository
-from tdp.modules.projects.domain.model import ProjectId
+from tdp.modules.projects.domain.model import Project, ProjectId, ProjectStatus
 from tdp.modules.projects.domain.repository import ProjectRepository
 from tdp.modules.sources.domain.model import SourceId
 from tdp.modules.sources.domain.repository import SourceRepository
+from tdp.modules.workspaces.domain.model import WorkspaceId, WorkspaceStatus
+from tdp.modules.workspaces.domain.repository import WorkspaceRepository
 
 
 class DocumentApplicationService:
@@ -53,6 +56,7 @@ class DocumentApplicationService:
         catalog_repository: CatalogRepository,
         comparator: DeterministicCatalogComparator,
         renderer: TechnicalSourceOverviewRenderer,
+        workspace_repository: WorkspaceRepository | None = None,
     ) -> None:
         self._repository = repository
         self._project_repository = project_repository
@@ -60,15 +64,14 @@ class DocumentApplicationService:
         self._catalog_repository = catalog_repository
         self._comparator = comparator
         self._renderer = renderer
+        self._workspace_repository = workspace_repository
         self._document_comparator = DeterministicMarkdownSectionComparator()
 
     async def generate(
         self,
         command: GenerateTechnicalSourceOverviewCommand,
     ) -> DocumentDetailDto:
-        project = await self._project_repository.get(ProjectId.from_string(command.project_id))
-        if project is None:
-            raise DocumentProjectNotFoundError(f"Project {command.project_id} was not found.")
+        project = await self._require_writable_project(command.project_id)
 
         target = await self._catalog_repository.get_run(
             SynchronizationId.from_string(command.target_run_id)
@@ -213,6 +216,7 @@ class DocumentApplicationService:
         command: DocumentWorkflowCommand,
     ) -> DocumentDetailDto:
         version, series = await self._require_version_and_series(command.version_id)
+        await self._require_writable_project(version.project_id)
         event = version.submit_for_review(actor=command.actor, comment=command.comment)
         await self._repository.apply_workflow_transition(series, version, event)
         return DocumentDetailDto.from_domain(version)
@@ -222,6 +226,7 @@ class DocumentApplicationService:
         command: DocumentWorkflowCommand,
     ) -> DocumentDetailDto:
         version, series = await self._require_version_and_series(command.version_id)
+        await self._require_writable_project(version.project_id)
         event = version.request_changes(actor=command.actor, comment=command.comment)
         await self._repository.apply_workflow_transition(series, version, event)
         return DocumentDetailDto.from_domain(version)
@@ -231,6 +236,7 @@ class DocumentApplicationService:
         command: DocumentWorkflowCommand,
     ) -> DocumentDetailDto:
         version, series = await self._require_version_and_series(command.version_id)
+        await self._require_writable_project(version.project_id)
         event = version.approve(actor=command.actor, comment=command.comment)
         previous_approved = await self._repository.get_current_approved_version(series.id)
         superseded_version = None
@@ -257,6 +263,7 @@ class DocumentApplicationService:
         command: DocumentWorkflowCommand,
     ) -> DocumentDetailDto:
         version, series = await self._require_version_and_series(command.version_id)
+        await self._require_writable_project(version.project_id)
         event = version.supersede(actor=command.actor, comment=command.comment)
         if series.current_approved_version_id == str(version.id):
             series.clear_approved_version(now=version.superseded_at)
@@ -287,6 +294,28 @@ class DocumentApplicationService:
         version = await self._require_version(version_id)
         events = await self._repository.list_workflow_events(version.id)
         return [WorkflowEventDto.from_domain(event) for event in events]
+
+    async def _require_writable_project(self, project_id: str) -> Project:
+        project = await self._project_repository.get(ProjectId.from_string(project_id))
+        if project is None:
+            raise DocumentProjectNotFoundError(f"Project {project_id} was not found.")
+        if project.status is ProjectStatus.ARCHIVED:
+            raise DocumentProjectArchivedError(
+                "Document lifecycle changes are not allowed for an archived project."
+            )
+        if self._workspace_repository is not None:
+            workspace = await self._workspace_repository.get(
+                WorkspaceId.from_string(project.workspace_id)
+            )
+            if workspace is None:
+                raise DocumentProjectNotFoundError(
+                    f"Workspace for project {project_id} was not found."
+                )
+            if workspace.status is WorkspaceStatus.ARCHIVED:
+                raise DocumentProjectArchivedError(
+                    "Document lifecycle changes are not allowed for an archived workspace."
+                )
+        return project
 
     async def _require_version(self, version_id: str) -> DocumentVersion:
         version = await self._repository.get_version(DocumentVersionId.from_string(version_id))

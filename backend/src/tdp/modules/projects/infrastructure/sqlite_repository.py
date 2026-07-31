@@ -5,6 +5,7 @@ from pathlib import Path
 
 from tdp.modules.projects.domain.errors import ProjectKeyAlreadyExistsError
 from tdp.modules.projects.domain.model import (
+    OwnershipType,
     Project,
     ProjectDescription,
     ProjectId,
@@ -13,8 +14,9 @@ from tdp.modules.projects.domain.model import (
     ProjectStatus,
     WorkspaceType,
 )
+from tdp.modules.workspaces.domain.model import DEFAULT_WORKSPACE_ID
 
-_SCHEMA = """
+_SCHEMA = f"""
 CREATE TABLE IF NOT EXISTS projects (
     id TEXT PRIMARY KEY,
     project_key TEXT NOT NULL UNIQUE,
@@ -23,7 +25,9 @@ CREATE TABLE IF NOT EXISTS projects (
     workspace_type TEXT NOT NULL,
     status TEXT NOT NULL,
     created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL
+    updated_at TEXT NOT NULL,
+    workspace_id TEXT NOT NULL DEFAULT '{DEFAULT_WORKSPACE_ID}',
+    ownership_type TEXT NOT NULL DEFAULT 'PERSONAL'
 );
 """
 
@@ -54,6 +58,9 @@ class SqliteProjectRepository:
     async def list_all(self) -> list[Project]:
         return await asyncio.to_thread(self._list_all)
 
+    async def list_by_workspace(self, workspace_id: str) -> list[Project]:
+        return await asyncio.to_thread(self._list_by_workspace, workspace_id)
+
     def _connect(self) -> sqlite3.Connection:
         connection = sqlite3.connect(self._database_path, timeout=5)
         connection.row_factory = sqlite3.Row
@@ -64,6 +71,46 @@ class SqliteProjectRepository:
             connection.execute("PRAGMA journal_mode = WAL")
             connection.execute("PRAGMA foreign_keys = ON")
             connection.executescript(_SCHEMA)
+            self._ensure_workspace_columns(connection)
+            connection.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_projects_workspace_created
+                ON projects(workspace_id, created_at DESC, id ASC)
+                """
+            )
+
+    @staticmethod
+    def _ensure_workspace_columns(connection: sqlite3.Connection) -> None:
+        columns = {
+            str(row["name"]) for row in connection.execute("PRAGMA table_info(projects)").fetchall()
+        }
+        if "workspace_id" not in columns:
+            connection.execute(
+                f"""
+                ALTER TABLE projects
+                ADD COLUMN workspace_id TEXT NOT NULL DEFAULT '{DEFAULT_WORKSPACE_ID}'
+                """
+            )
+        if "ownership_type" not in columns:
+            connection.execute(
+                """
+                ALTER TABLE projects
+                ADD COLUMN ownership_type TEXT NOT NULL DEFAULT 'PERSONAL'
+                """
+            )
+            connection.execute(
+                """
+                UPDATE projects
+                SET ownership_type = CASE
+                    WHEN workspace_type = 'ENTERPRISE' THEN 'TEAM'
+                    ELSE 'PERSONAL'
+                END
+                """
+            )
+        connection.execute(
+            "UPDATE projects SET workspace_id = ? WHERE workspace_id = '' OR workspace_id IS NULL",
+            (DEFAULT_WORKSPACE_ID,),
+        )
 
     def _add(self, project: Project) -> None:
         with self._connect() as connection:
@@ -71,8 +118,8 @@ class SqliteProjectRepository:
                 """
                 INSERT INTO projects (
                     id, project_key, name, description, workspace_type,
-                    status, created_at, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    status, created_at, updated_at, workspace_id, ownership_type
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 self._to_record(project),
             )
@@ -83,7 +130,8 @@ class SqliteProjectRepository:
                 """
                 UPDATE projects
                 SET project_key = ?, name = ?, description = ?, workspace_type = ?,
-                    status = ?, created_at = ?, updated_at = ?
+                    status = ?, created_at = ?, updated_at = ?, workspace_id = ?,
+                    ownership_type = ?
                 WHERE id = ?
                 """,
                 (
@@ -94,6 +142,8 @@ class SqliteProjectRepository:
                     project.status.value,
                     project.created_at.isoformat(),
                     project.updated_at.isoformat(),
+                    project.workspace_id,
+                    project.ownership_type.value,
                     str(project.id),
                 ),
             )
@@ -121,8 +171,22 @@ class SqliteProjectRepository:
             ).fetchall()
         return [self._from_row(row) for row in rows]
 
+    def _list_by_workspace(self, workspace_id: str) -> list[Project]:
+        with self._connect() as connection:
+            rows = connection.execute(
+                """
+                SELECT * FROM projects
+                WHERE workspace_id = ?
+                ORDER BY created_at DESC, id ASC
+                """,
+                (workspace_id,),
+            ).fetchall()
+        return [self._from_row(row) for row in rows]
+
     @staticmethod
-    def _to_record(project: Project) -> tuple[str, str, str, str, str, str, str, str]:
+    def _to_record(
+        project: Project,
+    ) -> tuple[str, str, str, str, str, str, str, str, str, str]:
         return (
             str(project.id),
             str(project.key),
@@ -132,6 +196,8 @@ class SqliteProjectRepository:
             project.status.value,
             project.created_at.isoformat(),
             project.updated_at.isoformat(),
+            project.workspace_id,
+            project.ownership_type.value,
         )
 
     @staticmethod
@@ -145,4 +211,6 @@ class SqliteProjectRepository:
             status=ProjectStatus(str(row["status"])),
             created_at=datetime.fromisoformat(str(row["created_at"])),
             updated_at=datetime.fromisoformat(str(row["updated_at"])),
+            workspace_id=str(row["workspace_id"]),
+            ownership_type=OwnershipType(str(row["ownership_type"])),
         )

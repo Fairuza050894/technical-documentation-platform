@@ -27,6 +27,11 @@ class InMemoryProjectRepository:
     async def list_all(self) -> list[Project]:
         return list(self.projects.values())
 
+    async def list_by_workspace(self, workspace_id: str) -> list[Project]:
+        return [
+            project for project in self.projects.values() if project.workspace_id == workspace_id
+        ]
+
 
 def test_create_and_list_projects() -> None:
     repository = InMemoryProjectRepository()

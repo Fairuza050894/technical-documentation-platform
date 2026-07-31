@@ -43,6 +43,10 @@ class DocumentProjectNotFoundError(DocumentError):
     code = "DOCUMENT_PROJECT_NOT_FOUND"
 
 
+class DocumentProjectArchivedError(DocumentError):
+    code = "DOCUMENT_PROJECT_ARCHIVED"
+
+
 class DocumentSourceNotFoundError(DocumentError):
     code = "DOCUMENT_SOURCE_NOT_FOUND"
 

@@ -27,6 +27,14 @@ class InvalidWorkspaceTypeError(ProjectError):
     code = "INVALID_WORKSPACE_TYPE"
 
 
+class InvalidOwnershipTypeError(ProjectError):
+    code = "INVALID_OWNERSHIP_TYPE"
+
+
+class InvalidProjectWorkspaceIdError(ProjectError):
+    code = "INVALID_PROJECT_WORKSPACE_ID"
+
+
 class ProjectKeyAlreadyExistsError(ProjectError):
     code = "PROJECT_KEY_ALREADY_EXISTS"
 

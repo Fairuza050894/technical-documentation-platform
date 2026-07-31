@@ -15,11 +15,11 @@ The frontend uses a small deterministic browser-history router with these routes
 
 - `/`
 - `/projects`
-- `/projects/:projectId/workbench/overview`
-- `/projects/:projectId/workbench/sources`
-- `/projects/:projectId/workbench/catalog`
-- `/projects/:projectId/workbench/changes`
-- `/projects/:projectId/workbench/documents`
+- `/workspaces/:workspaceId/projects/:projectId/workbench/overview`
+- `/workspaces/:workspaceId/projects/:projectId/workbench/sources`
+- `/workspaces/:workspaceId/projects/:projectId/workbench/catalog`
+- `/workspaces/:workspaceId/projects/:projectId/workbench/changes`
+- `/workspaces/:workspaceId/projects/:projectId/workbench/documents`
 - `/system`
 
 Global navigation is limited to Home, Projects, and System status. Source, catalog, change, and document capabilities are stages inside a selected project.

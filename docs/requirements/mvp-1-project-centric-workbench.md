@@ -42,7 +42,7 @@ Provide one persistent project context for the source-to-document workflow and r
 
 ## Acceptance criteria
 
-- `/projects/:projectId/workbench/documents` opens the selected project directly on Documents.
+- `/workspaces/:workspaceId/projects/:projectId/workbench/documents` opens the selected project directly on Documents.
 - The same URL remains active after browser refresh.
 - Browser history events update the displayed global page or project stage.
 - No project selector is rendered inside an embedded workspace.

@@ -3,6 +3,10 @@ import { useCallback, useEffect, useState } from "react";
 import { OperationalOverview, type OverviewNavigationTarget } from "../modules/overview/OperationalOverview";
 import { ProjectWorkspace } from "../modules/projects/ProjectWorkspace";
 import type { Project } from "../modules/projects/types";
+import { WorkspaceRegistry } from "../modules/workspaces/WorkspaceRegistry";
+import { WorkspaceSwitcher } from "../modules/workspaces/WorkspaceSwitcher";
+import { listWorkspaces } from "../modules/workspaces/api";
+import type { Workspace } from "../modules/workspaces/types";
 import { ProjectWorkbench } from "../modules/workbench/ProjectWorkbench";
 import { Icon, type IconName } from "../shared/ui/Icon";
 import {
@@ -10,6 +14,7 @@ import {
   type ProjectStage,
   parseRoute,
   routePath,
+  routeWorkspaceId,
 } from "./router";
 
 interface HealthResponse {
@@ -25,30 +30,7 @@ type ApiState =
   | { status: "unavailable" };
 
 type GlobalNavigation = "Home" | "Projects" | "System status";
-
-const navigationGroups: ReadonlyArray<{
-  label: string;
-  items: ReadonlyArray<{
-    id: GlobalNavigation;
-    label: string;
-    icon: IconName;
-    route: AppRoute;
-  }>;
-}> = [
-  {
-    label: "Workspace",
-    items: [
-      { id: "Home", label: "Home", icon: "overview", route: { name: "home" } },
-      { id: "Projects", label: "Projects", icon: "projects", route: { name: "projects" } },
-    ],
-  },
-  {
-    label: "Platform",
-    items: [
-      { id: "System status", label: "System status", icon: "server", route: { name: "system" } },
-    ],
-  },
-];
+type WorkspaceLoadState = "loading" | "ready" | "error";
 
 const projectStageLabels: Record<ProjectStage, string> = {
   overview: "Overview",
@@ -66,16 +48,46 @@ const projectStageIcons: Record<ProjectStage, IconName> = {
   documents: "documents",
 };
 
+const LAST_WORKSPACE_KEY = "tdp.last-workspace-id";
+
 export function App() {
   const [apiState, setApiState] = useState<ApiState>({ status: "loading" });
   const [route, setRoute] = useState<AppRoute>(() => parseRoute(globalThis.location.pathname));
   const [activeProject, setActiveProject] = useState<Project | null>(null);
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+  const [activeWorkspaceId, setActiveWorkspaceId] = useState<string | null>(null);
+  const [workspaceLoadState, setWorkspaceLoadState] =
+    useState<WorkspaceLoadState>("loading");
+  const [workspaceLoadError, setWorkspaceLoadError] = useState("");
+
+  const navigate = useCallback((nextRoute: AppRoute, replace = false): void => {
+    const path = routePath(nextRoute);
+    if (replace) {
+      globalThis.history.replaceState({}, "", path);
+    } else {
+      globalThis.history.pushState({}, "", path);
+    }
+    if (nextRoute.name !== "project") {
+      setActiveProject(null);
+    }
+    const nextWorkspaceId = routeWorkspaceId(nextRoute);
+    if (nextWorkspaceId !== null) {
+      setActiveWorkspaceId(nextWorkspaceId);
+      globalThis.localStorage.setItem(LAST_WORKSPACE_KEY, nextWorkspaceId);
+    }
+    setRoute(nextRoute);
+  }, []);
 
   useEffect(() => {
     const handlePopState = (): void => {
       const nextRoute = parseRoute(globalThis.location.pathname);
       if (nextRoute.name !== "project") {
         setActiveProject(null);
+      }
+      const nextWorkspaceId = routeWorkspaceId(nextRoute);
+      if (nextWorkspaceId !== null) {
+        setActiveWorkspaceId(nextWorkspaceId);
+        globalThis.localStorage.setItem(LAST_WORKSPACE_KEY, nextWorkspaceId);
       }
       setRoute(nextRoute);
     };
@@ -114,38 +126,135 @@ export function App() {
     return () => controller.abort();
   }, []);
 
-  const navigate = useCallback((nextRoute: AppRoute, replace = false): void => {
-    const path = routePath(nextRoute);
-    if (replace) {
-      globalThis.history.replaceState({}, "", path);
-    } else {
-      globalThis.history.pushState({}, "", path);
-    }
-    if (nextRoute.name !== "project") {
-      setActiveProject(null);
-    }
-    setRoute(nextRoute);
-  }, []);
+  useEffect(() => {
+    const controller = new AbortController();
 
-  const handleProjectResolved = useCallback((project: Project | null): void => {
-    setActiveProject(project);
+    async function loadWorkspaceContext(): Promise<void> {
+      setWorkspaceLoadState("loading");
+      setWorkspaceLoadError("");
+      try {
+        const response = await listWorkspaces(controller.signal);
+        const requestedId = routeWorkspaceId(parseRoute(globalThis.location.pathname));
+        const storedId = globalThis.localStorage.getItem(LAST_WORKSPACE_KEY);
+        const requestedWorkspace =
+          requestedId === null
+            ? null
+            : response.items.find((workspace) => workspace.id === requestedId) ?? null;
+        const selected =
+          requestedId !== null
+            ? requestedWorkspace
+            : response.items.find(
+                  (workspace) => workspace.id === storedId && workspace.status === "ACTIVE",
+                ) ??
+                response.items.find((workspace) => workspace.status === "ACTIVE") ??
+                response.items[0] ??
+                null;
+
+        setWorkspaces(response.items);
+        setActiveWorkspaceId(selected?.id ?? null);
+        if (selected !== null) {
+          globalThis.localStorage.setItem(LAST_WORKSPACE_KEY, selected.id);
+        }
+        setWorkspaceLoadState("ready");
+
+        const currentRoute = parseRoute(globalThis.location.pathname);
+        if (
+          selected !== null &&
+          currentRoute.name === "home" &&
+          currentRoute.workspaceId === null
+        ) {
+          navigate({ name: "home", workspaceId: selected.id }, true);
+        } else if (
+          selected !== null &&
+          currentRoute.name === "projects" &&
+          currentRoute.workspaceId === null
+        ) {
+          navigate({ name: "projects", workspaceId: selected.id }, true);
+        }
+      } catch (error: unknown) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+        setWorkspaceLoadError(
+          error instanceof Error ? error.message : "Workspace context could not be loaded.",
+        );
+        setWorkspaceLoadState("error");
+      }
+    }
+
+    void loadWorkspaceContext();
+    return () => controller.abort();
+  }, [navigate]);
+
+  const activeWorkspace =
+    workspaces.find((workspace) => workspace.id === activeWorkspaceId) ?? null;
+
+  const handleProjectResolved = useCallback(
+    (project: Project | null): void => {
+      setActiveProject(project);
+      if (
+        project !== null &&
+        project.workspace_id !== undefined &&
+        route.name === "project" &&
+        route.workspaceId === null
+      ) {
+        setActiveWorkspaceId(project.workspace_id);
+        globalThis.localStorage.setItem(LAST_WORKSPACE_KEY, project.workspace_id);
+        navigate(
+          {
+            name: "project",
+            workspaceId: project.workspace_id,
+            projectId: project.id,
+            stage: route.stage,
+          },
+          true,
+        );
+      }
+    },
+    [navigate, route],
+  );
+
+  const selectWorkspace = useCallback(
+    (workspace: Workspace): void => {
+      setActiveWorkspaceId(workspace.id);
+      globalThis.localStorage.setItem(LAST_WORKSPACE_KEY, workspace.id);
+      navigate({ name: "home", workspaceId: workspace.id });
+    },
+    [navigate],
+  );
+
+  const handleWorkspacesChanged = useCallback((items: Workspace[]): void => {
+    setWorkspaces(items);
+    setActiveWorkspaceId((current) =>
+      current !== null && !items.some((item) => item.id === current) ? null : current,
+    );
   }, []);
 
   function navigateFromOverview(
     target: OverviewNavigationTarget,
     projectId?: string,
   ): void {
+    if (activeWorkspace === null) {
+      navigate({ name: "workspaces" });
+      return;
+    }
+
     if (target === "Projects") {
       navigate(
         projectId
-          ? { name: "project", projectId, stage: "overview" }
-          : { name: "projects" },
+          ? {
+              name: "project",
+              workspaceId: activeWorkspace.id,
+              projectId,
+              stage: "overview",
+            }
+          : { name: "projects", workspaceId: activeWorkspace.id },
       );
       return;
     }
 
     if (!projectId) {
-      navigate({ name: "projects" });
+      navigate({ name: "projects", workspaceId: activeWorkspace.id });
       return;
     }
 
@@ -155,15 +264,54 @@ export function App() {
       Changes: "changes",
       Documents: "documents",
     };
-    navigate({ name: "project", projectId, stage: stageByTarget[target] });
+    navigate({
+      name: "project",
+      workspaceId: activeWorkspace.id,
+      projectId,
+      stage: stageByTarget[target],
+    });
   }
 
+  const navigationGroups: ReadonlyArray<{
+    label: string;
+    items: ReadonlyArray<{
+      id: GlobalNavigation;
+      label: string;
+      icon: IconName;
+      route: AppRoute;
+    }>;
+  }> = [
+    {
+      label: "Workspace",
+      items: [
+        {
+          id: "Home",
+          label: "Home",
+          icon: "overview",
+          route: { name: "home", workspaceId: activeWorkspace?.id ?? null },
+        },
+        {
+          id: "Projects",
+          label: "Projects",
+          icon: "projects",
+          route: { name: "projects", workspaceId: activeWorkspace?.id ?? null },
+        },
+      ],
+    },
+    {
+      label: "Platform",
+      items: [
+        {
+          id: "System status",
+          label: "System status",
+          icon: "server",
+          route: { name: "system" },
+        },
+      ],
+    },
+  ];
+
   const activeGlobalNavigation = resolveGlobalNavigation(route);
-  const contextLabel =
-    route.name === "project"
-      ? activeProject?.name ?? `Project ${route.projectId.slice(0, 8)}`
-      : "All projects";
-  const contextKicker = route.name === "project" ? "Project" : "Workspace";
   const environment = apiState.status === "available" ? apiState.health.environment : "local";
   const serviceLabel =
     apiState.status === "loading"
@@ -171,7 +319,7 @@ export function App() {
       : apiState.status === "available"
         ? "Connected"
         : "Offline";
-  const pageContext = resolvePageContext(route, activeProject);
+  const pageContext = resolvePageContext(route, activeWorkspace, activeProject);
 
   return (
     <div className="app-shell">
@@ -186,22 +334,14 @@ export function App() {
           </span>
         </div>
 
-        <button
-          type="button"
-          className="workspace-context"
-          title={contextLabel}
-          aria-label={`Current ${contextKicker.toLowerCase()}: ${contextLabel}. Open projects.`}
-          onClick={() => navigate({ name: "projects" })}
-        >
-          <span className="workspace-context__icon" aria-hidden="true">
-            <Icon name="folder" size={16} />
-          </span>
-          <span className="workspace-context__copy">
-            <small>{contextKicker}</small>
-            <strong>{contextLabel}</strong>
-          </span>
-          <Icon className="workspace-context__chevron" name="chevron-down" size={14} />
-        </button>
+        <WorkspaceSwitcher
+          workspaces={workspaces}
+          activeWorkspaceId={activeWorkspaceId}
+          status={workspaceLoadState}
+          errorMessage={workspaceLoadError}
+          onSelect={selectWorkspace}
+          onManage={() => navigate({ name: "workspaces" })}
+        />
 
         <nav className="primary-navigation">
           {navigationGroups.map((group) => (
@@ -280,7 +420,11 @@ export function App() {
           <div className="utility-status" aria-label="Runtime context">
             <span className="utility-status__item">
               <span className="utility-status__label">Scope</span>
-              <strong>{route.name === "project" ? activeProject?.key ?? "Project" : "All projects"}</strong>
+              <strong>
+                {route.name === "project"
+                  ? activeProject?.key ?? "Project"
+                  : activeWorkspace?.key ?? "No workspace"}
+              </strong>
             </span>
             <span className="utility-status__divider" aria-hidden="true" />
             <span className="utility-status__item">
@@ -305,36 +449,104 @@ export function App() {
 
         <main className="main-content">
           <div className="workspace-canvas">
-            {route.name === "home" && (
-              <OperationalOverview
-                serviceState={apiState.status}
-                serviceVersion={apiState.status === "available" ? apiState.health.version : undefined}
-                onNavigate={navigateFromOverview}
+            {workspaceLoadState === "error" && route.name !== "system" && (
+              <WorkspaceContextError
+                message={workspaceLoadError}
+                onManage={() => navigate({ name: "workspaces" })}
               />
             )}
-            {route.name === "projects" && (
-              <ProjectWorkspace
-                onOpenProject={(project) =>
-                  navigate({ name: "project", projectId: project.id, stage: "overview" })
-                }
-              />
+
+            {workspaceLoadState === "loading" && route.name !== "system" && (
+              <div className="project-workbench-state" role="status">
+                <span className="loading-bar" aria-hidden="true" />
+                Loading workspace context…
+              </div>
             )}
-            {route.name === "project" && (
+
+            {workspaceLoadState === "ready" && route.name === "home" && (
+              activeWorkspace === null ? (
+                <WorkspaceContextError
+                  message="Select an active workspace before opening Home."
+                  onManage={() => navigate({ name: "workspaces" })}
+                />
+              ) : (
+                <OperationalOverview
+                  workspace={activeWorkspace}
+                  serviceState={apiState.status}
+                  serviceVersion={
+                    apiState.status === "available" ? apiState.health.version : undefined
+                  }
+                  onNavigate={navigateFromOverview}
+                />
+              )
+            )}
+
+            {workspaceLoadState === "ready" && route.name === "projects" && (
+              activeWorkspace === null ? (
+                <WorkspaceContextError
+                  message="Select an active workspace before opening Projects."
+                  onManage={() => navigate({ name: "workspaces" })}
+                />
+              ) : (
+                <ProjectWorkspace
+                  workspace={activeWorkspace}
+                  onOpenProject={(project) =>
+                    navigate({
+                      name: "project",
+                      workspaceId: activeWorkspace.id,
+                      projectId: project.id,
+                      stage: "overview",
+                    })
+                  }
+                />
+              )
+            )}
+
+            {workspaceLoadState === "ready" && route.name === "project" && (
               <ProjectWorkbench
+                workspaceId={route.workspaceId}
                 projectId={route.projectId}
                 stage={route.stage}
                 onNavigateStage={(stage) =>
-                  navigate({ name: "project", projectId: route.projectId, stage })
+                  navigate({
+                    name: "project",
+                    workspaceId: route.workspaceId ?? activeWorkspace?.id ?? null,
+                    projectId: route.projectId,
+                    stage,
+                  })
                 }
-                onBackToProjects={() => navigate({ name: "projects" })}
+                onBackToProjects={() =>
+                  navigate({
+                    name: "projects",
+                    workspaceId: route.workspaceId ?? activeWorkspace?.id ?? null,
+                  })
+                }
                 onProjectResolved={handleProjectResolved}
               />
             )}
+
+            {workspaceLoadState === "ready" && route.name === "workspaces" && (
+              <WorkspaceRegistry
+                activeWorkspaceId={activeWorkspaceId}
+                onSelectWorkspace={selectWorkspace}
+                onWorkspacesChanged={handleWorkspacesChanged}
+              />
+            )}
+
             {route.name === "system" && <SystemStatus apiState={apiState} />}
-            {route.name === "not-found" && (
+
+            {workspaceLoadState === "ready" && route.name === "not-found" && (
               <RouteNotFound
                 pathname={route.pathname}
-                onGoHome={() => navigate({ name: "home" }, true)}
+                onGoHome={() =>
+                  navigate(
+                    {
+                      name: "home",
+                      workspaceId: activeWorkspace?.id ?? null,
+                    },
+                    true,
+                  )
+                }
               />
             )}
           </div>
@@ -351,6 +563,8 @@ function resolveGlobalNavigation(route: AppRoute): GlobalNavigation | null {
     case "projects":
     case "project":
       return "Projects";
+    case "workspaces":
+      return null;
     case "system":
       return "System status";
     case "not-found":
@@ -360,23 +574,56 @@ function resolveGlobalNavigation(route: AppRoute): GlobalNavigation | null {
 
 function resolvePageContext(
   route: AppRoute,
+  workspace: Workspace | null,
   project: Project | null,
 ): { breadcrumb: string[]; icon: IconName } {
+  const workspaceLabel = workspace?.key ?? "Workspace";
   switch (route.name) {
     case "home":
-      return { breadcrumb: ["Workspace", "Home"], icon: "overview" };
+      return { breadcrumb: [workspaceLabel, "Home"], icon: "overview" };
     case "projects":
-      return { breadcrumb: ["Workspace", "Projects"], icon: "projects" };
+      return { breadcrumb: [workspaceLabel, "Projects"], icon: "projects" };
+    case "workspaces":
+      return { breadcrumb: ["Platform", "Workspaces"], icon: "folder" };
     case "system":
       return { breadcrumb: ["Platform", "System status"], icon: "server" };
     case "project":
       return {
-        breadcrumb: ["Projects", project?.key ?? "Project", projectStageLabels[route.stage]],
+        breadcrumb: [
+          workspaceLabel,
+          "Projects",
+          project?.key ?? "Project",
+          projectStageLabels[route.stage],
+        ],
         icon: projectStageIcons[route.stage],
       };
     case "not-found":
-      return { breadcrumb: ["Workspace", "Not found"], icon: "alert" };
+      return { breadcrumb: [workspaceLabel, "Not found"], icon: "alert" };
   }
+}
+
+function WorkspaceContextError({
+  message,
+  onManage,
+}: {
+  message: string;
+  onManage: () => void;
+}) {
+  return (
+    <section
+      className="content-section project-workbench-state"
+      aria-labelledby="workspace-context-error-title"
+    >
+      <span className="project-workbench-state__icon" aria-hidden="true">
+        <Icon name="alert" size={22} />
+      </span>
+      <h1 id="workspace-context-error-title">Workspace context unavailable</h1>
+      <p>{message}</p>
+      <button type="button" className="button button--primary" onClick={onManage}>
+        Manage workspaces
+      </button>
+    </section>
+  );
 }
 
 function RouteNotFound({ pathname, onGoHome }: { pathname: string; onGoHome: () => void }) {

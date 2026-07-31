@@ -3,6 +3,16 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { OperationalOverview } from "./OperationalOverview";
 
+const workspace = {
+  id: "00000000-0000-4000-8000-000000000001",
+  key: "ERP",
+  name: "ERP Workspace",
+  description: "ERP documentation boundary",
+  status: "ACTIVE" as const,
+  created_at: "2026-07-29T00:00:00Z",
+  updated_at: "2026-07-30T00:00:00Z",
+};
+
 function getRequestUrl(input: RequestInfo | URL): string {
   if (typeof input === "string") {
     return input;
@@ -21,7 +31,7 @@ describe("OperationalOverview", () => {
     vi.spyOn(globalThis, "fetch").mockImplementation((input: RequestInfo | URL) => {
       const url = getRequestUrl(input);
 
-      if (url.endsWith("/api/projects")) {
+      if (url.endsWith(`/api/workspaces/${workspace.id}/projects`)) {
         return Promise.resolve(
           new Response(
             JSON.stringify({
@@ -31,7 +41,9 @@ describe("OperationalOverview", () => {
                   key: "COMM",
                   name: "Commerce API",
                   description: "",
-                  workspace_type: "PERSONAL",
+                  workspace_id: workspace.id,
+                  ownership_type: "TEAM",
+                  workspace_type: "ENTERPRISE",
                   status: "ACTIVE",
                   created_at: "2026-07-29T08:00:00Z",
                   updated_at: "2026-07-29T08:00:00Z",
@@ -152,6 +164,7 @@ describe("OperationalOverview", () => {
 
     render(
       <OperationalOverview
+        workspace={workspace}
         serviceState="available"
         serviceVersion="0.1.0"
         onNavigate={onNavigate}
@@ -188,13 +201,13 @@ describe("OperationalOverview", () => {
     expect(within(projectHealth).getByText("5")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /Pending reviews: 1/ }));
-    expect(onNavigate).toHaveBeenCalledWith("Documents", "project-1");
+    expect(onNavigate).toHaveBeenCalledWith("Documents");
   });
 
   it("shows a clear state when no operational issues exist", async () => {
     vi.spyOn(globalThis, "fetch").mockImplementation((input: RequestInfo | URL) => {
       const url = getRequestUrl(input);
-      if (url.endsWith("/api/projects")) {
+      if (url.endsWith(`/api/workspaces/${workspace.id}/projects`)) {
         return Promise.resolve(
           new Response(JSON.stringify({ items: [], total: 0 }), { status: 200 }),
         );
@@ -204,6 +217,7 @@ describe("OperationalOverview", () => {
 
     render(
       <OperationalOverview
+        workspace={workspace}
         serviceState="available"
         serviceVersion="0.1.0"
         onNavigate={vi.fn()}

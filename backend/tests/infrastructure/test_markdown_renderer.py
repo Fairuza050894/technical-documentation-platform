@@ -176,4 +176,6 @@ def test_renderer_is_deterministic_and_preserves_source_evidence() -> None:
     assert "`#/paths/~1orders/post`" in first
     assert "`#/components/schemas/CreateOrderRequest`" in first
     assert "Breaking changes: **1**" in first
+    assert "| Ownership | Personal |" in first
+    assert "| Workspace type |" not in first
     assert "does not use AI" in first

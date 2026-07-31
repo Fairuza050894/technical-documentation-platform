@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: help bootstrap dev-backend dev-frontend lint test build verify audit audit-projects audit-sources audit-catalog audit-changes audit-documents audit-lifecycle audit-documents-workspace audit-product-ui audit-visual-refinement audit-workbench
+.PHONY: help bootstrap dev-backend dev-frontend lint test build verify audit audit-projects audit-sources audit-catalog audit-changes audit-documents audit-lifecycle audit-documents-workspace audit-product-ui audit-visual-refinement audit-workbench audit-workspaces
 
 help:
 	@printf '%s\n' \
@@ -22,7 +22,8 @@ help:
 	  '  make audit-documents-workspace Write the Documents Workspace audit to Downloads' \
 	  '  make audit-product-ui Write the Product UI audit to Downloads' \
 	  '  make audit-visual-refinement Write the visual refinement audit to Downloads' \
-	  '  make audit-workbench Write the Project Workbench audit to Downloads'
+	  '  make audit-workbench Write the Project Workbench audit to Downloads' \
+	  '  make audit-workspaces Write the Workspace Foundation audit to Downloads'
 
 bootstrap:
 	bash scripts/bootstrap_macos.sh
@@ -91,3 +92,7 @@ audit-visual-refinement:
 
 audit-workbench:
 	bash scripts/audit_project_workbench.sh
+
+
+audit-workspaces:
+	bash scripts/audit_workspace_foundation.sh

@@ -22,7 +22,12 @@ from tdp.modules.documents.presentation.http.router import router as documents_r
 from tdp.modules.projects.application.service import ProjectApplicationService
 from tdp.modules.projects.domain.errors import ProjectError
 from tdp.modules.projects.infrastructure.sqlite_repository import SqliteProjectRepository
-from tdp.modules.projects.presentation.http.router import router as projects_router
+from tdp.modules.projects.presentation.http.router import (
+    router as projects_router,
+)
+from tdp.modules.projects.presentation.http.router import (
+    workspace_projects_router,
+)
 from tdp.modules.sources.application.service import SourceApplicationService
 from tdp.modules.sources.domain.errors import SourceError
 from tdp.modules.sources.infrastructure.local_artifact_store import LocalArtifactStore
@@ -30,6 +35,10 @@ from tdp.modules.sources.infrastructure.openapi_inspector import DeterministicOp
 from tdp.modules.sources.infrastructure.project_access import RepositoryBackedProjectAccess
 from tdp.modules.sources.infrastructure.sqlite_repository import SqliteSourceRepository
 from tdp.modules.sources.presentation.http.router import router as sources_router
+from tdp.modules.workspaces.application.service import WorkspaceApplicationService
+from tdp.modules.workspaces.domain.errors import WorkspaceError
+from tdp.modules.workspaces.infrastructure.sqlite_repository import SqliteWorkspaceRepository
+from tdp.modules.workspaces.presentation.http.router import router as workspaces_router
 from tdp.presentation.http.errors import (
     catalog_error_handler,
     change_detection_error_handler,
@@ -37,6 +46,7 @@ from tdp.presentation.http.errors import (
     project_error_handler,
     source_error_handler,
     validation_error_handler,
+    workspace_error_handler,
 )
 from tdp.presentation.http.middleware.request_id import RequestIdMiddleware
 from tdp.presentation.http.routers.health import router as health_router
@@ -44,11 +54,15 @@ from tdp.presentation.http.routers.health import router as health_router
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     runtime_settings = settings or get_settings()
+    workspace_repository = SqliteWorkspaceRepository(runtime_settings.database_path)
     project_repository = SqliteProjectRepository(runtime_settings.database_path)
     source_repository = SqliteSourceRepository(runtime_settings.database_path)
     catalog_repository = SqliteCatalogRepository(runtime_settings.database_path)
     document_repository = SqliteDocumentRepository(runtime_settings.database_path)
-    project_access = RepositoryBackedProjectAccess(project_repository)
+    project_access = RepositoryBackedProjectAccess(
+        project_repository,
+        workspace_repository,
+    )
     artifact_store = LocalArtifactStore(runtime_settings.artifact_root_path)
 
     application = FastAPI(
@@ -59,7 +73,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         openapi_url="/api/openapi.json",
     )
     application.state.settings = runtime_settings
-    application.state.project_service = ProjectApplicationService(project_repository)
+    application.state.workspace_service = WorkspaceApplicationService(workspace_repository)
+    application.state.project_service = ProjectApplicationService(
+        project_repository,
+        workspace_repository,
+    )
     application.state.source_service = SourceApplicationService(
         source_repository,
         project_access,
@@ -86,6 +104,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         catalog_repository,
         comparator,
         DeterministicTechnicalSourceOverviewRenderer(),
+        workspace_repository,
     )
     application.add_middleware(RequestIdMiddleware)
     application.add_middleware(
@@ -100,9 +119,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.add_exception_handler(DocumentError, document_error_handler)
     application.add_exception_handler(ProjectError, project_error_handler)
     application.add_exception_handler(SourceError, source_error_handler)
+    application.add_exception_handler(WorkspaceError, workspace_error_handler)
     application.add_exception_handler(RequestValidationError, validation_error_handler)
     application.include_router(health_router, prefix=runtime_settings.api_prefix)
+    application.include_router(workspaces_router, prefix=runtime_settings.api_prefix)
     application.include_router(projects_router, prefix=runtime_settings.api_prefix)
+    application.include_router(workspace_projects_router, prefix=runtime_settings.api_prefix)
     application.include_router(sources_router, prefix=runtime_settings.api_prefix)
     application.include_router(catalog_router, prefix=runtime_settings.api_prefix)
     application.include_router(changes_router, prefix=runtime_settings.api_prefix)

@@ -15,6 +15,7 @@ from tdp.modules.catalog.domain.errors import (
     CatalogArtifactIntegrityError,
     CatalogArtifactNotFoundError,
     CatalogError,
+    CatalogProjectArchivedError,
     CatalogProjectNotFoundError,
     CatalogSourceArchivedError,
     CatalogSourceNotFoundError,
@@ -52,6 +53,10 @@ class CatalogApplicationService:
             raise CatalogSourceNotFoundError(f"Source {source_id} was not found.")
         if source.status is SourceStatus.ARCHIVED:
             raise CatalogSourceArchivedError(f"Source {source_id} is archived.")
+        if not await self._project_access.is_active(str(source.project_id)):
+            raise CatalogProjectArchivedError(
+                "New synchronizations cannot be created for an archived project or workspace."
+            )
 
         run = SynchronizationRun.start(
             project_id=str(source.project_id),

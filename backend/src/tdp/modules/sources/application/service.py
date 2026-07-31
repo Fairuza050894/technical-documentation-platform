@@ -105,6 +105,7 @@ class SourceApplicationService:
         source = await self._repository.get(SourceId.from_string(source_id))
         if source is None:
             raise SourceNotFoundError(f"Source {source_id} was not found.")
+        await self._require_project(str(source.project_id), require_active=True)
         source.archive()
         await self._repository.update(source)
         return SourceDto.from_domain(source)

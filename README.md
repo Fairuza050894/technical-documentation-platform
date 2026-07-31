@@ -262,21 +262,52 @@ make audit-visual-refinement
 
 ## Project-Centric Workbench
 
-The frontend keeps project and workflow-stage context in browser URLs. Open an active project from the Project Registry, then move through Overview, Sources, API Catalog, Changes, and Documents without selecting the project again.
+The frontend keeps workspace, project, and workflow-stage context in browser URLs. Open an
+active project from the workspace Project Registry, then move through Overview, Sources, API
+Catalog, Changes, and Documents without selecting the project again.
 
 Representative routes:
 
 ```text
-/projects
-/projects/:projectId/workbench/overview
-/projects/:projectId/workbench/sources
-/projects/:projectId/workbench/catalog
-/projects/:projectId/workbench/changes
-/projects/:projectId/workbench/documents
+/workspaces/:workspaceId/projects
+/workspaces/:workspaceId/projects/:projectId/workbench/overview
+/workspaces/:workspaceId/projects/:projectId/workbench/sources
+/workspaces/:workspaceId/projects/:projectId/workbench/catalog
+/workspaces/:workspaceId/projects/:projectId/workbench/changes
+/workspaces/:workspaceId/projects/:projectId/workbench/documents
 ```
 
 Run the dedicated audit with:
 
 ```bash
 make audit-workbench
+```
+
+## Workspace Foundation
+
+Workspace is the persistent operational boundary above Project. The sidebar selector always
+shows the active workspace; opening a project does not replace that context. Workspace Home and
+Projects are scoped through canonical URLs, while legacy project routes remain readable during
+the additive migration.
+
+Existing projects are assigned to the protected `General Workspace` without changing their IDs
+or any source, snapshot, comparison, document, or version relationships. Project governance is
+shown as `Personal` or `Team` ownership. The previous `workspace_type` API field remains only as
+a temporary compatibility field and is no longer presented as a workspace.
+
+Workspace APIs:
+
+```text
+POST /api/workspaces
+GET  /api/workspaces
+GET  /api/workspaces/{workspace_id}
+POST /api/workspaces/{workspace_id}/archive
+POST /api/workspaces/{workspace_id}/projects
+GET  /api/workspaces/{workspace_id}/projects
+```
+
+Run the dedicated audit with:
+
+```bash
+make audit-workspaces
 ```

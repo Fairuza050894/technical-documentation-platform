@@ -23,6 +23,10 @@ class CatalogProjectNotFoundError(CatalogError):
     code = "CATALOG_PROJECT_NOT_FOUND"
 
 
+class CatalogProjectArchivedError(CatalogError):
+    code = "CATALOG_PROJECT_ARCHIVED"
+
+
 class CatalogArtifactNotFoundError(CatalogError):
     code = "CATALOG_ARTIFACT_NOT_FOUND"
 

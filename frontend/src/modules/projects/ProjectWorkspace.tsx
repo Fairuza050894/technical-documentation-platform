@@ -1,23 +1,28 @@
-import { type FormEvent, useCallback, useEffect, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 
 import { ApiClientError } from "../../shared/api/client";
+import type { Workspace } from "../workspaces/types";
 import { archiveProject, createProject, listProjects } from "./api";
-import type { CreateProjectInput, Project, WorkspaceType } from "./types";
+import type { CreateProjectInput, OwnershipType, Project } from "./types";
 
 const initialForm: CreateProjectInput = {
   key: "",
   name: "",
   description: "",
-  workspace_type: "PERSONAL",
+  ownership_type: "TEAM",
 };
 
 type LoadState = "loading" | "ready" | "error";
 
 interface ProjectWorkspaceProps {
+  workspace: Workspace;
   onOpenProject?: (project: Project) => void;
 }
 
-export function ProjectWorkspace({ onOpenProject }: ProjectWorkspaceProps = {}) {
+export function ProjectWorkspace({
+  workspace,
+  onOpenProject,
+}: ProjectWorkspaceProps) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loadState, setLoadState] = useState<LoadState>("loading");
   const [loadError, setLoadError] = useState("");
@@ -27,21 +32,26 @@ export function ProjectWorkspace({ onOpenProject }: ProjectWorkspaceProps = {}) 
   const [pendingArchiveId, setPendingArchiveId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const load = useCallback(async (signal?: AbortSignal): Promise<void> => {
-    setLoadState("loading");
-    setLoadError("");
-    try {
-      const response = await listProjects(signal);
-      setProjects(response.items);
-      setLoadState("ready");
-    } catch (error: unknown) {
-      if (error instanceof DOMException && error.name === "AbortError") {
-        return;
+  const isReadOnly = workspace.status === "ARCHIVED";
+
+  const load = useCallback(
+    async (signal?: AbortSignal): Promise<void> => {
+      setLoadState("loading");
+      setLoadError("");
+      try {
+        const response = await listProjects(workspace.id, signal);
+        setProjects(response.items);
+        setLoadState("ready");
+      } catch (error: unknown) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+        setLoadError("Projects could not be loaded. Confirm that the backend is running.");
+        setLoadState("error");
       }
-      setLoadError("Projects could not be loaded. Confirm that the backend is running.");
-      setLoadState("error");
-    }
-  }, []);
+    },
+    [workspace.id],
+  );
 
   useEffect(() => {
     const controller = new AbortController();
@@ -49,12 +59,20 @@ export function ProjectWorkspace({ onOpenProject }: ProjectWorkspaceProps = {}) 
     return () => controller.abort();
   }, [load]);
 
+  const activeProjects = useMemo(
+    () => projects.filter((project) => project.status === "ACTIVE").length,
+    [projects],
+  );
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
+    if (isReadOnly) {
+      return;
+    }
     setFormError("");
     setIsSubmitting(true);
     try {
-      const created = await createProject(form);
+      const created = await createProject(workspace.id, form);
       setProjects((current) => [created, ...current]);
       setForm(initialForm);
     } catch (error: unknown) {
@@ -67,7 +85,7 @@ export function ProjectWorkspace({ onOpenProject }: ProjectWorkspaceProps = {}) 
   }
 
   async function handleArchive(project: Project): Promise<void> {
-    if (project.status === "ARCHIVED") {
+    if (isReadOnly || project.status === "ARCHIVED") {
       return;
     }
     setActionError("");
@@ -88,23 +106,37 @@ export function ProjectWorkspace({ onOpenProject }: ProjectWorkspaceProps = {}) 
     <>
       <header className="topbar">
         <div>
-          <p className="eyebrow">Workspace administration</p>
+          <p className="eyebrow">{workspace.name}</p>
           <h1>Projects</h1>
+          <p className="page-summary">
+            Projects group features, sources, requirements, documents, and releases inside this workspace.
+          </p>
         </div>
-        <span className="environment-badge">Local development</span>
+        <span
+          className={
+            workspace.status === "ACTIVE"
+              ? "environment-badge environment-badge--success"
+              : "environment-badge environment-badge--warning"
+          }
+        >
+          {workspace.key} · {workspace.status === "ACTIVE" ? "Active" : "Archived"}
+        </span>
       </header>
+
+      {isReadOnly && (
+        <div className="notice notice--warning" role="status">
+          <span>This workspace is archived. Existing project evidence remains read-only.</span>
+        </div>
+      )}
 
       <section className="content-section" aria-labelledby="projects-title">
         <div className="section-heading section-heading--split">
           <div>
             <h2 id="projects-title">Project registry</h2>
-            <p>Projects provide the boundary for sources, catalogs, changes, and documents.</p>
+            <p>Only projects assigned to {workspace.name} are shown here.</p>
           </div>
-          <span
-            className="record-count"
-            aria-label={`${projects.length} ${projects.length === 1 ? "project" : "projects"}`}
-          >
-            {projects.length} {projects.length === 1 ? "project" : "projects"}
+          <span className="record-count">
+            {activeProjects} active · {projects.length} total
           </span>
         </div>
 
@@ -127,8 +159,8 @@ export function ProjectWorkspace({ onOpenProject }: ProjectWorkspaceProps = {}) 
 
         {loadState === "ready" && projects.length === 0 && (
           <div className="empty-state">
-            <h3>No projects yet</h3>
-            <p>Create the first project to establish a source and documentation boundary.</p>
+            <h3>No projects in this workspace</h3>
+            <p>Create the first project for {workspace.name}.</p>
           </div>
         )}
 
@@ -139,11 +171,9 @@ export function ProjectWorkspace({ onOpenProject }: ProjectWorkspaceProps = {}) 
                 <tr>
                   <th scope="col">Project</th>
                   <th scope="col">Key</th>
-                  <th scope="col">Workspace</th>
+                  <th scope="col">Ownership</th>
                   <th scope="col">Status</th>
-                  <th scope="col" className="table-action-column">
-                    Action
-                  </th>
+                  <th scope="col" className="table-action-column">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -155,10 +185,8 @@ export function ProjectWorkspace({ onOpenProject }: ProjectWorkspaceProps = {}) 
                         {project.description || "No description provided"}
                       </span>
                     </td>
-                    <td>
-                      <code>{project.key}</code>
-                    </td>
-                    <td>{formatWorkspace(project.workspace_type)}</td>
+                    <td><code>{project.key}</code></td>
+                    <td>{formatOwnership(project)}</td>
                     <td>
                       <span
                         className={
@@ -202,7 +230,7 @@ export function ProjectWorkspace({ onOpenProject }: ProjectWorkspaceProps = {}) 
                           <button
                             type="button"
                             className="button button--quiet"
-                            disabled={project.status === "ARCHIVED"}
+                            disabled={isReadOnly || project.status === "ARCHIVED"}
                             onClick={() => setPendingArchiveId(project.id)}
                           >
                             {project.status === "ARCHIVED" ? "Archived" : "Archive"}
@@ -222,7 +250,7 @@ export function ProjectWorkspace({ onOpenProject }: ProjectWorkspaceProps = {}) 
         <div className="section-heading">
           <div>
             <h2 id="create-project-title">Create project</h2>
-            <p>Use a stable key because future sources and documents will reference it.</p>
+            <p>The project will be assigned to {workspace.name}.</p>
           </div>
         </div>
 
@@ -235,12 +263,12 @@ export function ProjectWorkspace({ onOpenProject }: ProjectWorkspaceProps = {}) 
                 required
                 minLength={3}
                 maxLength={80}
-                aria-describedby="project-name-help"
                 value={form.name}
+                disabled={isReadOnly}
                 onChange={(event) => setForm({ ...form, name: event.target.value })}
-                placeholder="Commerce Documentation"
+                placeholder="ERP Core"
               />
-              <small id="project-name-help">Human-readable name shown across the workspace.</small>
+              <small>Human-readable system or application name.</small>
             </div>
 
             <div className="field">
@@ -251,33 +279,31 @@ export function ProjectWorkspace({ onOpenProject }: ProjectWorkspaceProps = {}) 
                 minLength={2}
                 maxLength={20}
                 pattern="[A-Za-z][A-Za-z0-9-]+"
-                aria-describedby="project-key-help"
                 value={form.key}
+                disabled={isReadOnly}
                 onChange={(event) => setForm({ ...form, key: event.target.value.toUpperCase() })}
-                placeholder="COMMERCE"
+                placeholder="ERP-CORE"
               />
-              <small id="project-key-help">
-                2-20 letters, numbers, or hyphens. Stored in uppercase.
-              </small>
+              <small>2-20 letters, numbers, or hyphens. Stored in uppercase.</small>
             </div>
 
             <div className="field">
-              <label htmlFor="workspace-type">Workspace type</label>
+              <label htmlFor="ownership-type">Ownership</label>
               <select
-                id="workspace-type"
-                aria-describedby="workspace-type-help"
-                value={form.workspace_type}
+                id="ownership-type"
+                value={form.ownership_type}
+                disabled={isReadOnly}
                 onChange={(event) =>
-                  setForm({ ...form, workspace_type: event.target.value as WorkspaceType })
+                  setForm({
+                    ...form,
+                    ownership_type: event.target.value as OwnershipType,
+                  })
                 }
               >
+                <option value="TEAM">Team</option>
                 <option value="PERSONAL">Personal</option>
-                <option value="DEMO">Demo</option>
-                <option value="ENTERPRISE">Enterprise</option>
               </select>
-              <small id="workspace-type-help">
-                Defines the intended governance context; it does not grant access.
-              </small>
+              <small>Governance ownership; access control will be implemented separately.</small>
             </div>
 
             <div className="field field--wide">
@@ -286,23 +312,23 @@ export function ProjectWorkspace({ onOpenProject }: ProjectWorkspaceProps = {}) 
                 id="project-description"
                 maxLength={500}
                 rows={3}
-                aria-describedby="project-description-help"
                 value={form.description}
+                disabled={isReadOnly}
                 onChange={(event) => setForm({ ...form, description: event.target.value })}
-                placeholder="Describe the system or documentation scope."
+                placeholder="Describe the product, system, or application boundary."
               />
-              <small id="project-description-help">{form.description.length}/500 characters</small>
+              <small>{form.description.length}/500 characters</small>
             </div>
           </div>
 
-          {formError && (
-            <p className="form-error" role="alert">
-              {formError}
-            </p>
-          )}
+          {formError && <p className="form-error" role="alert">{formError}</p>}
 
           <div className="form-actions">
-            <button type="submit" className="button button--primary" disabled={isSubmitting}>
+            <button
+              type="submit"
+              className="button button--primary"
+              disabled={isSubmitting || isReadOnly}
+            >
               {isSubmitting ? "Creating…" : "Create project"}
             </button>
           </div>
@@ -312,8 +338,11 @@ export function ProjectWorkspace({ onOpenProject }: ProjectWorkspaceProps = {}) 
   );
 }
 
-function formatWorkspace(value: WorkspaceType): string {
-  return value.charAt(0) + value.slice(1).toLowerCase();
+function formatOwnership(project: Project): string {
+  if (project.ownership_type !== undefined) {
+    return project.ownership_type === "PERSONAL" ? "Personal" : "Team";
+  }
+  return project.workspace_type === "ENTERPRISE" ? "Team" : "Personal";
 }
 
 function formatStatus(value: Project["status"]): string {

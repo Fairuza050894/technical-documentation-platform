@@ -8,6 +8,7 @@ from tdp.modules.catalog.domain.errors import (
     CatalogArtifactIntegrityError,
     CatalogArtifactNotFoundError,
     CatalogError,
+    CatalogProjectArchivedError,
     CatalogProjectNotFoundError,
     CatalogSourceArchivedError,
     CatalogSourceNotFoundError,
@@ -23,6 +24,7 @@ from tdp.modules.changes.domain.errors import (
 from tdp.modules.documents.domain.errors import (
     DocumentError,
     DocumentNotFoundError,
+    DocumentProjectArchivedError,
     DocumentProjectNotFoundError,
     DocumentSnapshotNotFoundError,
     DocumentSourceNotFoundError,
@@ -39,10 +41,12 @@ from tdp.modules.documents.domain.errors import (
     InvalidWorkflowEventIdError,
 )
 from tdp.modules.projects.domain.errors import (
+    InvalidOwnershipTypeError,
     InvalidProjectDescriptionError,
     InvalidProjectIdError,
     InvalidProjectKeyError,
     InvalidProjectNameError,
+    InvalidProjectWorkspaceIdError,
     InvalidWorkspaceTypeError,
     ProjectAlreadyArchivedError,
     ProjectError,
@@ -68,12 +72,25 @@ from tdp.modules.sources.domain.errors import (
     UnsupportedOpenApiVersionError,
     UnsupportedSourceFileError,
 )
+from tdp.modules.workspaces.domain.errors import (
+    DefaultWorkspaceArchiveError,
+    InvalidWorkspaceDescriptionError,
+    InvalidWorkspaceIdError,
+    InvalidWorkspaceKeyError,
+    InvalidWorkspaceNameError,
+    WorkspaceAlreadyArchivedError,
+    WorkspaceArchivedError,
+    WorkspaceError,
+    WorkspaceKeyAlreadyExistsError,
+    WorkspaceNotFoundError,
+)
 
 _CATALOG_ERROR_STATUS: Mapping[type[CatalogError], int] = {
     InvalidSynchronizationIdError: 422,
     CatalogSourceNotFoundError: 404,
     CatalogSourceArchivedError: 409,
     CatalogProjectNotFoundError: 404,
+    CatalogProjectArchivedError: 409,
     CatalogArtifactNotFoundError: 404,
     CatalogArtifactIntegrityError: 409,
     InvalidCatalogDocumentError: 422,
@@ -96,6 +113,7 @@ _DOCUMENT_ERROR_STATUS: Mapping[type[DocumentError], int] = {
     InvalidDocumentRevisionReasonError: 422,
     InvalidDocumentWorkflowTransitionError: 409,
     DocumentProjectNotFoundError: 404,
+    DocumentProjectArchivedError: 409,
     DocumentSourceNotFoundError: 404,
     DocumentSnapshotNotFoundError: 404,
     InvalidDocumentGenerationError: 422,
@@ -109,9 +127,23 @@ _PROJECT_ERROR_STATUS: Mapping[type[ProjectError], int] = {
     InvalidProjectNameError: 422,
     InvalidProjectDescriptionError: 422,
     InvalidWorkspaceTypeError: 422,
+    InvalidOwnershipTypeError: 422,
+    InvalidProjectWorkspaceIdError: 422,
     ProjectKeyAlreadyExistsError: 409,
     ProjectNotFoundError: 404,
     ProjectAlreadyArchivedError: 409,
+}
+
+_WORKSPACE_ERROR_STATUS: Mapping[type[WorkspaceError], int] = {
+    InvalidWorkspaceIdError: 422,
+    InvalidWorkspaceKeyError: 422,
+    InvalidWorkspaceNameError: 422,
+    InvalidWorkspaceDescriptionError: 422,
+    WorkspaceKeyAlreadyExistsError: 409,
+    WorkspaceNotFoundError: 404,
+    WorkspaceAlreadyArchivedError: 409,
+    WorkspaceArchivedError: 409,
+    DefaultWorkspaceArchiveError: 409,
 }
 
 _SOURCE_ERROR_STATUS: Mapping[type[SourceError], int] = {
@@ -172,6 +204,17 @@ async def source_error_handler(request: Request, exc: Exception) -> JSONResponse
     if not isinstance(exc, SourceError):
         raise exc
     return _error_response(request, exc.code, str(exc), _SOURCE_ERROR_STATUS.get(type(exc), 400))
+
+
+async def workspace_error_handler(request: Request, exc: Exception) -> JSONResponse:
+    if not isinstance(exc, WorkspaceError):
+        raise exc
+    return _error_response(
+        request,
+        exc.code,
+        str(exc),
+        _WORKSPACE_ERROR_STATUS.get(type(exc), 400),
+    )
 
 
 async def validation_error_handler(request: Request, exc: Exception) -> JSONResponse:

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import type { ProjectStage } from "../../app/router";
+import { ApiClientError } from "../../shared/api/client";
 import { Icon, type IconName } from "../../shared/ui/Icon";
 import { ApiCatalogWorkspace } from "../catalog/ApiCatalogWorkspace";
 import { listSynchronizations } from "../catalog/api";
@@ -9,13 +10,14 @@ import { ChangesWorkspace } from "../changes/ChangesWorkspace";
 import { DocumentsWorkspace } from "../documents/DocumentsWorkspace";
 import { listGeneratedDocuments } from "../documents/api";
 import type { GeneratedDocumentSummary } from "../documents/types";
-import { listProjects } from "../projects/api";
+import { getProject } from "../projects/api";
 import type { Project } from "../projects/types";
 import { SourceWorkspace } from "../sources/SourceWorkspace";
 import { listSources } from "../sources/api";
 import type { TechnicalSource } from "../sources/types";
 
 interface ProjectWorkbenchProps {
+  workspaceId: string | null;
   projectId: string;
   stage: ProjectStage;
   onNavigateStage: (stage: ProjectStage) => void;
@@ -45,6 +47,7 @@ const stageItems: ReadonlyArray<{
 ];
 
 export function ProjectWorkbench({
+  workspaceId,
   projectId,
   stage,
   onNavigateStage,
@@ -72,12 +75,15 @@ export function ProjectWorkbench({
 
     async function loadProject(): Promise<void> {
       try {
-        const collection = await listProjects();
-        const resolved = collection.items.find((item) => item.id === projectId) ?? null;
+        const resolved = await getProject(projectId);
         if (!active) {
           return;
         }
-        if (resolved === null) {
+        if (
+          workspaceId !== null &&
+          resolved.workspace_id !== undefined &&
+          resolved.workspace_id !== workspaceId
+        ) {
           setLoadState("not-found");
           return;
         }
@@ -116,6 +122,10 @@ export function ProjectWorkbench({
         if (!active) {
           return;
         }
+        if (error instanceof ApiClientError && error.status === 404) {
+          setLoadState("not-found");
+          return;
+        }
         setLoadError(
           error instanceof Error ? error.message : "The project workspace could not load.",
         );
@@ -127,7 +137,7 @@ export function ProjectWorkbench({
     return () => {
       active = false;
     };
-  }, [onProjectResolved, projectId]);
+  }, [onProjectResolved, projectId, workspaceId]);
 
   const nextAction = useMemo(
     () => (project === null ? null : resolveNextAction(project, summary)),
@@ -150,7 +160,7 @@ export function ProjectWorkbench({
           <Icon name="alert" size={22} />
         </span>
         <h1 id="project-not-found-title">Project not found</h1>
-        <p>The project in this URL no longer exists or is not available.</p>
+        <p>The project in this URL does not exist or does not belong to the selected workspace.</p>
         <button type="button" className="button button--primary" onClick={onBackToProjects}>
           Open project registry
         </button>

@@ -9,8 +9,10 @@ from tdp.modules.projects.domain.errors import (
     InvalidProjectIdError,
     InvalidProjectKeyError,
     InvalidProjectNameError,
+    InvalidProjectWorkspaceIdError,
     ProjectAlreadyArchivedError,
 )
+from tdp.modules.workspaces.domain.model import DEFAULT_WORKSPACE_ID
 
 _PROJECT_KEY_PATTERN = re.compile(r"^[A-Z][A-Z0-9-]{1,19}$")
 
@@ -21,9 +23,20 @@ class ProjectStatus(StrEnum):
 
 
 class WorkspaceType(StrEnum):
+    """Deprecated project classification retained for API and data migration compatibility."""
+
     DEMO = "DEMO"
     PERSONAL = "PERSONAL"
     ENTERPRISE = "ENTERPRISE"
+
+
+class OwnershipType(StrEnum):
+    PERSONAL = "PERSONAL"
+    TEAM = "TEAM"
+
+    @classmethod
+    def from_legacy_workspace_type(cls, value: WorkspaceType) -> "OwnershipType":
+        return cls.TEAM if value is WorkspaceType.ENTERPRISE else cls.PERSONAL
 
 
 @dataclass(frozen=True, slots=True)
@@ -101,6 +114,16 @@ class Project:
     status: ProjectStatus
     created_at: datetime
     updated_at: datetime
+    workspace_id: str = DEFAULT_WORKSPACE_ID
+    ownership_type: OwnershipType = OwnershipType.PERSONAL
+
+    def __post_init__(self) -> None:
+        try:
+            UUID(self.workspace_id)
+        except ValueError as exc:
+            raise InvalidProjectWorkspaceIdError(
+                "Project workspace reference must be a valid UUID."
+            ) from exc
 
     @classmethod
     def create(
@@ -109,10 +132,15 @@ class Project:
         key: ProjectKey,
         name: ProjectName,
         description: ProjectDescription,
-        workspace_type: WorkspaceType,
+        workspace_type: WorkspaceType = WorkspaceType.PERSONAL,
+        workspace_id: str = DEFAULT_WORKSPACE_ID,
+        ownership_type: OwnershipType | None = None,
         now: datetime | None = None,
     ) -> "Project":
         created_at = now or datetime.now(UTC)
+        resolved_ownership = ownership_type or OwnershipType.from_legacy_workspace_type(
+            workspace_type
+        )
         return cls(
             id=ProjectId.new(),
             key=key,
@@ -122,6 +150,8 @@ class Project:
             status=ProjectStatus.ACTIVE,
             created_at=created_at,
             updated_at=created_at,
+            workspace_id=workspace_id,
+            ownership_type=resolved_ownership,
         )
 
     def archive(self, *, now: datetime | None = None) -> None:

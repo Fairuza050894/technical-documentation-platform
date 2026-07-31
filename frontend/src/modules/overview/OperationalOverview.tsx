@@ -9,6 +9,7 @@ import { listProjects } from "../projects/api";
 import type { Project } from "../projects/types";
 import { listSources } from "../sources/api";
 import type { TechnicalSource } from "../sources/types";
+import type { Workspace } from "../workspaces/types";
 
 export type OverviewNavigationTarget =
   | "Projects"
@@ -18,6 +19,7 @@ export type OverviewNavigationTarget =
   | "Documents";
 
 interface OperationalOverviewProps {
+  workspace: Workspace;
   serviceState: "loading" | "available" | "unavailable";
   serviceVersion: string | undefined;
   onNavigate: (target: OverviewNavigationTarget, projectId?: string) => void;
@@ -47,6 +49,7 @@ const EMPTY_DATA: OverviewData = {
 };
 
 export function OperationalOverview({
+  workspace,
   serviceState,
   serviceVersion,
   onNavigate,
@@ -59,8 +62,11 @@ export function OperationalOverview({
     let active = true;
 
     async function loadOverview(): Promise<void> {
+      setLoadState("loading");
+      setLoadError("");
+      setData(EMPTY_DATA);
       try {
-        const projectCollection = await listProjects();
+        const projectCollection = await listProjects(workspace.id);
         const activeProjects = projectCollection.items.filter(
           (project) => project.status === "ACTIVE",
         );
@@ -107,26 +113,25 @@ export function OperationalOverview({
     return () => {
       active = false;
     };
-  }, []);
+  }, [workspace.id]);
 
   const dashboard = useMemo(() => buildDashboard(data), [data]);
-  const preferredProjectId = data.projects[0]?.id;
 
   return (
     <>
       <header className="topbar topbar--operational">
         <div>
-          <p className="eyebrow">Operational workspace</p>
+          <p className="eyebrow">{workspace.name}</p>
           <h1>Overview</h1>
           <p className="page-summary">
-            Current source, synchronization, and documentation state across the workspace.
+            Current source, synchronization, and documentation state for this workspace.
           </p>
         </div>
         <div className="page-actions" aria-label="Quick actions">
           <button
             type="button"
             className="button button--secondary"
-            onClick={() => onNavigate("Sources", preferredProjectId)}
+            onClick={() => onNavigate("Sources")}
           >
             <Icon name="upload" size={15} />
             Import source
@@ -134,7 +139,7 @@ export function OperationalOverview({
           <button
             type="button"
             className="button button--primary"
-            onClick={() => onNavigate("Documents", preferredProjectId)}
+            onClick={() => onNavigate("Documents")}
           >
             <Icon name="documents" size={15} />
             Generate document
@@ -188,7 +193,7 @@ export function OperationalOverview({
             <div className="signal-region__heading">
               <div>
                 <h2 id="workspace-metrics-title">Workspace metrics</h2>
-                <p>Live operational signals from existing platform APIs.</p>
+                <p>Live operational signals scoped to {workspace.name}.</p>
               </div>
               <span className="data-provenance">
                 <span className="data-provenance__dot" aria-hidden="true" />
@@ -201,7 +206,7 @@ export function OperationalOverview({
                 icon="projects"
                 label="Active projects"
                 value={dashboard.activeProjects}
-                detail="Workspace boundaries"
+                detail={`${workspace.key} boundaries`}
                 onClick={() => onNavigate("Projects")}
               />
               <SignalItem
@@ -209,14 +214,14 @@ export function OperationalOverview({
                 label="Ready sources"
                 value={dashboard.readySources}
                 detail="Validated artifacts"
-                onClick={() => onNavigate("Sources", preferredProjectId)}
+                onClick={() => onNavigate("Sources")}
               />
               <SignalItem
                 icon="sync"
                 label="Completed snapshots"
                 value={dashboard.completedSnapshots}
                 detail="Successful sync runs"
-                onClick={() => onNavigate("API Catalog", preferredProjectId)}
+                onClick={() => onNavigate("API Catalog")}
               />
               <SignalItem
                 icon="review"
@@ -224,7 +229,7 @@ export function OperationalOverview({
                 value={dashboard.pendingReviews}
                 detail="Lifecycle actions"
                 tone={dashboard.pendingReviews > 0 ? "warning" : "neutral"}
-                onClick={() => onNavigate("Documents", preferredProjectId)}
+                onClick={() => onNavigate("Documents")}
               />
             </div>
           </section>
@@ -328,14 +333,8 @@ export function OperationalOverview({
                         {dashboard.projectRows.map((row) => (
                           <tr key={row.project.id}>
                             <td>
-                              <button
-                                type="button"
-                                className="project-link"
-                                onClick={() => onNavigate("Projects", row.project.id)}
-                              >
-                                <strong>{row.project.name}</strong>
-                                <span className="table-secondary-text">{row.project.key}</span>
-                              </button>
+                              <strong>{row.project.name}</strong>
+                              <span className="table-secondary-text">{row.project.key}</span>
                             </td>
                             <td className="numeric-cell">{row.sourceCount}</td>
                             <td className="numeric-cell">{row.operationCount}</td>
@@ -399,7 +398,7 @@ export function OperationalOverview({
                           type="button"
                           className="icon-action"
                           aria-label={`Review ${item.label}`}
-                          onClick={() => onNavigate(item.target, preferredProjectId)}
+                          onClick={() => onNavigate(item.target)}
                         >
                           <Icon name="arrow-right" size={15} />
                         </button>
@@ -431,19 +430,19 @@ export function OperationalOverview({
                     icon="upload"
                     title="Import OpenAPI"
                     detail="Register a JSON or YAML artifact."
-                    onClick={() => onNavigate("Sources", preferredProjectId)}
+                    onClick={() => onNavigate("Sources")}
                   />
                   <QuickAction
                     icon="sync"
                     title="Synchronize catalog"
                     detail="Create a normalized snapshot."
-                    onClick={() => onNavigate("API Catalog", preferredProjectId)}
+                    onClick={() => onNavigate("API Catalog")}
                   />
                   <QuickAction
                     icon="review"
                     title="Review documents"
                     detail="Open approval and revision history."
-                    onClick={() => onNavigate("Documents", preferredProjectId)}
+                    onClick={() => onNavigate("Documents")}
                   />
                 </div>
               </section>
@@ -452,7 +451,7 @@ export function OperationalOverview({
                 <Icon name="server" size={14} />
                 <span>
                   Data is assembled from deterministic project, source, synchronization,
-                  and document APIs.
+                  and document APIs within the selected workspace.
                 </span>
               </div>
             </aside>
