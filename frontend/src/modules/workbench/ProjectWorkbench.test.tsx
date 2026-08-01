@@ -28,12 +28,73 @@ function projectRecord(overrideWorkspaceId = workspaceId) {
   };
 }
 
+function featureRecord() {
+  return {
+    id: "33333333-3333-4333-8333-333333333333",
+    project_id: projectId,
+    key: "DOCS-CORE",
+    name: "Documentation Core",
+    description: "Core documentation capability",
+    kind: "MODULE",
+    owner: "Platform Team",
+    status: "ACTIVE",
+    documentation_coverage: {
+      required_total: 5,
+      available_required: 0,
+      missing_required: 5,
+      optional_total: 3,
+    },
+    created_at: "2026-08-01T00:00:00Z",
+    updated_at: "2026-08-01T00:00:00Z",
+  };
+}
+
 afterEach(() => {
   vi.restoreAllMocks();
 });
 
 describe("ProjectWorkbench", () => {
   it("derives the next action from project evidence", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      const url = getRequestUrl(input);
+      if (url.endsWith(`/api/projects/${projectId}`)) {
+        return Promise.resolve(
+          new Response(JSON.stringify(projectRecord()), { status: 200 }),
+        );
+      }
+      if (url.endsWith(`/api/workspaces/${workspaceId}/projects/${projectId}/features`)) {
+        return Promise.resolve(
+          new Response(JSON.stringify({ items: [featureRecord()], total: 1 }), { status: 200 }),
+        );
+      }
+      return Promise.resolve(
+        new Response(JSON.stringify({ items: [], total: 0 }), { status: 200 }),
+      );
+    });
+    const navigateStage = vi.fn();
+
+    render(
+      <ProjectWorkbench
+        workspaceId={workspaceId}
+        projectId={projectId}
+        stage="overview"
+        featureId={null}
+        onNavigateStage={navigateStage}
+        onNavigateFeature={vi.fn()}
+        onBackToProjects={vi.fn()}
+        onProjectResolved={vi.fn()}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Import the first technical source")).toBeInTheDocument();
+    });
+    expect(screen.queryByRole("button", { name: "Projects" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Open source intake" }));
+    expect(navigateStage).toHaveBeenCalledWith("sources");
+  });
+
+  it("recommends defining a capability before technical intake", async () => {
     vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
       const url = getRequestUrl(input);
       if (url.endsWith(`/api/projects/${projectId}`)) {
@@ -52,18 +113,19 @@ describe("ProjectWorkbench", () => {
         workspaceId={workspaceId}
         projectId={projectId}
         stage="overview"
+        featureId={null}
         onNavigateStage={navigateStage}
+        onNavigateFeature={vi.fn()}
         onBackToProjects={vi.fn()}
         onProjectResolved={vi.fn()}
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText("Import the first technical source")).toBeInTheDocument();
-    });
-    expect(screen.queryByRole("button", { name: "Projects" })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Open source intake" }));
-    expect(navigateStage).toHaveBeenCalledWith("sources");
+    expect(
+      await screen.findByText("Define the first feature or module"),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Open capability registry" }));
+    expect(navigateStage).toHaveBeenCalledWith("features");
   });
 
   it("rejects a project that belongs to another workspace", async () => {
@@ -87,7 +149,9 @@ describe("ProjectWorkbench", () => {
         workspaceId={workspaceId}
         projectId={projectId}
         stage="overview"
+        featureId={null}
         onNavigateStage={vi.fn()}
+        onNavigateFeature={vi.fn()}
         onBackToProjects={vi.fn()}
         onProjectResolved={vi.fn()}
       />,
@@ -117,7 +181,9 @@ describe("ProjectWorkbench", () => {
         workspaceId={workspaceId}
         projectId="missing"
         stage="overview"
+        featureId={null}
         onNavigateStage={vi.fn()}
+        onNavigateFeature={vi.fn()}
         onBackToProjects={back}
         onProjectResolved={vi.fn()}
       />,

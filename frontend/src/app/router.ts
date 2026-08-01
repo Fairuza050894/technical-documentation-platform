@@ -1,5 +1,6 @@
 export const projectStages = [
   "overview",
+  "features",
   "sources",
   "catalog",
   "changes",
@@ -18,14 +19,16 @@ export type AppRoute =
       workspaceId: string | null;
       projectId: string;
       stage: ProjectStage;
+      featureId?: string | null;
     }
   | { name: "not-found"; pathname: string };
 
 const workspaceHomePattern = /^\/workspaces\/([^/]+)\/?$/;
 const workspaceProjectsPattern = /^\/workspaces\/([^/]+)\/projects\/?$/;
 const workspaceProjectPattern =
-  /^\/workspaces\/([^/]+)\/projects\/([^/]+)\/workbench(?:\/([^/]+))?\/?$/;
-const legacyProjectPattern = /^\/projects\/([^/]+)\/workbench(?:\/([^/]+))?\/?$/;
+  /^\/workspaces\/([^/]+)\/projects\/([^/]+)\/workbench(?:\/([^/]+))?(?:\/([^/]+))?\/?$/;
+const legacyProjectPattern =
+  /^\/projects\/([^/]+)\/workbench(?:\/([^/]+))?(?:\/([^/]+))?\/?$/;
 
 export function parseRoute(pathname: string): AppRoute {
   const normalized = normalizePath(pathname);
@@ -48,12 +51,16 @@ export function parseRoute(pathname: string): AppRoute {
     const workspaceId = safeDecode(workspaceProjectMatch[1]);
     const projectId = safeDecode(workspaceProjectMatch[2]);
     const stage = workspaceProjectMatch[3] ?? "overview";
+    const featureId = safeDecode(workspaceProjectMatch[4]);
     if (
       workspaceId !== null &&
       projectId !== null &&
-      isProjectStage(stage)
+      isProjectStage(stage) &&
+      isValidFeatureContext(stage, featureId)
     ) {
-      return { name: "project", workspaceId, projectId, stage };
+      return featureId === null
+        ? { name: "project", workspaceId, projectId, stage }
+        : { name: "project", workspaceId, projectId, stage, featureId };
     }
   }
 
@@ -77,8 +84,15 @@ export function parseRoute(pathname: string): AppRoute {
   if (legacyProjectMatch) {
     const projectId = safeDecode(legacyProjectMatch[1]);
     const stage = legacyProjectMatch[2] ?? "overview";
-    if (projectId !== null && isProjectStage(stage)) {
-      return { name: "project", workspaceId: null, projectId, stage };
+    const featureId = safeDecode(legacyProjectMatch[3]);
+    if (
+      projectId !== null &&
+      isProjectStage(stage) &&
+      isValidFeatureContext(stage, featureId)
+    ) {
+      return featureId === null
+        ? { name: "project", workspaceId: null, projectId, stage }
+        : { name: "project", workspaceId: null, projectId, stage, featureId };
     }
   }
 
@@ -101,11 +115,12 @@ export function routePath(route: AppRoute): string {
       return "/system";
     case "project":
       return route.workspaceId === null
-        ? `/projects/${encodeURIComponent(route.projectId)}/workbench/${route.stage}`
+        ? projectStagePath(route.projectId, route.stage, route.featureId)
         : workspaceProjectStagePath(
             route.workspaceId,
             route.projectId,
             route.stage,
+            route.featureId,
           );
     case "not-found":
       return route.pathname;
@@ -124,12 +139,23 @@ export function workspaceProjectStagePath(
   workspaceId: string,
   projectId: string,
   stage: ProjectStage,
+  featureId?: string | null,
 ): string {
-  return `${workspaceProjectsPath(workspaceId)}/${encodeURIComponent(projectId)}/workbench/${stage}`;
+  const base = `${workspaceProjectsPath(workspaceId)}/${encodeURIComponent(projectId)}/workbench/${stage}`;
+  return stage === "features" && featureId
+    ? `${base}/${encodeURIComponent(featureId)}`
+    : base;
 }
 
-export function projectStagePath(projectId: string, stage: ProjectStage): string {
-  return `/projects/${encodeURIComponent(projectId)}/workbench/${stage}`;
+export function projectStagePath(
+  projectId: string,
+  stage: ProjectStage,
+  featureId?: string | null,
+): string {
+  const base = `/projects/${encodeURIComponent(projectId)}/workbench/${stage}`;
+  return stage === "features" && featureId
+    ? `${base}/${encodeURIComponent(featureId)}`
+    : base;
 }
 
 export function routeWorkspaceId(route: AppRoute): string | null {
@@ -147,6 +173,13 @@ export function routeWorkspaceId(route: AppRoute): string | null {
 
 export function isProjectStage(value: string): value is ProjectStage {
   return projectStages.includes(value as ProjectStage);
+}
+
+function isValidFeatureContext(
+  stage: ProjectStage,
+  featureId: string | null,
+): boolean {
+  return featureId === null || stage === "features";
 }
 
 function safeDecode(value: string | undefined): string | null {

@@ -51,6 +51,43 @@ describe("workspace and project routing", () => {
     );
   });
 
+
+  it("parses and builds feature-scoped documentation map routes", () => {
+    const route = parseRoute(
+      "/workspaces/workspace-1/projects/project-1/workbench/features/feature-1",
+    );
+
+    expect(route).toEqual({
+      name: "project",
+      workspaceId: "workspace-1",
+      projectId: "project-1",
+      stage: "features",
+      featureId: "feature-1",
+    });
+    expect(
+      workspaceProjectStagePath(
+        "workspace-1",
+        "project-1",
+        "features",
+        "feature-1",
+      ),
+    ).toBe(
+      "/workspaces/workspace-1/projects/project-1/workbench/features/feature-1",
+    );
+  });
+
+  it("rejects a feature identifier on a non-feature stage", () => {
+    expect(
+      parseRoute(
+        "/workspaces/workspace-1/projects/project-1/workbench/documents/feature-1",
+      ),
+    ).toEqual({
+      name: "not-found",
+      pathname:
+        "/workspaces/workspace-1/projects/project-1/workbench/documents/feature-1",
+    });
+  });
+
   it("preserves legacy project routes for additive migration", () => {
     expect(parseRoute("/projects/project-1/workbench")).toEqual({
       name: "project",

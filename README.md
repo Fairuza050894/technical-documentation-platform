@@ -311,3 +311,34 @@ Run the dedicated audit with:
 ```bash
 make audit-workspaces
 ```
+
+
+## Feature / Module Registry
+
+A Project now contains stable Feature or Module boundaries. Each capability receives a
+versioned, deterministic documentation baseline before requirement and source evidence are
+linked. The baseline is stored separately from the current project-scoped document lifecycle,
+so existing document IDs, checksums, and version history are not rewritten.
+
+Feature APIs:
+
+```text
+POST /api/workspaces/{workspace_id}/projects/{project_id}/features
+GET  /api/workspaces/{workspace_id}/projects/{project_id}/features
+GET  /api/workspaces/{workspace_id}/projects/{project_id}/features/{feature_id}
+POST /api/workspaces/{workspace_id}/projects/{project_id}/features/{feature_id}/archive
+GET  /api/workspaces/{workspace_id}/projects/{project_id}/features/{feature_id}/documentation-map
+```
+
+The Project Workbench exposes a persistent `Features` stage and optional feature detail route:
+
+```text
+/workspaces/:workspaceId/projects/:projectId/workbench/features
+/workspaces/:workspaceId/projects/:projectId/workbench/features/:featureId
+```
+
+Run the dedicated audit with:
+
+```bash
+make audit-features
+```

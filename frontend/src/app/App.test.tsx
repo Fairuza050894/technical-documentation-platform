@@ -6,6 +6,7 @@ import { App } from "./App";
 const workspaceId = "00000000-0000-4000-8000-000000000001";
 const secondWorkspaceId = "22222222-2222-4222-8222-222222222222";
 const projectId = "11111111-1111-4111-8111-111111111111";
+const featureId = "33333333-3333-4333-8333-333333333333";
 
 function getRequestUrl(input: RequestInfo | URL): string {
   if (typeof input === "string") {
@@ -41,12 +42,36 @@ function projectRecord() {
   };
 }
 
+
+function featureRecord() {
+  return {
+    id: featureId,
+    project_id: projectId,
+    key: "DOCS-CORE",
+    name: "Documentation Core",
+    description: "Core documentation capability",
+    kind: "MODULE",
+    owner: "Platform Team",
+    status: "ACTIVE",
+    documentation_coverage: {
+      required_total: 5,
+      available_required: 0,
+      missing_required: 5,
+      optional_total: 3,
+    },
+    created_at: "2026-08-01T00:00:00Z",
+    updated_at: "2026-08-01T00:00:00Z",
+  };
+}
+
 function mockPlatform({
   withProject = false,
   withSecondWorkspace = false,
+  withFeature = false,
 }: {
   withProject?: boolean;
   withSecondWorkspace?: boolean;
+  withFeature?: boolean;
 } = {}): void {
   vi.spyOn(globalThis, "fetch").mockImplementation((input: RequestInfo | URL) => {
     const url = getRequestUrl(input);
@@ -92,6 +117,40 @@ function mockPlatform({
     }
     if (url.endsWith(`/api/projects/${projectId}`)) {
       return Promise.resolve(new Response(JSON.stringify(projectRecord()), { status: 200 }));
+    }
+    if (url.endsWith(`/api/workspaces/${workspaceId}/projects/${projectId}/features`)) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            items: withFeature ? [featureRecord()] : [],
+            total: withFeature ? 1 : 0,
+          }),
+          { status: 200 },
+        ),
+      );
+    }
+    if (url.endsWith(`/api/workspaces/${workspaceId}/projects/${projectId}/features/${featureId}/documentation-map`)) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            feature_id: featureId,
+            policy_key: "feature-documentation-baseline-v1",
+            total: 8,
+            items: [
+              {
+                document_type: "SYSTEM_REQUIREMENTS_SPECIFICATION",
+                requirement: "REQUIRED",
+                coverage_status: "MISSING",
+                document_id: null,
+                policy_key: "feature-documentation-baseline-v1",
+                created_at: "2026-08-01T00:00:00Z",
+                updated_at: "2026-08-01T00:00:00Z",
+              },
+            ],
+          }),
+          { status: 200 },
+        ),
+      );
     }
     if (url.endsWith(`/api/projects/${projectId}/sources`)) {
       return Promise.resolve(
@@ -186,7 +245,7 @@ describe("App", () => {
       }),
     ).toHaveAttribute("aria-expanded", "false");
     expect(screen.getByRole("navigation", { name: "Project workflow" })).toBeInTheDocument();
-    expect(screen.getByText("Import the first technical source")).toBeInTheDocument();
+    expect(screen.getByText("Define the first feature or module")).toBeInTheDocument();
   });
 
   it("restores workspace, project, and stage context from a deep link", async () => {
@@ -215,6 +274,27 @@ describe("App", () => {
       "aria-current",
       "step",
     );
+  });
+
+  it("restores a feature documentation map from a deep link", async () => {
+    globalThis.history.replaceState(
+      {},
+      "",
+      `/workspaces/${workspaceId}/projects/${projectId}/workbench/features/${featureId}`,
+    );
+    mockPlatform({ withProject: true, withFeature: true });
+
+    render(<App />);
+
+    expect(
+      await screen.findByRole("heading", { name: "Documentation Core" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Features Capability map/ }),
+    ).toHaveAttribute("aria-current", "step");
+    expect(
+      await screen.findByText("System requirements specification"),
+    ).toBeInTheDocument();
   });
 
   it("upgrades a legacy project deep link to its workspace-scoped route", async () => {

@@ -34,6 +34,7 @@ type WorkspaceLoadState = "loading" | "ready" | "error";
 
 const projectStageLabels: Record<ProjectStage, string> = {
   overview: "Overview",
+  features: "Features",
   sources: "Sources",
   catalog: "API Catalog",
   changes: "Changes",
@@ -42,6 +43,7 @@ const projectStageLabels: Record<ProjectStage, string> = {
 
 const projectStageIcons: Record<ProjectStage, IconName> = {
   overview: "overview",
+  features: "projects",
   sources: "source",
   catalog: "catalog",
   changes: "changes",
@@ -507,12 +509,22 @@ export function App() {
                 workspaceId={route.workspaceId}
                 projectId={route.projectId}
                 stage={route.stage}
+                featureId={route.featureId ?? null}
                 onNavigateStage={(stage) =>
                   navigate({
                     name: "project",
                     workspaceId: route.workspaceId ?? activeWorkspace?.id ?? null,
                     projectId: route.projectId,
                     stage,
+                  })
+                }
+                onNavigateFeature={(featureId) =>
+                  navigate({
+                    name: "project",
+                    workspaceId: route.workspaceId ?? activeWorkspace?.id ?? null,
+                    projectId: route.projectId,
+                    stage: "features",
+                    featureId,
                   })
                 }
                 onBackToProjects={() =>

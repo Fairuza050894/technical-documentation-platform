@@ -7,6 +7,9 @@ import { ApiCatalogWorkspace } from "../catalog/ApiCatalogWorkspace";
 import { listSynchronizations } from "../catalog/api";
 import type { SynchronizationRun } from "../catalog/types";
 import { ChangesWorkspace } from "../changes/ChangesWorkspace";
+import { FeatureWorkspace } from "../features/FeatureWorkspace";
+import { listFeatures } from "../features/api";
+import type { Feature } from "../features/types";
 import { DocumentsWorkspace } from "../documents/DocumentsWorkspace";
 import { listGeneratedDocuments } from "../documents/api";
 import type { GeneratedDocumentSummary } from "../documents/types";
@@ -20,7 +23,9 @@ interface ProjectWorkbenchProps {
   workspaceId: string | null;
   projectId: string;
   stage: ProjectStage;
+  featureId: string | null;
   onNavigateStage: (stage: ProjectStage) => void;
+  onNavigateFeature: (featureId: string | null) => void;
   onBackToProjects: () => void;
   onProjectResolved: (project: Project | null) => void;
 }
@@ -29,6 +34,7 @@ interface ProjectSummary {
   sources: TechnicalSource[];
   runs: SynchronizationRun[];
   documents: GeneratedDocumentSummary[];
+  features: Feature[];
 }
 
 type LoadState = "loading" | "ready" | "not-found" | "error";
@@ -40,6 +46,7 @@ const stageItems: ReadonlyArray<{
   description: string;
 }> = [
   { id: "overview", label: "Overview", icon: "overview", description: "Project readiness" },
+  { id: "features", label: "Features", icon: "projects", description: "Capability map" },
   { id: "sources", label: "Sources", icon: "source", description: "Technical intake" },
   { id: "catalog", label: "API Catalog", icon: "catalog", description: "Normalized snapshot" },
   { id: "changes", label: "Changes", icon: "changes", description: "Deterministic comparison" },
@@ -50,7 +57,9 @@ export function ProjectWorkbench({
   workspaceId,
   projectId,
   stage,
+  featureId,
   onNavigateStage,
+  onNavigateFeature,
   onBackToProjects,
   onProjectResolved,
 }: ProjectWorkbenchProps) {
@@ -59,6 +68,7 @@ export function ProjectWorkbench({
     sources: [],
     runs: [],
     documents: [],
+    features: [],
   });
   const [loadState, setLoadState] = useState<LoadState>("loading");
   const [loadError, setLoadError] = useState("");
@@ -68,7 +78,7 @@ export function ProjectWorkbench({
     let active = true;
     onProjectResolved(null);
     setProject(null);
-    setSummary({ sources: [], runs: [], documents: [] });
+    setSummary({ sources: [], runs: [], documents: [], features: [] });
     setLoadState("loading");
     setLoadError("");
     setSummaryError("");
@@ -97,9 +107,13 @@ export function ProjectWorkbench({
           const readySources = sourceCollection.items.filter(
             (source) => source.status === "READY",
           );
-          const [runCollections, documentCollection] = await Promise.all([
+          const resolvedWorkspaceId = resolved.workspace_id ?? workspaceId;
+          const [runCollections, documentCollection, featureCollection] = await Promise.all([
             Promise.all(readySources.map((source) => listSynchronizations(source.id))),
             listGeneratedDocuments(resolved.id),
+            resolvedWorkspaceId === null
+              ? Promise.resolve({ items: [], total: 0 })
+              : listFeatures(resolvedWorkspaceId, resolved.id),
           ]);
           if (!active) {
             return;
@@ -108,6 +122,7 @@ export function ProjectWorkbench({
             sources: sourceCollection.items,
             runs: runCollections.flatMap((collectionItem) => collectionItem.items),
             documents: documentCollection.items,
+            features: featureCollection.items,
           });
         } catch (error: unknown) {
           if (active) {
@@ -248,12 +263,12 @@ export function ProjectWorkbench({
             </li>
           ))}
           <li className="project-stage-planned" aria-label="Review stage planned">
-            <span>6</span>
+            <span>7</span>
             <strong>Review</strong>
             <small>Planned</small>
           </li>
           <li className="project-stage-planned" aria-label="Release stage planned">
-            <span>7</span>
+            <span>8</span>
             <strong>Release</strong>
             <small>Planned</small>
           </li>
@@ -271,6 +286,15 @@ export function ProjectWorkbench({
       )}
 
       <div className="embedded-workspace">
+        {stage === "features" && (project.workspace_id ?? workspaceId) !== null && (
+          <FeatureWorkspace
+            workspaceId={(project.workspace_id ?? workspaceId) as string}
+            project={project}
+            selectedFeatureId={featureId}
+            onOpenFeature={(selectedId) => onNavigateFeature(selectedId)}
+            onCloseFeature={() => onNavigateFeature(null)}
+          />
+        )}
         {stage === "sources" && <SourceWorkspace project={project} embedded />}
         {stage === "catalog" && <ApiCatalogWorkspace project={project} embedded />}
         {stage === "changes" && <ChangesWorkspace project={project} embedded />}
@@ -329,6 +353,13 @@ function ProjectOverview({
 
       <section className="project-summary-grid" aria-label="Project readiness summary">
         <SummaryCard
+          icon="projects"
+          label="Active capabilities"
+          value={summary.features.filter((feature) => feature.status === "ACTIVE").length}
+          detail={`${summary.features.length} features and modules`}
+          onClick={() => onNavigateStage("features")}
+        />
+        <SummaryCard
           icon="source"
           label="Ready sources"
           value={readySources.length}
@@ -370,7 +401,8 @@ function ProjectOverview({
           </div>
         </div>
         <ol>
-          <WorkflowStep label="Source intake" state={readySources.length > 0 ? "complete" : "current"} />
+          <WorkflowStep label="Capability map" state={summary.features.length > 0 ? "complete" : "current"} />
+          <WorkflowStep label="Source intake" state={readySources.length > 0 ? "complete" : summary.features.length > 0 ? "current" : "pending"} />
           <WorkflowStep label="Synchronization" state={completedRuns.length > 0 ? "complete" : readySources.length > 0 ? "current" : "pending"} />
           <WorkflowStep label="Change analysis" state={completedRuns.length >= 2 ? "available" : "pending"} />
           <WorkflowStep label="Document lifecycle" state={summary.documents.length > 0 ? "complete" : completedRuns.length > 0 ? "current" : "pending"} />
@@ -397,6 +429,16 @@ function resolveNextAction(project: Project, summary: ProjectSummary): NextActio
       title: "Review archived project evidence",
       detail: "This project is read-only. Existing sources and documents remain available.",
       actionLabel: "Review overview",
+    };
+  }
+
+  if (summary.features.length === 0) {
+    return {
+      stage: "features",
+      icon: "projects",
+      title: "Define the first feature or module",
+      detail: "Create a stable capability boundary before requirements and technical evidence are mapped.",
+      actionLabel: "Open capability registry",
     };
   }
 
