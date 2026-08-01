@@ -75,6 +75,21 @@ function mockPlatform({
 } = {}): void {
   vi.spyOn(globalThis, "fetch").mockImplementation((input: RequestInfo | URL) => {
     const url = getRequestUrl(input);
+    if (url.endsWith("/api/identity/me")) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            subject_id: "local-technical-writer",
+            display_name: "Technical Writer",
+            email: "technical.writer@local.invalid",
+            provider: "local",
+            assurance: "DEVELOPMENT",
+            audit_actor: "Technical Writer [local:local-technical-writer]",
+          }),
+          { status: 200 },
+        ),
+      );
+    }
     if (url.endsWith("/api/health")) {
       return Promise.resolve(
         new Response(

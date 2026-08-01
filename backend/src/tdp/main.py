@@ -3,6 +3,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 
 from tdp.config import Settings, get_settings
+from tdp.identity.model import IdentityAssurance, RequestPrincipal
+from tdp.identity.provider import LocalIdentityProvider
 from tdp.modules.catalog.application.service import CatalogApplicationService
 from tdp.modules.catalog.domain.errors import CatalogError
 from tdp.modules.catalog.infrastructure.openapi_parser import DeterministicOpenApiCatalogParser
@@ -58,11 +60,22 @@ from tdp.presentation.http.errors import (
     workspace_error_handler,
 )
 from tdp.presentation.http.middleware.request_id import RequestIdMiddleware
+from tdp.presentation.http.middleware.security_headers import SecurityHeadersMiddleware
 from tdp.presentation.http.routers.health import router as health_router
+from tdp.presentation.http.routers.identity import router as identity_router
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     runtime_settings = settings or get_settings()
+    identity_provider = LocalIdentityProvider(
+        RequestPrincipal(
+            subject_id=runtime_settings.local_identity_subject,
+            display_name=runtime_settings.local_identity_name,
+            email=runtime_settings.local_identity_email,
+            provider="local",
+            assurance=IdentityAssurance.DEVELOPMENT,
+        )
+    )
     workspace_repository = SqliteWorkspaceRepository(runtime_settings.database_path)
     project_repository = SqliteProjectRepository(runtime_settings.database_path)
     source_repository = SqliteSourceRepository(runtime_settings.database_path)
@@ -83,6 +96,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         openapi_url="/api/openapi.json",
     )
     application.state.settings = runtime_settings
+    application.state.identity_provider = identity_provider
     application.state.workspace_service = WorkspaceApplicationService(workspace_repository)
     application.state.feature_service = FeatureApplicationService(
         feature_repository,
@@ -121,6 +135,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         DeterministicTechnicalSourceOverviewRenderer(),
         workspace_repository,
     )
+    application.add_middleware(SecurityHeadersMiddleware)
     application.add_middleware(RequestIdMiddleware)
     application.add_middleware(
         CORSMiddleware,
@@ -138,6 +153,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.add_exception_handler(WorkspaceError, workspace_error_handler)
     application.add_exception_handler(RequestValidationError, validation_error_handler)
     application.include_router(health_router, prefix=runtime_settings.api_prefix)
+    application.include_router(identity_router, prefix=runtime_settings.api_prefix)
     application.include_router(workspaces_router, prefix=runtime_settings.api_prefix)
     application.include_router(projects_router, prefix=runtime_settings.api_prefix)
     application.include_router(workspace_projects_router, prefix=runtime_settings.api_prefix)

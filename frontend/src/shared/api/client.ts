@@ -1,3 +1,5 @@
+import { apiUrl } from "./config";
+
 interface ApiErrorPayload {
   error?: {
     code?: string;
@@ -23,7 +25,7 @@ export async function requestJson<T>(path: string, init?: RequestInit): Promise<
     headers.set("Content-Type", "application/json");
   }
 
-  const response = await fetch(`http://127.0.0.1:8000/api${path}`, {
+  const response = await fetch(apiUrl(path), {
     ...init,
     headers,
   });

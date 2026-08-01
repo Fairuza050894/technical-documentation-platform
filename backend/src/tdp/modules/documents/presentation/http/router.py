@@ -3,7 +3,7 @@ from typing import Annotated, Self, cast
 
 from fastapi import APIRouter, Depends, Request, status
 from fastapi.responses import PlainTextResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from tdp.modules.documents.application.commands import (
     CompareDocumentVersionsCommand,
@@ -17,19 +17,22 @@ from tdp.modules.documents.application.dto import (
     WorkflowEventDto,
 )
 from tdp.modules.documents.application.service import DocumentApplicationService
+from tdp.presentation.http.dependencies.identity import PrincipalDependency
 
 router = APIRouter(tags=["documents"])
 
 
 class GenerateTechnicalSourceOverviewRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     target_run_id: str
     baseline_run_id: str | None = None
     revision_reason: str = Field(default="", max_length=500)
-    actor: str = Field(default="System Generator", min_length=2, max_length=80)
 
 
 class DocumentWorkflowRequest(BaseModel):
-    actor: str = Field(min_length=2, max_length=80)
+    model_config = ConfigDict(extra="forbid")
+
     comment: str = Field(default="", max_length=1000)
 
 
@@ -141,14 +144,15 @@ async def generate_technical_source_overview(
     project_id: str,
     payload: GenerateTechnicalSourceOverviewRequest,
     service: DocumentServiceDependency,
+    principal: PrincipalDependency,
 ) -> DocumentDetailResponse:
     document = await service.generate(
         GenerateTechnicalSourceOverviewCommand(
             project_id=project_id,
             target_run_id=payload.target_run_id,
+            principal=principal,
             baseline_run_id=payload.baseline_run_id,
             revision_reason=payload.revision_reason,
-            actor=payload.actor,
         )
     )
     return DocumentDetailResponse.from_dto(document)
@@ -220,8 +224,9 @@ async def submit_document_version_for_review(
     version_id: str,
     payload: DocumentWorkflowRequest,
     service: DocumentServiceDependency,
+    principal: PrincipalDependency,
 ) -> DocumentDetailResponse:
-    document = await service.submit_for_review(_workflow_command(version_id, payload))
+    document = await service.submit_for_review(_workflow_command(version_id, payload, principal))
     return DocumentDetailResponse.from_dto(document)
 
 
@@ -233,8 +238,9 @@ async def request_document_version_changes(
     version_id: str,
     payload: DocumentWorkflowRequest,
     service: DocumentServiceDependency,
+    principal: PrincipalDependency,
 ) -> DocumentDetailResponse:
-    document = await service.request_changes(_workflow_command(version_id, payload))
+    document = await service.request_changes(_workflow_command(version_id, payload, principal))
     return DocumentDetailResponse.from_dto(document)
 
 
@@ -246,8 +252,9 @@ async def approve_document_version(
     version_id: str,
     payload: DocumentWorkflowRequest,
     service: DocumentServiceDependency,
+    principal: PrincipalDependency,
 ) -> DocumentDetailResponse:
-    document = await service.approve(_workflow_command(version_id, payload))
+    document = await service.approve(_workflow_command(version_id, payload, principal))
     return DocumentDetailResponse.from_dto(document)
 
 
@@ -259,8 +266,9 @@ async def supersede_document_version(
     version_id: str,
     payload: DocumentWorkflowRequest,
     service: DocumentServiceDependency,
+    principal: PrincipalDependency,
 ) -> DocumentDetailResponse:
-    document = await service.supersede(_workflow_command(version_id, payload))
+    document = await service.supersede(_workflow_command(version_id, payload, principal))
     return DocumentDetailResponse.from_dto(document)
 
 
@@ -297,10 +305,11 @@ async def compare_document_versions(
 def _workflow_command(
     version_id: str,
     payload: DocumentWorkflowRequest,
+    principal: PrincipalDependency,
 ) -> DocumentWorkflowCommand:
     return DocumentWorkflowCommand(
         version_id=version_id,
-        actor=payload.actor,
+        principal=principal,
         comment=payload.comment,
     )
 

@@ -184,7 +184,7 @@ class DocumentApplicationService:
             schema_count=len(schemas),
             breaking_change_count=(comparison.breaking_total if comparison is not None else 0),
             revision_reason=command.revision_reason,
-            created_by=command.actor,
+            created_by=command.principal.audit_actor,
         )
         series.register_version(version.id, now=version.created_at)
         await self._repository.add_version(series, version, version.generated_event())
@@ -217,7 +217,10 @@ class DocumentApplicationService:
     ) -> DocumentDetailDto:
         version, series = await self._require_version_and_series(command.version_id)
         await self._require_writable_project(version.project_id)
-        event = version.submit_for_review(actor=command.actor, comment=command.comment)
+        event = version.submit_for_review(
+            actor=command.principal.audit_actor,
+            comment=command.comment,
+        )
         await self._repository.apply_workflow_transition(series, version, event)
         return DocumentDetailDto.from_domain(version)
 
@@ -227,7 +230,10 @@ class DocumentApplicationService:
     ) -> DocumentDetailDto:
         version, series = await self._require_version_and_series(command.version_id)
         await self._require_writable_project(version.project_id)
-        event = version.request_changes(actor=command.actor, comment=command.comment)
+        event = version.request_changes(
+            actor=command.principal.audit_actor,
+            comment=command.comment,
+        )
         await self._repository.apply_workflow_transition(series, version, event)
         return DocumentDetailDto.from_domain(version)
 
@@ -237,14 +243,14 @@ class DocumentApplicationService:
     ) -> DocumentDetailDto:
         version, series = await self._require_version_and_series(command.version_id)
         await self._require_writable_project(version.project_id)
-        event = version.approve(actor=command.actor, comment=command.comment)
+        event = version.approve(actor=command.principal.audit_actor, comment=command.comment)
         previous_approved = await self._repository.get_current_approved_version(series.id)
         superseded_version = None
         superseded_event = None
         if previous_approved is not None and previous_approved.id != version.id:
             superseded_version = previous_approved
             superseded_event = previous_approved.supersede(
-                actor=command.actor,
+                actor=command.principal.audit_actor,
                 comment=f"Superseded by approved version {version.version_number}.",
                 now=version.approved_at,
             )
@@ -264,7 +270,7 @@ class DocumentApplicationService:
     ) -> DocumentDetailDto:
         version, series = await self._require_version_and_series(command.version_id)
         await self._require_writable_project(version.project_id)
-        event = version.supersede(actor=command.actor, comment=command.comment)
+        event = version.supersede(actor=command.principal.audit_actor, comment=command.comment)
         if series.current_approved_version_id == str(version.id):
             series.clear_approved_version(now=version.superseded_at)
         await self._repository.apply_workflow_transition(series, version, event)

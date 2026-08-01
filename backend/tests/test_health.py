@@ -38,3 +38,23 @@ def test_health_endpoint_preserves_supplied_request_id(tmp_path: Path) -> None:
     response = client.get("/api/health", headers={"X-Request-ID": "audit-request-001"})
 
     assert response.headers["X-Request-ID"] == "audit-request-001"
+
+
+def test_liveness_alias_returns_service_metadata(tmp_path: Path) -> None:
+    client = build_client(tmp_path / "health.sqlite3")
+
+    response = client.get("/api/health/live")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "ok"
+
+
+def test_readiness_checks_database_and_artifact_store(tmp_path: Path) -> None:
+    client = build_client(tmp_path / "health.sqlite3")
+
+    response = client.get("/api/health/ready")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "ready"
+    assert response.json()["dependencies"]["database"]["status"] == "ready"
+    assert response.json()["dependencies"]["artifact_store"]["status"] == "ready"

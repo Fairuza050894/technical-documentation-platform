@@ -100,7 +100,6 @@ def generate(
             "target_run_id": target_run_id,
             "baseline_run_id": None,
             "revision_reason": revision_reason,
-            "actor": "Technical Writer",
         },
     )
     assert response.status_code == 201
@@ -116,7 +115,7 @@ def workflow_action(
 ) -> dict[str, Any]:
     response = client.post(
         f"/api/document-versions/{version_id}/{action}",
-        json={"actor": "Lead Reviewer", "comment": comment},
+        json={"comment": comment},
     )
     assert response.status_code == 200
     return response.json()
@@ -148,6 +147,7 @@ def test_generation_reuses_identical_content_without_duplicate_version(tmp_path:
 
     assert first["version"] == "1.0"
     assert first["status"] == "DRAFT"
+    assert first["created_by"] == "Technical Writer [local:local-technical-writer]"
     assert first["reused_existing_version"] is False
     assert duplicate["id"] == first["id"]
     assert duplicate["document_id"] == first["document_id"]
@@ -219,6 +219,9 @@ def test_review_approval_and_automatic_supersede_are_audited(tmp_path: Path) -> 
         "SUBMITTED_FOR_REVIEW",
         "APPROVED",
     ]
+    assert {item["actor"] for item in second_events.json()["items"]} == {
+        "Technical Writer [local:local-technical-writer]"
+    }
 
     first_events = client.get(f"/api/document-versions/{first['id']}/workflow-events")
     assert first_events.status_code == 200
@@ -244,8 +247,37 @@ def test_invalid_workflow_transition_returns_conflict(tmp_path: Path) -> None:
 
     response = client.post(
         f"/api/document-versions/{version['id']}/approve",
-        json={"actor": "Lead Reviewer", "comment": "Premature approval."},
+        json={"comment": "Premature approval."},
     )
 
     assert response.status_code == 409
     assert response.json()["error"]["code"] == "INVALID_DOCUMENT_WORKFLOW_TRANSITION"
+
+
+def test_workflow_rejects_client_supplied_actor(tmp_path: Path) -> None:
+    client = build_client(tmp_path)
+    response = client.post(
+        "/api/document-versions/00000000-0000-4000-8000-000000000001/approve",
+        json={"actor": "Spoofed Approver", "comment": "This identity must not be accepted."},
+    )
+
+    assert response.status_code == 422
+    fields = {item["field"] for item in response.json()["error"]["details"]}
+    assert "actor" in fields
+
+
+def test_generation_rejects_client_supplied_actor(tmp_path: Path) -> None:
+    client = build_client(tmp_path)
+    response = client.post(
+        "/api/projects/project-id/documents/technical-source-overview",
+        json={
+            "target_run_id": "synchronization-id",
+            "baseline_run_id": None,
+            "revision_reason": "Attempt to spoof identity.",
+            "actor": "Spoofed Generator",
+        },
+    )
+
+    assert response.status_code == 422
+    fields = {item["field"] for item in response.json()["error"]["details"]}
+    assert "actor" in fields

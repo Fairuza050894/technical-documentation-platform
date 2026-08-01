@@ -24,3 +24,11 @@ The SQLite repository creates lifecycle tables additively and migrates existing 
 - Review and approval decisions are auditable.
 - Existing local document history is retained.
 - The Documents Workspace can be upgraded independently in the next patch.
+
+
+## Identity clarification
+
+As of ADR-015, the HTTP boundary no longer accepts a free-text workflow actor.
+Application commands receive a server-resolved request principal and the
+current schema stores its stable rendered actor snapshot. Full OIDC, RBAC, and
+structured identity persistence remain future production requirements.

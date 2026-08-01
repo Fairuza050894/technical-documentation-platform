@@ -1,19 +1,21 @@
 from dataclasses import dataclass
 
+from tdp.identity.model import RequestPrincipal
+
 
 @dataclass(frozen=True, slots=True)
 class GenerateTechnicalSourceOverviewCommand:
     project_id: str
     target_run_id: str
+    principal: RequestPrincipal
     baseline_run_id: str | None = None
     revision_reason: str = ""
-    actor: str = "System Generator"
 
 
 @dataclass(frozen=True, slots=True)
 class DocumentWorkflowCommand:
     version_id: str
-    actor: str
+    principal: RequestPrincipal
     comment: str = ""
 
 

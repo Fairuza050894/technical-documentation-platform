@@ -52,6 +52,18 @@ function requestUrl(input: RequestInfo | URL): string {
 }
 
 function commonResponse(url: string, versions: GeneratedDocumentSummary[]): Response | null {
+  if (url.endsWith("/api/identity/me")) {
+    return new Response(
+      JSON.stringify({
+        subject_id: "local-technical-writer",
+        display_name: "Technical Writer",
+        email: "technical.writer@local.invalid",
+        provider: "local",
+        assurance: "DEVELOPMENT",
+        audit_actor: "Technical Writer [local:local-technical-writer]",
+      }),
+    );
+  }
   if (url.endsWith("/api/projects")) {
     return new Response(
       JSON.stringify({
@@ -155,6 +167,10 @@ describe("DocumentsWorkspace", () => {
         url.endsWith(`/api/document-versions/${versionTwoId}/submit-review`) &&
         init?.method === "POST"
       ) {
+        if (typeof init.body !== "string") {
+          throw new Error("Expected the workflow request body to be serialized JSON.");
+        }
+        expect(JSON.parse(init.body)).toEqual({ comment: "" });
         draft = { ...draft, status: "IN_REVIEW", submitted_at: "2026-07-29T01:00:00Z" };
         return Promise.resolve(
           new Response(
@@ -182,6 +198,8 @@ describe("DocumentsWorkspace", () => {
       expect(screen.getByRole("button", { name: "Submit for review" })).toBeEnabled(),
     );
     expect(screen.getByText("Workflow timeline")).toBeInTheDocument();
+    expect(screen.getAllByText("Technical Writer").length).toBeGreaterThan(0);
+    expect(screen.queryByLabelText("Actor")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Submit for review" }));
 
     await waitFor(() =>

@@ -342,3 +342,45 @@ Run the dedicated audit with:
 ```bash
 make audit-features
 ```
+
+
+## Engineering Safety Baseline
+
+The HTTP boundary now resolves a server-controlled request principal. Document generation and
+workflow actions no longer accept a client-supplied actor. Local development uses an explicitly
+marked `DEVELOPMENT` identity and application startup rejects that provider for staging or
+production.
+
+Runtime configuration examples:
+
+```text
+backend/.env.example
+frontend/.env.example
+```
+
+The frontend defaults to the same-origin `/api` contract. Vite proxies that path to the local
+backend, while deployed environments can set `VITE_API_BASE_URL`.
+
+System endpoints:
+
+```text
+GET /api/health
+GET /api/health/live
+GET /api/health/ready
+GET /api/identity/me
+```
+
+GitHub Actions runs the existing repository quality gate for pull requests and pushes to `main`:
+
+```bash
+make verify
+```
+
+Run the dedicated safety audit with:
+
+```bash
+make audit-safety
+```
+
+The local identity provider is not an enterprise authentication solution. OIDC, RBAC, workspace
+membership, and verified release approval remain required before shared production use.

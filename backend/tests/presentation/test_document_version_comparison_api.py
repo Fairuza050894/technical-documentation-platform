@@ -89,7 +89,6 @@ paths:
             "target_run_id": synchronization["id"],
             "baseline_run_id": None,
             "revision_reason": f"Generate API {api_version}.",
-            "actor": "Technical Writer",
         },
     )
     assert generation_response.status_code == 201

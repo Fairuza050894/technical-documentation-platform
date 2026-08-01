@@ -27,3 +27,22 @@
 - Keep changes small and independently reviewable.
 - Tests should assert behavior, not implementation details.
 - Comments explain decisions or constraints, not obvious syntax.
+
+
+## Request identity
+
+- Mutation endpoints must derive identity from the server-side request principal.
+- Client request bodies must not contain free-text actor or approver identity fields.
+- Local development identities must be marked with development assurance and must
+  not be enabled in staging or production.
+- Audit records must preserve a stable actor snapshot and must not log tokens or
+  credentials.
+
+## Runtime configuration
+
+- Environment-specific URLs, paths, origins, identity settings, and limits must
+  be loaded from environment configuration.
+- Tracked `.env.example` files document names and safe examples only.
+- Real `.env` files and secrets must remain outside Git.
+- Production startup must fail closed when required security configuration is
+  missing or an unsafe development provider is selected.

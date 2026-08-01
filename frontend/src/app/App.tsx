@@ -8,6 +8,7 @@ import { WorkspaceSwitcher } from "../modules/workspaces/WorkspaceSwitcher";
 import { listWorkspaces } from "../modules/workspaces/api";
 import type { Workspace } from "../modules/workspaces/types";
 import { ProjectWorkbench } from "../modules/workbench/ProjectWorkbench";
+import { apiUrl } from "../shared/api/config";
 import { Icon, type IconName } from "../shared/ui/Icon";
 import {
   type AppRoute,
@@ -108,7 +109,7 @@ export function App() {
 
     async function loadHealth(): Promise<void> {
       try {
-        const response = await fetch("http://127.0.0.1:8000/api/health", {
+        const response = await fetch(apiUrl("/health"), {
           signal: controller.signal,
         });
         if (!response.ok) {

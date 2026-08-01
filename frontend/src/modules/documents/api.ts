@@ -1,4 +1,5 @@
 import { requestJson } from "../../shared/api/client";
+import { apiUrl } from "../../shared/api/config";
 import type {
   DocumentVersionComparison,
   GeneratedDocumentCollection,
@@ -17,7 +18,6 @@ export function generateTechnicalSourceOverview(
   targetRunId: string,
   baselineRunId: string | null,
   revisionReason: string,
-  actor: string,
 ): Promise<GeneratedDocumentDetail> {
   return requestJson<GeneratedDocumentDetail>(
     `/projects/${projectId}/documents/technical-source-overview`,
@@ -27,7 +27,6 @@ export function generateTechnicalSourceOverview(
         target_run_id: targetRunId,
         baseline_run_id: baselineRunId,
         revision_reason: revisionReason,
-        actor,
       }),
     },
   );
@@ -40,39 +39,35 @@ export function getGeneratedDocument(
 }
 
 export function getDocumentDownloadUrl(versionId: string): string {
-  return `http://127.0.0.1:8000/api/document-versions/${encodeURIComponent(versionId)}/download`;
+  return apiUrl(`/document-versions/${encodeURIComponent(versionId)}/download`);
 }
 
 export function submitDocumentForReview(
   versionId: string,
-  actor: string,
   comment: string,
 ): Promise<GeneratedDocumentDetail> {
-  return workflowRequest(versionId, "submit-review", actor, comment);
+  return workflowRequest(versionId, "submit-review", comment);
 }
 
 export function requestDocumentChanges(
   versionId: string,
-  actor: string,
   comment: string,
 ): Promise<GeneratedDocumentDetail> {
-  return workflowRequest(versionId, "request-changes", actor, comment);
+  return workflowRequest(versionId, "request-changes", comment);
 }
 
 export function approveDocumentVersion(
   versionId: string,
-  actor: string,
   comment: string,
 ): Promise<GeneratedDocumentDetail> {
-  return workflowRequest(versionId, "approve", actor, comment);
+  return workflowRequest(versionId, "approve", comment);
 }
 
 export function supersedeDocumentVersion(
   versionId: string,
-  actor: string,
   comment: string,
 ): Promise<GeneratedDocumentDetail> {
-  return workflowRequest(versionId, "supersede", actor, comment);
+  return workflowRequest(versionId, "supersede", comment);
 }
 
 export function listWorkflowEvents(versionId: string): Promise<WorkflowEventCollection> {
@@ -97,14 +92,13 @@ export function compareDocumentVersions(
 function workflowRequest(
   versionId: string,
   action: string,
-  actor: string,
   comment: string,
 ): Promise<GeneratedDocumentDetail> {
   return requestJson<GeneratedDocumentDetail>(
     `/document-versions/${versionId}/${action}`,
     {
       method: "POST",
-      body: JSON.stringify({ actor, comment }),
+      body: JSON.stringify({ comment }),
     },
   );
 }
