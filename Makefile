@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: help bootstrap dev-backend dev-frontend lint test build verify audit audit-projects audit-sources audit-catalog audit-changes audit-documents audit-lifecycle audit-documents-workspace audit-product-ui audit-visual-refinement audit-workbench audit-workspaces audit-features audit-safety
+.PHONY: help bootstrap dev-backend dev-frontend docs docs-check lint test build verify audit audit-projects audit-sources audit-catalog audit-changes audit-documents audit-lifecycle audit-documents-workspace audit-product-ui audit-visual-refinement audit-workbench audit-workspaces audit-features audit-safety audit-docs
 
 help:
 	@printf '%s\n' \
@@ -8,10 +8,12 @@ help:
 	  '  make bootstrap      Install local development dependencies' \
 	  '  make dev-backend    Start FastAPI on http://127.0.0.1:8000' \
 	  '  make dev-frontend   Start Vite on http://127.0.0.1:4173' \
+	  '  make docs           Regenerate deterministic repository documentation' \
+	  '  make docs-check     Validate controlled docs and generated freshness' \
 	  '  make lint           Run backend and frontend linting' \
 	  '  make test           Run backend and frontend tests' \
 	  '  make build          Build the frontend and validate backend imports' \
-	  '  make verify         Run lint, tests, and build' \
+	  '  make verify         Run docs check, lint, tests, and build' \
 	  '  make audit          Write the foundation audit to Downloads' \
 	  '  make audit-projects Write the Project Management audit to Downloads' \
 	  '  make audit-sources  Write the OpenAPI Source audit to Downloads' \
@@ -25,7 +27,8 @@ help:
 	  '  make audit-workbench Write the Project Workbench audit to Downloads' \
 	  '  make audit-workspaces Write the Workspace Foundation audit to Downloads' \
 	  '  make audit-features Write the Feature / Module Registry audit to Downloads' \
-  '  make audit-safety   Write the Engineering Safety audit to Downloads'
+	  '  make audit-safety   Write the Engineering Safety audit to Downloads' \
+	  '  make audit-docs     Write the Documentation Governance audit to Downloads'
 
 bootstrap:
 	bash scripts/bootstrap_macos.sh
@@ -35,6 +38,12 @@ dev-backend:
 
 dev-frontend:
 	npm --prefix frontend run dev
+
+docs:
+	python3 scripts/generate_repository_docs.py
+
+docs-check:
+	python3 scripts/generate_repository_docs.py --check
 
 lint:
 	uv run --project backend ruff check backend
@@ -50,7 +59,7 @@ build:
 	uv run --project backend python -c "from tdp.main import app; assert app.title"
 	npm --prefix frontend run build
 
-verify: lint test build
+verify: docs-check lint test build
 
 audit:
 	bash scripts/audit_foundation.sh
@@ -106,3 +115,7 @@ audit-features:
 
 audit-safety:
 	bash scripts/audit_engineering_safety.sh
+
+
+audit-docs:
+	bash scripts/audit_documentation_governance.sh

@@ -2,12 +2,17 @@
 
 A change is complete when:
 
-- Acceptance criteria are satisfied.
-- Relevant unit and integration tests pass.
-- Type checking and linting pass.
-- Error, loading, and empty states are handled.
-- Security-sensitive data is not logged or exposed.
-- Documentation and architecture decisions are updated when necessary.
-- Production build succeeds.
-- `git diff --check` reports no whitespace errors.
-- The final patch contains only files relevant to the change.
+- acceptance criteria are satisfied;
+- relevant unit, integration, architecture, and frontend tests pass;
+- type checking and linting pass;
+- error, loading, and empty states are handled;
+- security-sensitive data is not logged or exposed;
+- server-side identity and authorization boundaries are preserved;
+- product, architecture, requirement, operational, and release documents are updated when affected;
+- `make docs` has been run and the generated diff reviewed;
+- `make docs-check` passes;
+- production build succeeds;
+- `git diff --check` reports no whitespace errors;
+- runtime data, imported evidence, `.env`, credentials, and secrets are excluded;
+- the final patch contains only files relevant to the change;
+- known limitations and residual risks are documented.

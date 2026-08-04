@@ -1,50 +1,53 @@
-# Architecture Overview
+# Architecture Portal
 
-The product starts as a modular monolith with Clean Architecture boundaries.
-
-```text
-Presentation -> Application -> Domain
-Infrastructure -> Application ports
-Domain -> no framework dependencies
-```
-
-Initial modules:
-
-- Projects
-- Sources
-- Synchronization
-- Technical Catalog
-- Change Detection
-- Documents
-- Audit
-
-The first production database will be PostgreSQL. The foundation patch deliberately does not install or configure it yet because the initial health-check slice does not persist business data.
-
-
-## Implemented vertical slices
-
-### Project Management
+The Technical Documentation Platform is a modular monolith with Clean Architecture boundaries.
 
 ```text
-HTTP API / React UI
-        ↓
-ProjectApplicationService
-        ↓
-ProjectRepository port
-        ↓
-SQLite local adapter
+Presentation → Application → Domain
+Infrastructure → Application ports
+Domain → no framework dependencies
 ```
 
-The SQLite adapter is a local MVP decision. PostgreSQL remains the intended enterprise production database.
+## Architecture views
 
+- [System context](system-context.md)
+- [Container view](container-view.md)
+- [Component view](component-view.md)
+- [Domain model](domain-model.md)
+- [Data and information model](data-and-information-model.md)
+- [Security architecture](security-architecture.md)
+- [Deployment view](deployment-view.md)
+- [Architecture decision records](../decisions/)
+- [Generated API surface](../_generated/api-surface.md)
+- [Generated frontend route index](../_generated/frontend-route-index.md)
 
-## Source Management boundary
-
-The source module follows the same dependency rule as Projects:
+## Current modules
 
 ```text
-presentation -> application -> domain
-infrastructure -> application/domain ports
+workspaces
+projects
+features
+sources
+catalog
+changes
+documents
 ```
 
-`DeterministicOpenApiInspector`, `LocalArtifactStore`, and `SqliteSourceRepository` are replaceable infrastructure adapters. The application service does not import FastAPI, SQLite, or PyYAML.
+Identity and system-health capabilities are cross-cutting presentation and application concerns rather than business modules.
+
+## Architectural principles
+
+1. Business rules remain framework-independent.
+2. Persistence, transport, storage, and identity providers are adapters.
+3. Evidence is immutable, checksummed, and attributable.
+4. Factual generation is deterministic.
+5. Additive migrations protect existing identifiers and evidence relationships.
+6. New generalization is introduced only after a repeated need is demonstrated.
+7. Production-only controls are not simulated as completed capabilities.
+
+## Current constraints
+
+- SQLite and local artifact storage are local-development adapters.
+- The source-to-document path is OpenAPI-specific.
+- The frontend application shell requires decomposition.
+- OIDC, RBAC, production migrations, deployment packaging, and observability remain planned.

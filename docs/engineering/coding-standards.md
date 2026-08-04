@@ -28,21 +28,26 @@
 - Tests should assert behavior, not implementation details.
 - Comments explain decisions or constraints, not obvious syntax.
 
-
 ## Request identity
 
 - Mutation endpoints must derive identity from the server-side request principal.
 - Client request bodies must not contain free-text actor or approver identity fields.
-- Local development identities must be marked with development assurance and must
-  not be enabled in staging or production.
-- Audit records must preserve a stable actor snapshot and must not log tokens or
-  credentials.
+- Local development identities must be marked with development assurance and must not be enabled in staging or production.
+- Audit records must preserve a stable actor snapshot and must not log tokens or credentials.
 
 ## Runtime configuration
 
-- Environment-specific URLs, paths, origins, identity settings, and limits must
-  be loaded from environment configuration.
+- Environment-specific URLs, paths, origins, identity settings, and limits must be loaded from environment configuration.
 - Tracked `.env.example` files document names and safe examples only.
 - Real `.env` files and secrets must remain outside Git.
-- Production startup must fail closed when required security configuration is
-  missing or an unsafe development provider is selected.
+- Production startup must fail closed when required security configuration is missing or an unsafe development provider is selected.
+
+## Documentation as code
+
+- Material behavior, architecture, security, user-flow, operational, or release changes require documentation updates.
+- Human-governed documents must not be silently rewritten by automation.
+- Generated repository indexes must be changed only through `make docs`.
+- Generated documentation must be deterministic and contain no local paths, timestamps, credentials, or runtime data.
+- `make docs-check` must pass before commit.
+- Standards references describe intended alignment and must not imply certification or legal approval.
+- Repository documentation, system templates, and user-generated project documents are separate information classes.

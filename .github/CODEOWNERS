@@ -1,0 +1,15 @@
+# Default repository ownership
+* @Fairuza050894
+
+# Controlled documentation
+/docs/ @Fairuza050894
+/README.md @Fairuza050894
+/CONTRIBUTING.md @Fairuza050894
+/SECURITY.md @Fairuza050894
+/CHANGELOG.md @Fairuza050894
+
+# Quality and automation
+/.github/ @Fairuza050894
+/scripts/ @Fairuza050894
+/backend/tests/ @Fairuza050894
+/frontend/src/ @Fairuza050894
