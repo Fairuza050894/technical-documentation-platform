@@ -64,6 +64,7 @@ This register inventories Markdown documentation. Formal approval must be record
 | Unassigned | MVP 1 Requirement: Documentation Governance and Living Repository Docs | Requirements | Not specified | `docs/requirements/mvp-1-documentation-governance.md` (Not specified) |
 | Unassigned | MVP 1 — Documents Workspace | Requirements | Not specified | `docs/requirements/mvp-1-documents-workspace.md` (Not specified) |
 | Unassigned | MVP 1 Engineering Safety Baseline | Requirements | Not specified | `docs/requirements/mvp-1-engineering-safety-baseline.md` (Not specified) |
+| Unassigned | MVP 1 Enterprise Document Taxonomy and Automation Boundaries | Requirements | Not specified | `docs/requirements/mvp-1-enterprise-document-taxonomy-and-agentic-boundaries.md` (Not specified) |
 | Unassigned | MVP 1 — Feature / Module Registry and Documentation Map | Requirements | Not specified | `docs/requirements/mvp-1-feature-module-registry.md` (Not specified) |
 | Unassigned | MVP 1 Frontend Composition and CSS Foundation | Requirements | Not specified | `docs/requirements/mvp-1-frontend-composition-foundation.md` (Not specified) |
 | Unassigned | MVP 1 — OpenAPI Source Management | Requirements | Not specified | `docs/requirements/mvp-1-openapi-source-management.md` (Not specified) |

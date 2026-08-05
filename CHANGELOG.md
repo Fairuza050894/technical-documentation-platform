@@ -17,7 +17,8 @@ The project will follow semantic versioning when formal release tags begin. Unti
 - deterministic repository documentation generator and freshness check;
 - generated repository, ADR, requirement, API, route, test, and document indexes;
 - GitHub CODEOWNERS, pull-request template, and issue templates;
-- external audit management response.
+- external audit management response;
+- reviewer reconciliation for enterprise document types and automation boundaries.
 
 ### Changed
 
@@ -25,7 +26,9 @@ The project will follow semantic versioning when formal release tags begin. Unti
 - `globals.css` converted to an ordered import manifest without intentional visual changes;
 
 - root README converted from chronological slice log to a concise product and documentation portal;
-- `make verify` now includes repository documentation freshness.
+- `make verify` now includes repository documentation freshness;
+- product roadmap and audit dispositions now distinguish completed, partially addressed, open,
+  deferred, and dependency-blocked work.
 
 ## Historical foundation
 
