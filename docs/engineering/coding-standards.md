@@ -20,6 +20,11 @@
 - Use internal design tokens instead of ad-hoc values.
 - Do not use color as the only status indicator.
 - Avoid decorative charts, gradients, glassmorphism, excessive radius, and generic AI-product language.
+- Keep `App.tsx` as a composition root; application chrome and route content belong in app-layer components.
+- Product modules must not render or import global application-shell components.
+- `globals.css` is an import manifest; new selectors belong in the layer that owns their responsibility.
+- CSS comments describe responsibility or constraints, not patch history.
+- Preserve controlled CSS import order unless visual regression review approves a cascade change.
 
 ## General
 

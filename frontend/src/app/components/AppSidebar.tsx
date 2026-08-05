@@ -1,0 +1,112 @@
+import type { Workspace } from "../../modules/workspaces/types";
+import { WorkspaceSwitcher } from "../../modules/workspaces/WorkspaceSwitcher";
+import { Icon } from "../../shared/ui/Icon";
+import type { GlobalNavigation, NavigationGroup } from "../navigation";
+import type { AppRoute } from "../router";
+import type { ApiState, WorkspaceLoadState } from "../types";
+
+interface AppSidebarProps {
+  workspaces: Workspace[];
+  activeWorkspaceId: string | null;
+  workspaceLoadState: WorkspaceLoadState;
+  workspaceLoadError: string;
+  navigationGroups: readonly NavigationGroup[];
+  activeGlobalNavigation: GlobalNavigation | null;
+  apiState: ApiState;
+  serviceLabel: string;
+  onSelectWorkspace: (workspace: Workspace) => void;
+  onManageWorkspaces: () => void;
+  onNavigate: (route: AppRoute) => void;
+}
+
+export function AppSidebar({
+  workspaces,
+  activeWorkspaceId,
+  workspaceLoadState,
+  workspaceLoadError,
+  navigationGroups,
+  activeGlobalNavigation,
+  apiState,
+  serviceLabel,
+  onSelectWorkspace,
+  onManageWorkspaces,
+  onNavigate,
+}: AppSidebarProps) {
+  return (
+    <aside className="sidebar" aria-label="Primary navigation">
+      <div className="product-mark" aria-label="Technical Documentation Platform">
+        <span className="product-mark__symbol" aria-hidden="true">
+          <Icon name="documents" size={17} />
+        </span>
+        <span className="product-mark__copy">
+          <strong>Technical Docs</strong>
+          <small>Documentation platform</small>
+        </span>
+      </div>
+
+      <WorkspaceSwitcher
+        workspaces={workspaces}
+        activeWorkspaceId={activeWorkspaceId}
+        status={workspaceLoadState}
+        errorMessage={workspaceLoadError}
+        onSelect={onSelectWorkspace}
+        onManage={onManageWorkspaces}
+      />
+
+      <nav className="primary-navigation">
+        {navigationGroups.map((group) => (
+          <section
+            className="navigation-group"
+            aria-labelledby={`nav-${group.label.replaceAll(" ", "-")}`}
+            key={group.label}
+          >
+            <h2 id={`nav-${group.label.replaceAll(" ", "-")}`}>{group.label}</h2>
+            <ul className="navigation-list">
+              {group.items.map((item) => (
+                <li key={item.id}>
+                  <button
+                    type="button"
+                    className={
+                      item.id === activeGlobalNavigation
+                        ? "navigation-item is-active"
+                        : "navigation-item"
+                    }
+                    aria-current={item.id === activeGlobalNavigation ? "page" : undefined}
+                    onClick={() => onNavigate(item.route)}
+                  >
+                    <span className="navigation-item__icon" aria-hidden="true">
+                      <Icon name={item.icon} size={17} />
+                    </span>
+                    <span className="navigation-item__label">{item.label}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
+      </nav>
+
+      <div className="sidebar-service" aria-label={`Backend API ${serviceLabel}`}>
+        <span className="sidebar-service__icon" aria-hidden="true">
+          <Icon name="server" size={16} />
+        </span>
+        <span className="sidebar-service__copy">
+          <strong>Backend API</strong>
+          <small>
+            {apiState.status === "loading" && "Checking service"}
+            {apiState.status === "available" && `v${apiState.health.version}`}
+            {apiState.status === "unavailable" && "Not connected"}
+          </small>
+        </span>
+        <span
+          className={
+            apiState.status === "available"
+              ? "service-dot service-dot--available"
+              : "service-dot"
+          }
+          aria-hidden="true"
+        />
+      </div>
+    </aside>
+  );
+}

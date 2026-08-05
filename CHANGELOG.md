@@ -8,6 +8,10 @@ The project will follow semantic versioning when formal release tags begin. Unti
 
 ### Added
 
+- explicit frontend application-shell, route-content, navigation, and runtime boundaries;
+- ordered CSS responsibility layers with architecture fitness checks;
+- Frontend Composition audit and ADR-017;
+
 - living repository documentation governance;
 - canonical product, architecture, quality, compliance, operations, release, and user-guide documents;
 - deterministic repository documentation generator and freshness check;
@@ -16,6 +20,9 @@ The project will follow semantic versioning when formal release tags begin. Unti
 - external audit management response.
 
 ### Changed
+
+- `App.tsx` reduced to a stateful composition root while preserving routes and behavior;
+- `globals.css` converted to an ordered import manifest without intentional visual changes;
 
 - root README converted from chronological slice log to a concise product and documentation portal;
 - `make verify` now includes repository documentation freshness.

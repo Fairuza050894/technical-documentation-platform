@@ -21,3 +21,4 @@ Architecture decisions are human-governed. This index is generated from `docs/de
 | ADR-014 | ADR-014 — Feature Boundaries and Deterministic Documentation Baseline | Accepted. | Not specified |
 | ADR-015 | ADR-015: Request identity and environment safety boundary | Accepted | 2026-08-01 |
 | ADR-016 | ADR-016: Living Repository Documentation and Deterministic Indexes | Accepted | 2026-08-02 |
+| ADR-017 | ADR-017: Compose the Frontend Shell and Split CSS by Responsibility | Accepted | 2026-08-04 |

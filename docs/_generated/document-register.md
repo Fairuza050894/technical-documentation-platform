@@ -36,6 +36,7 @@ This register inventories Markdown documentation. Formal approval must be record
 | Unassigned | ADR-014 — Feature Boundaries and Deterministic Documentation Baseline | Decisions | Accepted. | `docs/decisions/ADR-014-feature-boundaries-and-documentation-baseline.md` (Not specified) |
 | Unassigned | ADR-015: Request identity and environment safety boundary | Decisions | Accepted | `docs/decisions/ADR-015-request-identity-and-environment-safety.md` (Not specified) |
 | Unassigned | ADR-016: Living Repository Documentation and Deterministic Indexes | Decisions | Accepted | `docs/decisions/ADR-016-living-documentation-and-generated-indexes.md` (Not specified) |
+| Unassigned | ADR-017: Compose the Frontend Shell and Split CSS by Responsibility | Decisions | Accepted | `docs/decisions/ADR-017-frontend-composition-and-css-layers.md` (Not specified) |
 | Unassigned | Coding Standards | Engineering | Not specified | `docs/engineering/coding-standards.md` (Not specified) |
 | Unassigned | Definition of Done | Engineering | Not specified | `docs/engineering/definition-of-done.md` (Not specified) |
 | TDP-GOV-002 | Document Control | Governance | Controlled draft | `docs/governance/document-control.md` (Internal project documentation) |
@@ -64,6 +65,7 @@ This register inventories Markdown documentation. Formal approval must be record
 | Unassigned | MVP 1 — Documents Workspace | Requirements | Not specified | `docs/requirements/mvp-1-documents-workspace.md` (Not specified) |
 | Unassigned | MVP 1 Engineering Safety Baseline | Requirements | Not specified | `docs/requirements/mvp-1-engineering-safety-baseline.md` (Not specified) |
 | Unassigned | MVP 1 — Feature / Module Registry and Documentation Map | Requirements | Not specified | `docs/requirements/mvp-1-feature-module-registry.md` (Not specified) |
+| Unassigned | MVP 1 Frontend Composition and CSS Foundation | Requirements | Not specified | `docs/requirements/mvp-1-frontend-composition-foundation.md` (Not specified) |
 | Unassigned | MVP 1 — OpenAPI Source Management | Requirements | Not specified | `docs/requirements/mvp-1-openapi-source-management.md` (Not specified) |
 | Unassigned | MVP 1 Requirement: Product UI Foundation and Operational Overview | Requirements | Not specified | `docs/requirements/mvp-1-product-ui-foundation.md` (Not specified) |
 | Unassigned | MVP 1 Requirement: Project-Centric Workbench | Requirements | Not specified | `docs/requirements/mvp-1-project-centric-workbench.md` (Not specified) |

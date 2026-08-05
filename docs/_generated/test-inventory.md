@@ -39,17 +39,19 @@
 | backend/tests/test_architecture.py | 9 |
 | backend/tests/test_config.py | 3 |
 | backend/tests/test_feature_architecture.py | 2 |
+| backend/tests/test_frontend_architecture.py | 3 |
 | backend/tests/test_health.py | 4 |
 | backend/tests/test_repository_documentation.py | 1 |
 | backend/tests/test_workspace_architecture.py | 2 |
 
-Backend total: **84** tests.
+Backend total: **87** tests.
 
 ## Frontend
 
 | File | Test cases |
 |---|---|
 | frontend/src/app/App.test.tsx | 9 |
+| frontend/src/app/navigation.test.ts | 3 |
 | frontend/src/app/router.test.ts | 7 |
 | frontend/src/modules/catalog/ApiCatalogWorkspace.test.tsx | 2 |
 | frontend/src/modules/changes/ChangesWorkspace.test.tsx | 1 |
@@ -63,6 +65,6 @@ Backend total: **84** tests.
 | frontend/src/modules/workspaces/WorkspaceSwitcher.test.tsx | 5 |
 | frontend/src/shared/api/config.test.ts | 3 |
 
-Frontend total: **46** tests.
+Frontend total: **49** tests.
 
 Counts are structural and do not replace execution evidence from `make verify`.

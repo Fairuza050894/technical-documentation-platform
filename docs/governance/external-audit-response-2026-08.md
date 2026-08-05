@@ -38,7 +38,7 @@ Record management assessment of externally supplied technical reviews and map ac
 | No license decision | Legal governance gap | Accepted | [Intellectual property and licensing](intellectual-property-and-licensing.md) |
 | Missing release and changelog governance | Traceability gap | Completed foundation | release policy and `CHANGELOG.md` |
 | Missing CODEOWNERS and templates | Repository-governance gap | Completed foundation | `.github/` governance files |
-| CSS and large frontend components | Maintainability risk | Accepted | Patch 0009.12 |
+| CSS and large frontend components | Maintainability risk | Completed foundation | ADR-017, composed app shell, ordered CSS layers, architecture tests; workspace-level decomposition continues incrementally |
 | Dark mode and broad mobile support | Usability enhancement, not core risk | Deferred | after frontend modularization and product validation |
 | OpenAPI-specific document core | Limits product expansion | Accepted with modification | generic typed document profile and evidence architecture, Patch 0009.14 |
 | DevOps document profiles | Valuable product expansion | Accepted | static repository evidence pilot, Sequence 0011 |

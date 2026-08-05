@@ -47,6 +47,31 @@ application ports and domain contracts
 | Health | Liveness and dependency readiness |
 | Repository docs generator | Deterministic documentation indexes |
 
+## Frontend component pattern
+
+```text
+App.tsx
+├── navigation and route state
+├── workspace context
+└── AppShell
+    ├── AppSidebar
+    ├── AppUtilityBar
+    └── RouteContent
+        └── product workspaces
+```
+
+The app layer owns browser routing and persistent application chrome. Product modules own their
+workspace behavior and do not render the global sidebar or utility bar.
+
+CSS follows an ordered responsibility model:
+
+```text
+foundation → application shell → shared components → product modules
+```
+
+The import order is a compatibility contract until a separately reviewed cascade-layer
+migration is justified.
+
 ## Future component boundaries
 
 ```text

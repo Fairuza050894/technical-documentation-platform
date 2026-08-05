@@ -49,5 +49,5 @@ Identity and system-health capabilities are cross-cutting presentation and appli
 
 - SQLite and local artifact storage are local-development adapters.
 - The source-to-document path is OpenAPI-specific.
-- The frontend application shell requires decomposition.
+- The frontend shell is composed through explicit app-layer components and ordered CSS layers.
 - OIDC, RBAC, production migrations, deployment packaging, and observability remain planned.

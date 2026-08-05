@@ -1,0 +1,41 @@
+/* Verified request identity and document workflow additions. */
+
+.identity-summary {
+  min-height: 4.25rem;
+  justify-content: center;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface-subtle);
+  padding: 0.75rem 0.875rem;
+}
+
+.identity-summary__label {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.identity-summary strong,
+.identity-summary small,
+.identity-summary__loading,
+.identity-summary__error {
+  display: block;
+}
+
+.identity-summary strong {
+  color: var(--text-primary);
+  font-size: 0.875rem;
+}
+
+.identity-summary small,
+.identity-summary__loading {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.identity-summary__error {
+  color: var(--status-danger-text);
+  font-size: 0.75rem;
+}
