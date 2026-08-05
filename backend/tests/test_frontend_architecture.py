@@ -37,6 +37,26 @@ def test_global_css_is_an_explicit_import_manifest() -> None:
     assert len(source.splitlines()) == len(imports)
 
 
+def test_system_status_grid_keeps_its_layout_contract() -> None:
+    components_path = FRONTEND / "styles" / "components.css"
+    source = components_path.read_text(encoding="utf-8")
+    rule = re.search(
+        r"\.system-status-grid\s*\{(?P<body>.*?)\}",
+        source,
+        flags=re.DOTALL,
+    )
+
+    assert rule is not None
+    body = rule.group("body")
+    assert "display: grid;" in body
+    assert "grid-template-columns:" in body
+    assert "gap: 1px;" in body
+    assert "margin: 14px 0 0;" in body
+    assert ".system-status-grid > div" in source
+    assert ".system-status-grid dt" in source
+    assert ".system-status-grid dd" in source
+
+
 def test_frontend_styles_do_not_encode_patch_history() -> None:
     offenders = []
     for path in sorted((FRONTEND / "styles").rglob("*.css")):
