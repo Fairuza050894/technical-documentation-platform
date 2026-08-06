@@ -143,7 +143,7 @@ export function ChangesWorkspace({
       </section>
 
       {result !== null && summary !== null && (
-        <section className="content-section" aria-labelledby="change-results-title">
+        <section className="content-section changes-results" aria-labelledby="change-results-title">
           <div className="section-heading section-heading--split">
             <div>
               <h2 id="change-results-title">Comparison result</h2>

@@ -32,6 +32,7 @@ def test_global_css_is_an_explicit_import_manifest() -> None:
         "./modules/workbench.css",
         "./modules/workspaces.css",
         "./modules/features.css",
+        "./modules/changes.css",
         "./modules/documents.css",
     ]
     assert len(source.splitlines()) == len(imports)
@@ -55,6 +56,29 @@ def test_system_status_grid_keeps_its_layout_contract() -> None:
     assert ".system-status-grid > div" in source
     assert ".system-status-grid dt" in source
     assert ".system-status-grid dd" in source
+
+
+def test_changes_workspace_keeps_its_visual_contract() -> None:
+    workspace_path = FRONTEND / "modules" / "changes" / "ChangesWorkspace.tsx"
+    styles_path = FRONTEND / "styles" / "modules" / "changes.css"
+    workspace = workspace_path.read_text(encoding="utf-8")
+    styles = styles_path.read_text(encoding="utf-8")
+
+    assert 'className="content-section changes-results"' in workspace
+    for selector in [
+        ".changes-results .status-grid",
+        ".changes-results .status-card",
+        ".changes-results .catalog-list",
+        ".changes-results .catalog-card__heading",
+        ".changes-results .method-badge",
+        ".changes-results .detail-list",
+        ".changes-results .detail-list code",
+    ]:
+        assert selector in styles
+
+    assert "min-height: 0;" in styles
+    assert "overflow-wrap: anywhere;" in styles
+    assert "@media (max-width: 760px)" in styles
 
 
 def test_frontend_styles_do_not_encode_patch_history() -> None:
