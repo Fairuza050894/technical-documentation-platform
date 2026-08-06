@@ -71,7 +71,7 @@ export function SystemStatus({ apiState }: SystemStatusProps) {
           </div>
         </div>
 
-        <dl className="constraint-list constraint-list--compact">
+        <dl className="constraint-list">
           <div>
             <dt>Source-backed facts</dt>
             <dd>Every generated fact keeps a verifiable source reference.</dd>

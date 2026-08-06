@@ -39,12 +39,12 @@
 | backend/tests/test_architecture.py | 9 |
 | backend/tests/test_config.py | 3 |
 | backend/tests/test_feature_architecture.py | 2 |
-| backend/tests/test_frontend_architecture.py | 5 |
+| backend/tests/test_frontend_architecture.py | 6 |
 | backend/tests/test_health.py | 4 |
 | backend/tests/test_repository_documentation.py | 1 |
 | backend/tests/test_workspace_architecture.py | 2 |
 
-Backend total: **89** tests.
+Backend total: **90** tests.
 
 ## Frontend
 

@@ -321,7 +321,7 @@ export function DocumentsWorkspace({
   return (
     <>
       {!embedded && (
-        <header className="topbar topbar--documents">
+        <header className="topbar">
           <div>
             <p className="eyebrow">Governed document lifecycle</p>
             <h1>Documents</h1>
@@ -331,7 +331,7 @@ export function DocumentsWorkspace({
       )}
 
       <section
-        className="content-section document-section document-section--generator"
+        className="content-section document-section"
         aria-labelledby="document-generator-title"
       >
         <div className="section-heading">

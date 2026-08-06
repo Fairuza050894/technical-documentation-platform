@@ -77,6 +77,13 @@
   background: var(--color-warning-subtle);
 }
 
+.notice--warning {
+  border-color: #efd5ae;
+  border-left-color: var(--color-warning);
+  color: var(--color-warning);
+  background: var(--color-warning-subtle);
+}
+
 .content-section {
   margin-top: 14px;
   padding: 20px;

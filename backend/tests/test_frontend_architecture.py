@@ -81,6 +81,27 @@ def test_changes_workspace_keeps_its_visual_contract() -> None:
     assert "@media (max-width: 760px)" in styles
 
 
+def test_literal_class_names_have_css_contracts() -> None:
+    literal_class_pattern = re.compile(r'className\s*=\s*["\']([^"\']+)["\']')
+    css_class_pattern = re.compile(r"(?<![\w-])\.([A-Za-z_][A-Za-z0-9_-]*)")
+
+    used_classes = set()
+    for path in sorted(FRONTEND.rglob("*.tsx")):
+        source = path.read_text(encoding="utf-8")
+        for class_value in literal_class_pattern.findall(source):
+            used_classes.update(
+                token
+                for token in class_value.split()
+                if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_-]*", token)
+            )
+
+    defined_classes = set()
+    for path in sorted((FRONTEND / "styles").rglob("*.css")):
+        defined_classes.update(css_class_pattern.findall(path.read_text(encoding="utf-8")))
+
+    assert sorted(used_classes - defined_classes) == []
+
+
 def test_frontend_styles_do_not_encode_patch_history() -> None:
     offenders = []
     for path in sorted((FRONTEND / "styles").rglob("*.css")):

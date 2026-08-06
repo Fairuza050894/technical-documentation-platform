@@ -119,7 +119,7 @@ export function OperationalOverview({
 
   return (
     <>
-      <header className="topbar topbar--operational">
+      <header className="topbar">
         <div>
           <p className="eyebrow">{workspace.name}</p>
           <h1>Overview</h1>
