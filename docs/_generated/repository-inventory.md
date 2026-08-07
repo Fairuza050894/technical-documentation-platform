@@ -34,4 +34,4 @@ This inventory is derived from the repository tree and is checked by `make docs-
 | Frontend TypeScript files | 27 |
 | Frontend TSX files | 30 |
 | Frontend test files | 14 |
-| Controlled Markdown files | 73 |
+| Controlled Markdown files | 74 |

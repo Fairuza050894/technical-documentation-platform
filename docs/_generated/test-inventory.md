@@ -58,13 +58,13 @@ Backend total: **90** tests.
 | frontend/src/modules/documents/DocumentsWorkspace.test.tsx | 3 |
 | frontend/src/modules/features/FeatureWorkspace.test.tsx | 3 |
 | frontend/src/modules/overview/OperationalOverview.test.tsx | 2 |
-| frontend/src/modules/projects/ProjectWorkspace.test.tsx | 3 |
+| frontend/src/modules/projects/ProjectWorkspace.test.tsx | 4 |
 | frontend/src/modules/sources/SourceWorkspace.test.tsx | 2 |
-| frontend/src/modules/workbench/ProjectWorkbench.test.tsx | 4 |
+| frontend/src/modules/workbench/ProjectWorkbench.test.tsx | 5 |
 | frontend/src/modules/workspaces/WorkspaceRegistry.test.tsx | 2 |
 | frontend/src/modules/workspaces/WorkspaceSwitcher.test.tsx | 5 |
 | frontend/src/shared/api/config.test.ts | 3 |
 
-Frontend total: **49** tests.
+Frontend total: **51** tests.
 
 Counts are structural and do not replace execution evidence from `make verify`.

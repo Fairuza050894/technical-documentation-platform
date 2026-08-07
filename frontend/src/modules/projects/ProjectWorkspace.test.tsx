@@ -14,6 +14,19 @@ const workspace: Workspace = {
   updated_at: "2026-07-30T00:00:00Z",
 };
 
+const archivedProject = {
+  id: "11111111-1111-4111-8111-111111111111",
+  key: "DOCS",
+  name: "Documentation Platform",
+  description: "Source-backed documentation",
+  workspace_id: workspace.id,
+  ownership_type: "TEAM",
+  workspace_type: "ENTERPRISE",
+  status: "ARCHIVED",
+  created_at: "2026-07-29T00:00:00Z",
+  updated_at: "2026-08-06T00:00:00Z",
+} as const;
+
 function getRequestUrl(input: RequestInfo | URL): string {
   if (typeof input === "string") {
     return input;
@@ -89,6 +102,34 @@ describe("ProjectWorkspace", () => {
       expect(screen.getByRole("alert")).toHaveTextContent("Projects could not be loaded");
       expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
     });
+  });
+
+  it("opens archived projects for read-only inspection", async () => {
+    const onOpenProject = vi.fn();
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ items: [archivedProject], total: 1 }), { status: 200 }),
+    );
+
+    render(
+      <ProjectWorkspace
+        workspace={workspace}
+        onOpenProject={onOpenProject}
+      />,
+    );
+
+    const projectRow = (await screen.findByText("Documentation Platform")).closest("tr");
+    expect(projectRow).not.toBeNull();
+
+    const renderedRow = within(projectRow as HTMLElement);
+    const openButton = renderedRow.getByRole("button", {
+      name: "View Documentation Platform workbench",
+    });
+    expect(openButton).toBeEnabled();
+
+    fireEvent.click(openButton);
+
+    expect(onOpenProject).toHaveBeenCalledWith(archivedProject);
+    expect(renderedRow.getByRole("button", { name: "Archived" })).toBeDisabled();
   });
 
   it("keeps archived workspaces read-only", async () => {

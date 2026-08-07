@@ -13,7 +13,10 @@ function getRequestUrl(input: RequestInfo | URL): string {
   return input instanceof URL ? input.href : input.url;
 }
 
-function projectRecord(overrideWorkspaceId = workspaceId) {
+function projectRecord(
+  overrideWorkspaceId = workspaceId,
+  status: "ACTIVE" | "ARCHIVED" = "ACTIVE",
+) {
   return {
     id: projectId,
     key: "DOCS",
@@ -22,7 +25,7 @@ function projectRecord(overrideWorkspaceId = workspaceId) {
     workspace_id: overrideWorkspaceId,
     ownership_type: "TEAM",
     workspace_type: "ENTERPRISE",
-    status: "ACTIVE",
+    status,
     created_at: "2026-07-29T00:00:00Z",
     updated_at: "2026-07-30T00:00:00Z",
   };
@@ -126,6 +129,47 @@ describe("ProjectWorkbench", () => {
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Open capability registry" }));
     expect(navigateStage).toHaveBeenCalledWith("features");
+  });
+
+  it("keeps archived project evidence available in a read-only workbench", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      const url = getRequestUrl(input);
+      if (url.endsWith(`/api/projects/${projectId}`)) {
+        return Promise.resolve(
+          new Response(JSON.stringify(projectRecord(workspaceId, "ARCHIVED")), { status: 200 }),
+        );
+      }
+      return Promise.resolve(
+        new Response(JSON.stringify({ items: [], total: 0 }), { status: 200 }),
+      );
+    });
+    const navigateStage = vi.fn();
+    const onProjectResolved = vi.fn();
+
+    render(
+      <ProjectWorkbench
+        workspaceId={workspaceId}
+        projectId={projectId}
+        stage="overview"
+        featureId={null}
+        onNavigateStage={navigateStage}
+        onNavigateFeature={vi.fn()}
+        onBackToProjects={vi.fn()}
+        onProjectResolved={onProjectResolved}
+      />,
+    );
+
+    const readOnlyStatus = await screen.findByRole("status", {
+      name: "Archived project read-only status",
+    });
+    expect(readOnlyStatus).toHaveTextContent("Existing evidence remains available in read-only mode");
+    expect(readOnlyStatus).toHaveTextContent("New intake and lifecycle changes are blocked");
+    expect(onProjectResolved).toHaveBeenCalledWith(projectRecord(workspaceId, "ARCHIVED"));
+
+    const sourceStage = screen.getByRole("button", { name: /Sources/ });
+    expect(sourceStage).toBeEnabled();
+    fireEvent.click(sourceStage);
+    expect(navigateStage).toHaveBeenCalledWith("sources");
   });
 
   it("rejects a project that belongs to another workspace", async () => {

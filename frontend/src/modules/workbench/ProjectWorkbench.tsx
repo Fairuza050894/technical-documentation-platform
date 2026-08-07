@@ -228,13 +228,20 @@ export function ProjectWorkbench({
       </header>
 
       {project.status === "ARCHIVED" && (
-        <div className="notice notice--warning" role="status">
+        <div
+          className="notice notice--warning"
+          role="status"
+          aria-label="Archived project read-only status"
+        >
           <span className="notice__icon" aria-hidden="true">
             <Icon name="alert" size={17} />
           </span>
           <span className="notice__body">
             <strong>This project is archived</strong>
-            <small>Existing evidence remains available, but new intake may be restricted.</small>
+            <small>
+              Existing evidence remains available in read-only mode. New intake and lifecycle
+              changes are blocked.
+            </small>
           </span>
         </div>
       )}

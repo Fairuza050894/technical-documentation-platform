@@ -59,6 +59,7 @@ This register inventories Markdown documentation. Formal approval must be record
 | TDP-REL-001 | Release Policy | Releases | Controlled draft | `docs/releases/release-policy.md` (Internal project documentation) |
 | TDP-REL-002 | Release Readiness | Releases | Controlled draft | `docs/releases/release-readiness.md` (Internal project documentation) |
 | Unassigned | MVP 1 API Catalog Requirements | Requirements | Not specified | `docs/requirements/mvp-1-api-catalog.md` (Not specified) |
+| Unassigned | MVP 1 Archived Project Read-only Access | Requirements | Not specified | `docs/requirements/mvp-1-archived-project-read-only-access.md` (Not specified) |
 | Unassigned | MVP 1 Change Detection | Requirements | Not specified | `docs/requirements/mvp-1-change-detection.md` (Not specified) |
 | Unassigned | MVP 1 Requirement: Document Lifecycle Core | Requirements | Not specified | `docs/requirements/mvp-1-document-lifecycle-core.md` (Not specified) |
 | Unassigned | MVP 1 Requirement: Documentation Governance and Living Repository Docs | Requirements | Not specified | `docs/requirements/mvp-1-documentation-governance.md` (Not specified) |

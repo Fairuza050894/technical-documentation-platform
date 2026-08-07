@@ -203,11 +203,15 @@ export function ProjectWorkspace({
                         <button
                           type="button"
                           className="button button--secondary"
-                          aria-label={`Open ${project.name} workbench`}
-                          disabled={project.status === "ARCHIVED" || onOpenProject === undefined}
+                          aria-label={
+                            project.status === "ARCHIVED"
+                              ? `View ${project.name} workbench`
+                              : `Open ${project.name} workbench`
+                          }
+                          disabled={onOpenProject === undefined}
                           onClick={() => onOpenProject?.(project)}
                         >
-                          Open workbench
+                          {project.status === "ARCHIVED" ? "View workbench" : "Open workbench"}
                         </button>
                         {pendingArchiveId === project.id ? (
                           <span className="inline-actions">
