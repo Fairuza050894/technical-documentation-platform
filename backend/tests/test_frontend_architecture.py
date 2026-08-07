@@ -139,6 +139,30 @@ def test_workbench_owns_project_navigation_and_readiness_layout() -> None:
     assert "grid-template-columns: repeat(3, minmax(0, 1fr));" in workbench
 
 
+def test_shared_forms_are_owned_by_components_layer() -> None:
+    foundation_path = FRONTEND / "styles" / "foundation.css"
+    components_path = FRONTEND / "styles" / "components.css"
+    foundation = foundation_path.read_text(encoding="utf-8")
+    components = components_path.read_text(encoding="utf-8")
+
+    selectors = [
+        ".form-panel",
+        ".form-grid",
+        ".field",
+        ".field--wide",
+        ".form-error",
+        ".form-actions",
+        ".inline-actions",
+    ]
+
+    for selector in selectors:
+        component_rule = re.compile(
+            rf"(?m)^\s*{re.escape(selector)}(?=[\s{{,:])",
+        )
+        assert component_rule.search(components) is not None
+        assert component_rule.search(foundation) is None
+
+
 def test_frontend_styles_do_not_encode_patch_history() -> None:
     offenders = []
     for path in sorted((FRONTEND / "styles").rglob("*.css")):

@@ -16,6 +16,7 @@ This index reports the requirement documents currently stored in the repository.
 | mvp-1-feature-module-registry.md | MVP 1 — Feature / Module Registry and Documentation Map | 0 | 10 | No |
 | mvp-1-frontend-composition-foundation.md | MVP 1 Frontend Composition and CSS Foundation | 0 | 7 | Yes |
 | mvp-1-frontend-css-canonical-ownership.md | MVP 1 Frontend CSS Canonical Ownership | 0 | 10 | Yes |
+| mvp-1-frontend-shared-form-ownership.md | MVP 1 Shared Form CSS Ownership | 0 | 6 | Yes |
 | mvp-1-openapi-source-management.md | MVP 1 — OpenAPI Source Management | 0 | 10 | No |
 | mvp-1-product-ui-foundation.md | MVP 1 Requirement: Product UI Foundation and Operational Overview | 0 | 11 | Yes |
 | mvp-1-project-centric-workbench.md | MVP 1 Requirement: Project-Centric Workbench | 0 | 15 | Yes |
