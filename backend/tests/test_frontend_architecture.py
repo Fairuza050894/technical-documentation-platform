@@ -102,6 +102,43 @@ def test_literal_class_names_have_css_contracts() -> None:
     assert sorted(used_classes - defined_classes) == []
 
 
+def test_workbench_owns_project_navigation_and_readiness_layout() -> None:
+    workbench_path = FRONTEND / "styles" / "modules" / "workbench.css"
+    features_path = FRONTEND / "styles" / "modules" / "features.css"
+    workbench = workbench_path.read_text(encoding="utf-8")
+    features = features_path.read_text(encoding="utf-8")
+
+    for selector in [
+        ".project-stage-navigation ol",
+        ".project-summary-grid",
+        ".project-workflow-map ol",
+    ]:
+        assert selector in workbench
+        assert selector not in features
+
+    stage_navigation = re.search(
+        r"\.project-stage-navigation ol\s*\{(?P<body>.*?)\}",
+        workbench,
+        flags=re.DOTALL,
+    )
+    assert stage_navigation is not None
+    assert "min-width: 1080px;" in stage_navigation.group("body")
+    assert "repeat(6, minmax(132px, 1fr)) 94px 94px" in stage_navigation.group("body")
+
+    stage_button = re.search(
+        r"\.project-stage-button\s*\{(?P<body>.*?)\}",
+        workbench,
+        flags=re.DOTALL,
+    )
+    assert stage_button is not None
+    assert "grid-template-columns: 14px 24px minmax(0, 1fr);" in stage_button.group("body")
+    assert "gap: 6px;" in stage_button.group("body")
+    assert "padding: 10px;" in stage_button.group("body")
+
+    assert "@media (max-width: 1260px)" in workbench
+    assert "grid-template-columns: repeat(3, minmax(0, 1fr));" in workbench
+
+
 def test_frontend_styles_do_not_encode_patch_history() -> None:
     offenders = []
     for path in sorted((FRONTEND / "styles").rglob("*.css")):

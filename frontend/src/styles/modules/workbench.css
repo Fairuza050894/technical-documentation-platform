@@ -145,8 +145,8 @@ button.workspace-context:focus-visible {
 
 .project-stage-navigation ol {
   display: grid;
-  min-width: 940px;
-  grid-template-columns: repeat(5, minmax(132px, 1fr)) 94px 94px;
+  min-width: 1080px;
+  grid-template-columns: repeat(6, minmax(132px, 1fr)) 94px 94px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -166,10 +166,10 @@ button.workspace-context:focus-visible {
   display: grid;
   width: 100%;
   min-height: 68px;
-  grid-template-columns: 20px 26px minmax(0, 1fr);
+  grid-template-columns: 14px 24px minmax(0, 1fr);
   align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
+  gap: 6px;
+  padding: 10px;
   border: 0;
   color: var(--color-text-secondary);
   font: inherit;
@@ -210,8 +210,8 @@ button.workspace-context:focus-visible {
 
 .project-stage-button__icon {
   display: grid;
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   place-items: center;
   border-radius: var(--radius-small);
   color: var(--color-text-secondary);
@@ -316,7 +316,7 @@ button.workspace-context:focus-visible {
 
 .project-summary-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: var(--space-3);
 }
 
@@ -383,7 +383,7 @@ button.workspace-context:focus-visible {
 
 .project-workflow-map ol {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   margin: 0;
   padding: 0;
   list-style: none;
@@ -488,11 +488,13 @@ button.workspace-context:focus-visible {
   color: var(--color-text-secondary);
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 1260px) {
   .project-summary-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+}
 
+@media (max-width: 1100px) {
   .project-workbench-header {
     align-items: stretch;
     flex-direction: column;

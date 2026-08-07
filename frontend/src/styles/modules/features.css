@@ -1,18 +1,5 @@
 /* Feature or Module Registry and Documentation Map. */
 
-.project-stage-navigation ol {
-  min-width: 1080px;
-  grid-template-columns: repeat(6, minmax(132px, 1fr)) 94px 94px;
-}
-
-.project-summary-grid {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-}
-
-.project-workflow-map ol {
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-}
-
 .feature-workspace {
   display: grid;
   gap: var(--space-4);
@@ -292,10 +279,6 @@
 }
 
 @media (max-width: 1260px) {
-  .project-summary-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
   .feature-workspace__grid {
     grid-template-columns: 1fr;
   }
@@ -315,8 +298,7 @@
     align-self: flex-start;
   }
 
-  .feature-signal-strip,
-  .project-summary-grid {
+  .feature-signal-strip {
     grid-template-columns: 1fr;
   }
 

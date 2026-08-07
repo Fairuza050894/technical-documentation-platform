@@ -68,6 +68,7 @@ This register inventories Markdown documentation. Formal approval must be record
 | Unassigned | MVP 1 Enterprise Document Taxonomy and Automation Boundaries | Requirements | Not specified | `docs/requirements/mvp-1-enterprise-document-taxonomy-and-agentic-boundaries.md` (Not specified) |
 | Unassigned | MVP 1 — Feature / Module Registry and Documentation Map | Requirements | Not specified | `docs/requirements/mvp-1-feature-module-registry.md` (Not specified) |
 | Unassigned | MVP 1 Frontend Composition and CSS Foundation | Requirements | Not specified | `docs/requirements/mvp-1-frontend-composition-foundation.md` (Not specified) |
+| Unassigned | MVP 1 Frontend CSS Canonical Ownership | Requirements | Not specified | `docs/requirements/mvp-1-frontend-css-canonical-ownership.md` (Not specified) |
 | Unassigned | MVP 1 — OpenAPI Source Management | Requirements | Not specified | `docs/requirements/mvp-1-openapi-source-management.md` (Not specified) |
 | Unassigned | MVP 1 Requirement: Product UI Foundation and Operational Overview | Requirements | Not specified | `docs/requirements/mvp-1-product-ui-foundation.md` (Not specified) |
 | Unassigned | MVP 1 Requirement: Project-Centric Workbench | Requirements | Not specified | `docs/requirements/mvp-1-project-centric-workbench.md` (Not specified) |
