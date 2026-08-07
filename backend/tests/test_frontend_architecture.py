@@ -163,6 +163,61 @@ def test_shared_forms_are_owned_by_components_layer() -> None:
         assert component_rule.search(foundation) is None
 
 
+def test_shared_buttons_are_owned_by_components_layer() -> None:
+    foundation_path = FRONTEND / "styles" / "foundation.css"
+    components_path = FRONTEND / "styles" / "components.css"
+    overview_path = FRONTEND / "styles" / "modules" / "overview.css"
+
+    foundation = foundation_path.read_text(encoding="utf-8")
+    components = components_path.read_text(encoding="utf-8")
+    overview = overview_path.read_text(encoding="utf-8")
+
+    selectors = [
+        ".button",
+        ".button:disabled",
+        ".button--primary",
+        ".button--primary:hover:not(:disabled)",
+        ".button--primary:disabled",
+        ".button--secondary",
+        ".button--secondary:hover:not(:disabled)",
+        ".button--quiet",
+        ".button--quiet:hover:not(:disabled)",
+        ".button--danger-quiet",
+        ".button--danger-quiet:hover:not(:disabled)",
+    ]
+
+    for selector in selectors:
+        global_rule = re.compile(
+            rf"(?m)^\s*{re.escape(selector)}\s*\{{",
+        )
+        assert global_rule.search(components) is not None
+        assert global_rule.search(foundation) is None
+        assert global_rule.search(overview) is None
+
+    disabled = re.search(
+        r"\.button:disabled\s*\{(?P<body>.*?)\}",
+        components,
+        flags=re.DOTALL,
+    )
+    assert disabled is not None
+    for declaration in [
+        "opacity: 1;",
+        "border-color: var(--color-border-subtle);",
+        "color: var(--color-text-faint);",
+        "background: var(--color-surface-muted);",
+        "box-shadow: none;",
+    ]:
+        assert declaration in disabled.group("body")
+
+    primary_disabled = re.search(
+        r"\.button--primary:disabled\s*\{(?P<body>.*?)\}",
+        components,
+        flags=re.DOTALL,
+    )
+    assert primary_disabled is not None
+    assert "background: var(--color-surface-emphasis);" in primary_disabled.group("body")
+
+
 def test_frontend_styles_do_not_encode_patch_history() -> None:
     offenders = []
     for path in sorted((FRONTEND / "styles").rglob("*.css")):

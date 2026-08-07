@@ -1019,20 +1019,6 @@ html {
   scroll-margin-top: calc(var(--utility-height) + 16px);
 }
 
-.button:disabled {
-  opacity: 1;
-  border-color: var(--color-border-subtle);
-  color: var(--color-text-faint);
-  background: var(--color-surface-muted);
-  box-shadow: none;
-}
-
-.button--primary:disabled {
-  border-color: var(--color-border-subtle);
-  color: var(--color-text-faint);
-  background: var(--color-surface-emphasis);
-}
-
 .rail-count {
   min-width: auto;
   padding-inline: 8px;
