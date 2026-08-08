@@ -2,10 +2,15 @@
 
 .topbar {
   display: flex;
+  min-width: 0;
   align-items: flex-start;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 28px;
   margin: 0 0 22px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--color-border-subtle);
+  scroll-margin-top: calc(var(--utility-height) + 16px);
 }
 
 .topbar > div:first-child {
@@ -201,7 +206,14 @@
 }
 
 .section-heading--split {
+  display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.section-heading.section-heading--split {
+  gap: 18px;
 }
 
 .section-heading h2,
@@ -530,6 +542,16 @@ input[type="file"]::file-selector-button {
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-small);
   background: var(--color-surface);
+  box-shadow: var(--shadow-low);
+}
+
+.table-frame th {
+  color: var(--color-text-secondary);
+  background: var(--color-surface-subtle);
+}
+
+.table-frame td {
+  color: var(--color-text-primary);
 }
 
 table {
@@ -579,15 +601,20 @@ tbody tr.is-selected,
 }
 
 td strong {
+  display: block;
   color: var(--color-text-primary);
   font-weight: 650;
 }
 
 .table-secondary-text {
   display: block;
+  max-width: 420px;
   margin-top: 2px;
+  overflow: hidden;
   color: var(--color-text-muted);
   font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .table-action-column {
@@ -760,9 +787,10 @@ td strong {
 
 .empty-state {
   display: flex;
+  min-height: 92px;
   align-items: center;
   gap: 12px;
-  min-height: 92px;
+  margin-top: 18px;
   padding: 16px;
   border: 1px dashed var(--color-border);
   border-radius: var(--radius-small);
@@ -787,6 +815,7 @@ td strong {
   background: var(--color-surface);
 }
 
+.empty-state h2,
 .empty-state h3 {
   margin: 0;
   color: var(--color-text-primary);
@@ -799,6 +828,20 @@ td strong {
   color: var(--color-text-muted);
   font-size: 10.5px;
   line-height: 1.45;
+}
+
+@media (max-width: 760px) {
+  .topbar,
+  .section-heading--split {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 720px) {
+  .section-heading--split {
+    gap: 8px;
+  }
 }
 
 @media (max-width: 520px) {

@@ -553,15 +553,6 @@
   padding-block: 7px;
 }
 
-.topbar {
-  min-width: 0;
-  flex-wrap: wrap;
-}
-
-.topbar > div:first-child {
-  min-width: 0;
-}
-
 .signal-region__heading {
   min-height: 44px;
   padding-inline: 14px;
@@ -709,15 +700,6 @@ textarea:hover {
   border-color: var(--color-border-strong);
 }
 
-.table-frame th {
-  color: var(--color-text-secondary);
-  background: var(--color-surface-subtle);
-}
-
-.table-frame td {
-  color: var(--color-text-primary);
-}
-
 @media (max-width: 1180px) {
   .operations-workbench {
     grid-template-columns: minmax(0, 1fr) 285px;
@@ -843,8 +825,6 @@ textarea:hover {
     padding: 20px 16px 44px;
   }
 
-  .topbar,
-  .section-heading--split,
   .signal-region__heading,
   .operations-section__heading {
     align-items: flex-start;
@@ -948,10 +928,6 @@ textarea:hover {
 
 html {
   scroll-padding-top: calc(var(--utility-height) + 16px);
-}
-
-.topbar {
-  scroll-margin-top: calc(var(--utility-height) + 16px);
 }
 
 .rail-count {
