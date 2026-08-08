@@ -152,21 +152,6 @@ h2 {
   line-height: 1.4;
 }
 
-.environment-badge,
-.status-indicator {
-  display: inline-flex;
-  align-items: center;
-  width: fit-content;
-  min-height: 26px;
-  padding: 4px 8px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-medium);
-  color: var(--color-text-secondary);
-  background: var(--color-surface);
-  font-size: 12px;
-  font-weight: 600;
-}
-
 .content-section {
   padding-top: 28px;
 }
@@ -209,27 +194,6 @@ h2 {
 
 .status-card p {
   margin: 8px 0 20px;
-}
-
-.status-label {
-  color: var(--color-text-muted);
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.status-indicator {
-  margin-top: auto;
-}
-
-.status-indicator--success {
-  border-color: #abefc6;
-  color: var(--color-success);
-  background: var(--color-success-subtle);
-}
-
-.status-indicator--neutral {
-  background: var(--color-surface-subtle);
 }
 
 .constraint-list {
@@ -300,16 +264,8 @@ h2 {
   gap: 20px;
 }
 
-.record-count {
-  color: var(--color-text-muted);
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
 .loading-state,
 .empty-state,
-.notice,
 .table-frame {
   margin-top: 18px;
 }
@@ -337,23 +293,6 @@ h2 {
   color: var(--color-text-secondary);
   font-size: 14px;
   line-height: 1.55;
-}
-
-.notice {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 12px 14px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-medium);
-  font-size: 14px;
-}
-
-.notice--error {
-  border-color: #fecdca;
-  color: #912018;
-  background: #fef3f2;
 }
 
 .table-frame {
@@ -640,58 +579,6 @@ input[type="file"]::file-selector-button {
   overflow-wrap: anywhere;
 }
 
-
-.status-badge,
-.change-kind {
-  display: inline-flex;
-  width: fit-content;
-  align-items: center;
-  min-height: 24px;
-  padding: 3px 7px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-medium);
-  color: var(--color-text-secondary);
-  background: var(--color-surface-subtle);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-}
-
-.status-badge--draft {
-  color: var(--color-text-secondary);
-}
-
-.status-badge--in_review {
-  border-color: #b2ccff;
-  color: #175cd3;
-  background: #eff4ff;
-}
-
-.status-badge--changes_requested {
-  border-color: #fedf89;
-  color: #b54708;
-  background: #fffaeb;
-}
-
-.status-badge--approved,
-.change-kind--added {
-  border-color: #abefc6;
-  color: var(--color-success);
-  background: var(--color-success-subtle);
-}
-
-.status-badge--superseded,
-.change-kind--removed {
-  border-color: #fecdca;
-  color: #b42318;
-  background: #fef3f2;
-}
-
-.change-kind--modified {
-  border-color: #b2ccff;
-  color: #175cd3;
-  background: #eff4ff;
-}
 
 .document-detail-badges,
 .workflow-action-row {

@@ -286,7 +286,6 @@ summary:focus-visible {
 
 .service-dot,
 .runtime-state__dot,
-.environment-badge__dot,
 .data-provenance__dot {
   width: 7px;
   height: 7px;
@@ -297,7 +296,6 @@ summary:focus-visible {
 
 .service-dot--available,
 .runtime-state--success .runtime-state__dot,
-.environment-badge--success .environment-badge__dot,
 .data-provenance__dot {
   background: #2aa66a;
 }
