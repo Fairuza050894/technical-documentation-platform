@@ -14,6 +14,9 @@ from tdp.modules.changes.application.service import ChangeDetectionApplicationSe
 from tdp.modules.changes.domain.errors import ChangeDetectionError
 from tdp.modules.changes.domain.model import DeterministicCatalogComparator
 from tdp.modules.changes.presentation.http.router import router as changes_router
+from tdp.modules.documents.application.governance_service import (
+    DocumentGovernanceApplicationService,
+)
 from tdp.modules.documents.application.service import DocumentApplicationService
 from tdp.modules.documents.domain.errors import DocumentError
 from tdp.modules.documents.infrastructure.markdown_renderer import (
@@ -125,6 +128,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.state.change_detection_service = ChangeDetectionApplicationService(
         catalog_repository,
         comparator,
+    )
+    application.state.document_governance_service = DocumentGovernanceApplicationService(
+        document_repository,
+        project_repository,
     )
     application.state.document_service = DocumentApplicationService(
         document_repository,

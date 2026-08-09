@@ -37,6 +37,7 @@ This register inventories Markdown documentation. Formal approval must be record
 | Unassigned | ADR-015: Request identity and environment safety boundary | Decisions | Accepted | `docs/decisions/ADR-015-request-identity-and-environment-safety.md` (Not specified) |
 | Unassigned | ADR-016: Living Repository Documentation and Deterministic Indexes | Decisions | Accepted | `docs/decisions/ADR-016-living-documentation-and-generated-indexes.md` (Not specified) |
 | Unassigned | ADR-017: Compose the Frontend Shell and Split CSS by Responsibility | Decisions | Accepted | `docs/decisions/ADR-017-frontend-composition-and-css-layers.md` (Not specified) |
+| Unassigned | ADR-018: Establish a Project-Level Enterprise Document Governance Registry | Decisions | Accepted | `docs/decisions/ADR-018-project-document-governance-registry.md` (Not specified) |
 | Unassigned | Coding Standards | Engineering | Not specified | `docs/engineering/coding-standards.md` (Not specified) |
 | Unassigned | Definition of Done | Engineering | Not specified | `docs/engineering/definition-of-done.md` (Not specified) |
 | TDP-GOV-002 | Document Control | Governance | Controlled draft | `docs/governance/document-control.md` (Internal project documentation) |
@@ -61,6 +62,7 @@ This register inventories Markdown documentation. Formal approval must be record
 | Unassigned | MVP 1 API Catalog Requirements | Requirements | Not specified | `docs/requirements/mvp-1-api-catalog.md` (Not specified) |
 | Unassigned | MVP 1 Archived Project Read-only Access | Requirements | Not specified | `docs/requirements/mvp-1-archived-project-read-only-access.md` (Not specified) |
 | Unassigned | MVP 1 Change Detection | Requirements | Not specified | `docs/requirements/mvp-1-change-detection.md` (Not specified) |
+| Unassigned | MVP 1 — Enterprise Document Governance Foundation | Requirements | Not specified | `docs/requirements/mvp-1-document-governance-foundation.md` (Not specified) |
 | Unassigned | MVP 1 Requirement: Document Lifecycle Core | Requirements | Not specified | `docs/requirements/mvp-1-document-lifecycle-core.md` (Not specified) |
 | Unassigned | MVP 1 Requirement: Documentation Governance and Living Repository Docs | Requirements | Not specified | `docs/requirements/mvp-1-documentation-governance.md` (Not specified) |
 | Unassigned | MVP 1 — Documents Workspace | Requirements | Not specified | `docs/requirements/mvp-1-documents-workspace.md` (Not specified) |

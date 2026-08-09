@@ -5,11 +5,13 @@
 
 | File | Test functions |
 |---|---|
+| backend/tests/application/test_document_governance_service.py | 2 |
 | backend/tests/application/test_feature_service.py | 2 |
 | backend/tests/application/test_project_service.py | 2 |
 | backend/tests/application/test_source_service.py | 3 |
 | backend/tests/application/test_workspace_service.py | 1 |
 | backend/tests/domain/test_change_detection.py | 1 |
+| backend/tests/domain/test_document_governance.py | 3 |
 | backend/tests/domain/test_document_lifecycle.py | 3 |
 | backend/tests/domain/test_document_version_comparison.py | 2 |
 | backend/tests/domain/test_feature.py | 2 |
@@ -27,6 +29,7 @@
 | backend/tests/infrastructure/test_sqlite_source_repository.py | 1 |
 | backend/tests/infrastructure/test_sqlite_workspace_repository.py | 1 |
 | backend/tests/presentation/test_api_catalog.py | 1 |
+| backend/tests/presentation/test_document_governance_api.py | 3 |
 | backend/tests/presentation/test_document_lifecycle_api.py | 5 |
 | backend/tests/presentation/test_document_version_comparison_api.py | 2 |
 | backend/tests/presentation/test_documents_api.py | 1 |
@@ -50,7 +53,7 @@
 | backend/tests/test_repository_documentation.py | 1 |
 | backend/tests/test_workspace_architecture.py | 2 |
 
-Backend total: **116** tests.
+Backend total: **124** tests.
 
 ## Frontend
 

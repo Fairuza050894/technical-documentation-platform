@@ -16,6 +16,15 @@ from tdp.modules.documents.application.dto import (
     DocumentVersionComparisonDto,
     WorkflowEventDto,
 )
+from tdp.modules.documents.application.governance_dto import (
+    DocumentTypeDefinitionDto,
+    DocumentTypeRegistryDto,
+    ProjectDocumentationChecklistDto,
+    ProjectDocumentationChecklistItemDto,
+)
+from tdp.modules.documents.application.governance_service import (
+    DocumentGovernanceApplicationService,
+)
 from tdp.modules.documents.application.service import DocumentApplicationService
 from tdp.presentation.http.dependencies.identity import PrincipalDependency
 
@@ -81,6 +90,82 @@ class DocumentCollectionResponse(BaseModel):
     total: int
 
 
+class DocumentTypeDefinitionResponse(BaseModel):
+    document_type: str
+    display_name: str
+    description: str
+    automation_profile: str
+    order: int
+
+    @classmethod
+    def from_dto(cls, item: DocumentTypeDefinitionDto) -> "DocumentTypeDefinitionResponse":
+        return cls.model_validate(asdict(item))
+
+
+class DocumentTypeRegistryResponse(BaseModel):
+    schema_version: str
+    items: list[DocumentTypeDefinitionResponse]
+    total: int
+
+    @classmethod
+    def from_dto(cls, registry: DocumentTypeRegistryDto) -> "DocumentTypeRegistryResponse":
+        return cls(
+            schema_version=registry.schema_version,
+            items=[DocumentTypeDefinitionResponse.from_dto(item) for item in registry.items],
+            total=registry.total,
+        )
+
+
+class ProjectDocumentationChecklistItemResponse(BaseModel):
+    document_type: str
+    display_name: str
+    automation_profile: str
+    requirement: str
+    availability: str
+    latest_document_id: str | None
+    latest_version_id: str | None
+    latest_version: str | None
+    latest_status: str | None
+
+    @classmethod
+    def from_dto(
+        cls,
+        item: ProjectDocumentationChecklistItemDto,
+    ) -> "ProjectDocumentationChecklistItemResponse":
+        return cls.model_validate(asdict(item))
+
+
+class ProjectDocumentationChecklistResponse(BaseModel):
+    project_id: str
+    policy_key: str
+    registry_schema_version: str
+    items: list[ProjectDocumentationChecklistItemResponse]
+    total: int
+    required_total: int
+    supplementary_total: int
+    available_total: int
+    missing_required_total: int
+
+    @classmethod
+    def from_dto(
+        cls,
+        checklist: ProjectDocumentationChecklistDto,
+    ) -> "ProjectDocumentationChecklistResponse":
+        return cls(
+            project_id=checklist.project_id,
+            policy_key=checklist.policy_key,
+            registry_schema_version=checklist.registry_schema_version,
+            items=[
+                ProjectDocumentationChecklistItemResponse.from_dto(item) for item in checklist.items
+            ],
+            total=checklist.total,
+            required_total=checklist.required_total,
+            supplementary_total=checklist.supplementary_total,
+            available_total=checklist.available_total,
+            missing_required_total=checklist.missing_required_total,
+        )
+
+
 class WorkflowEventResponse(BaseModel):
     id: str
     version_id: str
@@ -132,7 +217,37 @@ def get_document_service(request: Request) -> DocumentApplicationService:
     return cast(DocumentApplicationService, request.app.state.document_service)
 
 
+def get_document_governance_service(request: Request) -> DocumentGovernanceApplicationService:
+    return cast(
+        DocumentGovernanceApplicationService,
+        request.app.state.document_governance_service,
+    )
+
+
 DocumentServiceDependency = Annotated[DocumentApplicationService, Depends(get_document_service)]
+DocumentGovernanceServiceDependency = Annotated[
+    DocumentGovernanceApplicationService,
+    Depends(get_document_governance_service),
+]
+
+
+@router.get("/document-types", response_model=DocumentTypeRegistryResponse)
+async def list_document_types(
+    service: DocumentGovernanceServiceDependency,
+) -> DocumentTypeRegistryResponse:
+    return DocumentTypeRegistryResponse.from_dto(await service.list_document_types())
+
+
+@router.get(
+    "/projects/{project_id}/documentation-checklist",
+    response_model=ProjectDocumentationChecklistResponse,
+)
+async def get_project_documentation_checklist(
+    project_id: str,
+    service: DocumentGovernanceServiceDependency,
+) -> ProjectDocumentationChecklistResponse:
+    checklist = await service.project_documentation_checklist(project_id)
+    return ProjectDocumentationChecklistResponse.from_dto(checklist)
 
 
 @router.post(

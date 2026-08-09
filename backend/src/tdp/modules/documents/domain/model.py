@@ -20,7 +20,20 @@ _VERSION_PATTERN = re.compile(r"^(?P<major>[1-9][0-9]*)\.(?P<minor>0|[1-9][0-9]*
 
 
 class DocumentType(StrEnum):
+    # Existing deterministic system artifact retained for backward compatibility.
     TECHNICAL_SOURCE_OVERVIEW = "TECHNICAL_SOURCE_OVERVIEW"
+
+    # Canonical enterprise Project-level document types.
+    HLD = "HLD"
+    LLD = "LLD"
+    AS_BUILT = "AS_BUILT"
+    SOP = "SOP"
+    USER_GUIDE = "USER_GUIDE"
+    INSTALLATION_GUIDE = "INSTALLATION_GUIDE"
+    PROJECT_HANDOVER = "PROJECT_HANDOVER"
+    UAT_EVIDENCE = "UAT_EVIDENCE"
+    JOURNEY_MAP = "JOURNEY_MAP"
+    DEVELOPER_ONBOARDING_BRIEF = "DEVELOPER_ONBOARDING_BRIEF"
 
 
 class DocumentFormat(StrEnum):

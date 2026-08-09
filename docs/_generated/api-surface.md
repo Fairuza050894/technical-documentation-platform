@@ -5,17 +5,18 @@ The table is derived from FastAPI route decorators. It records declared routes, 
 
 | Method | Path | Source |
 |---|---|---|
-| POST | `/api/document-version-comparisons` | `backend/src/tdp/modules/documents/presentation/http/router.py:292` |
-| GET | `/api/document-versions/{version_id}` | `backend/src/tdp/modules/documents/presentation/http/router.py:204` |
-| POST | `/api/document-versions/{version_id}/approve` | `backend/src/tdp/modules/documents/presentation/http/router.py:251` |
-| GET | `/api/document-versions/{version_id}/download` | `backend/src/tdp/modules/documents/presentation/http/router.py:212` |
-| POST | `/api/document-versions/{version_id}/request-changes` | `backend/src/tdp/modules/documents/presentation/http/router.py:237` |
-| POST | `/api/document-versions/{version_id}/submit-review` | `backend/src/tdp/modules/documents/presentation/http/router.py:223` |
-| POST | `/api/document-versions/{version_id}/supersede` | `backend/src/tdp/modules/documents/presentation/http/router.py:265` |
-| GET | `/api/document-versions/{version_id}/workflow-events` | `backend/src/tdp/modules/documents/presentation/http/router.py:279` |
-| GET | `/api/documents/{document_id}` | `backend/src/tdp/modules/documents/presentation/http/router.py:188` |
-| GET | `/api/documents/{document_id}/download` | `backend/src/tdp/modules/documents/presentation/http/router.py:196` |
-| GET | `/api/documents/{document_id}/versions` | `backend/src/tdp/modules/documents/presentation/http/router.py:178` |
+| GET | `/api/document-types` | `backend/src/tdp/modules/documents/presentation/http/router.py:235` |
+| POST | `/api/document-version-comparisons` | `backend/src/tdp/modules/documents/presentation/http/router.py:407` |
+| GET | `/api/document-versions/{version_id}` | `backend/src/tdp/modules/documents/presentation/http/router.py:319` |
+| POST | `/api/document-versions/{version_id}/approve` | `backend/src/tdp/modules/documents/presentation/http/router.py:366` |
+| GET | `/api/document-versions/{version_id}/download` | `backend/src/tdp/modules/documents/presentation/http/router.py:327` |
+| POST | `/api/document-versions/{version_id}/request-changes` | `backend/src/tdp/modules/documents/presentation/http/router.py:352` |
+| POST | `/api/document-versions/{version_id}/submit-review` | `backend/src/tdp/modules/documents/presentation/http/router.py:338` |
+| POST | `/api/document-versions/{version_id}/supersede` | `backend/src/tdp/modules/documents/presentation/http/router.py:380` |
+| GET | `/api/document-versions/{version_id}/workflow-events` | `backend/src/tdp/modules/documents/presentation/http/router.py:394` |
+| GET | `/api/documents/{document_id}` | `backend/src/tdp/modules/documents/presentation/http/router.py:303` |
+| GET | `/api/documents/{document_id}/download` | `backend/src/tdp/modules/documents/presentation/http/router.py:311` |
+| GET | `/api/documents/{document_id}/versions` | `backend/src/tdp/modules/documents/presentation/http/router.py:293` |
 | GET | `/api/health` | `backend/src/tdp/presentation/http/routers/health.py:36` |
 | GET | `/api/health/live` | `backend/src/tdp/presentation/http/routers/health.py:36` |
 | GET | `/api/health/ready` | `backend/src/tdp/presentation/http/routers/health.py:47` |
@@ -26,8 +27,9 @@ The table is derived from FastAPI route decorators. It records declared routes, 
 | GET | `/api/projects/{project_id}/api-catalog` | `backend/src/tdp/modules/catalog/presentation/http/router.py:179` |
 | POST | `/api/projects/{project_id}/archive` | `backend/src/tdp/modules/projects/presentation/http/router.py:104` |
 | POST | `/api/projects/{project_id}/comparisons` | `backend/src/tdp/modules/changes/presentation/http/router.py:39` |
-| GET | `/api/projects/{project_id}/documents` | `backend/src/tdp/modules/documents/presentation/http/router.py:165` |
-| POST | `/api/projects/{project_id}/documents/technical-source-overview` | `backend/src/tdp/modules/documents/presentation/http/router.py:143` |
+| GET | `/api/projects/{project_id}/documentation-checklist` | `backend/src/tdp/modules/documents/presentation/http/router.py:245` |
+| GET | `/api/projects/{project_id}/documents` | `backend/src/tdp/modules/documents/presentation/http/router.py:280` |
+| POST | `/api/projects/{project_id}/documents/technical-source-overview` | `backend/src/tdp/modules/documents/presentation/http/router.py:258` |
 | GET | `/api/projects/{project_id}/sources` | `backend/src/tdp/modules/sources/presentation/http/router.py:93` |
 | POST | `/api/projects/{project_id}/sources/openapi` | `backend/src/tdp/modules/sources/presentation/http/router.py:68` |
 | GET | `/api/sources/{source_id}` | `backend/src/tdp/modules/sources/presentation/http/router.py:103` |
