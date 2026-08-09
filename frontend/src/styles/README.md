@@ -15,6 +15,8 @@ globals.css
     ├── workbench.css
     ├── workspaces.css
     ├── features.css
+    ├── sources.css
+    ├── catalog.css
     ├── changes.css
     └── documents.css
 ```
@@ -42,6 +44,8 @@ Ownership is based on responsibility, not on the route that happens to import la
 | project workbench stage navigation, readiness summary, workflow map | `modules/workbench.css` |
 | workspace registry and switcher | `modules/workspaces.css` |
 | feature/module registry and documentation map | `modules/features.css` |
+| source registry and technical intake | `modules/sources.css` |
+| API catalog and evidence presentation | `modules/catalog.css` |
 | deterministic changes result workspace | `modules/changes.css` |
 | document-specific identity/workflow additions | `modules/documents.css` |
 

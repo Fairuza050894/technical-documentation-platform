@@ -5,5 +5,7 @@
 @import "./modules/workbench.css";
 @import "./modules/workspaces.css";
 @import "./modules/features.css";
+@import "./modules/sources.css";
+@import "./modules/catalog.css";
 @import "./modules/changes.css";
 @import "./modules/documents.css";

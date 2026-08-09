@@ -1,0 +1,50 @@
+/* Source Registry and technical intake composition. */
+
+.workspace-filter {
+  display: grid;
+  max-width: 620px;
+  grid-template-areas:
+    "label blank"
+    "control action";
+  grid-template-columns: minmax(240px, 380px) auto;
+  align-items: end;
+  gap: 5px 9px;
+  margin-top: 14px;
+}
+
+.workspace-filter label {
+  grid-area: label;
+  color: var(--color-text-secondary);
+  font-size: 10.5px;
+  font-weight: 680;
+  letter-spacing: 0.01em;
+}
+
+.workspace-filter select {
+  grid-area: control;
+}
+
+.workspace-filter .button {
+  grid-area: action;
+}
+
+.checksum-text {
+  display: block;
+  margin-top: 4px;
+  color: var(--color-text-muted);
+  font-size: 11px;
+}
+
+@media (max-width: 760px) {
+  .workspace-filter {
+    grid-template-areas:
+      "label"
+      "control"
+      "action";
+    grid-template-columns: 1fr;
+  }
+
+  .workspace-filter .button {
+    width: 100%;
+  }
+}

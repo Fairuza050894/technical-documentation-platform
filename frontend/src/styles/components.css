@@ -361,7 +361,6 @@
 }
 
 .form-panel,
-.catalog-toolbar,
 .comparison-toolbar {
   margin-top: 14px;
   padding: 16px;
@@ -388,8 +387,7 @@
   grid-column: 1 / -1;
 }
 
-.field > label,
-.workspace-filter label {
+.field > label {
   color: var(--color-text-secondary);
   font-size: 10.5px;
   font-weight: 680;
@@ -492,42 +490,6 @@ input[type="file"]::file-selector-button {
   border-top: 1px solid var(--color-border-subtle);
 }
 
-.workspace-filter {
-  display: grid;
-  max-width: 620px;
-  grid-template-areas:
-    "label blank"
-    "control action";
-  grid-template-columns: minmax(240px, 380px) auto;
-  align-items: end;
-  gap: 5px 9px;
-  margin-top: 14px;
-}
-
-.workspace-filter label {
-  grid-area: label;
-}
-
-.workspace-filter select {
-  grid-area: control;
-}
-
-.workspace-filter .button {
-  grid-area: action;
-}
-
-.catalog-toolbar {
-  grid-template-columns: minmax(210px, 1fr) minmax(210px, 1fr) auto;
-  gap: 12px;
-  align-items: end;
-}
-
-.catalog-toolbar__action {
-  display: flex;
-  min-height: var(--control-height);
-  align-items: center;
-}
-
 .comparison-toolbar {
   grid-template-columns: repeat(2, minmax(210px, 1fr)) auto;
   gap: 12px;
@@ -595,8 +557,7 @@ tbody tr:hover {
 }
 
 tbody tr.is-selected,
-.table-frame tbody tr.is-selected,
-.catalog-layout tbody tr.is-selected {
+.table-frame tbody tr.is-selected {
   background: var(--color-accent-subtle);
 }
 
@@ -710,22 +671,12 @@ td strong {
   background: var(--color-surface-muted);
 }
 
-.catalog-layout {
-  gap: 14px;
-  margin-top: 14px;
-}
-
-.evidence-panel,
 .document-panel {
   padding: 16px;
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-medium);
   background: var(--color-surface);
   box-shadow: none;
-}
-
-.evidence-panel {
-  top: calc(var(--utility-height) + 16px);
 }
 
 .catalog-card {

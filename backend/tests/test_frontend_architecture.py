@@ -32,6 +32,8 @@ def test_global_css_is_an_explicit_import_manifest() -> None:
         "./modules/workbench.css",
         "./modules/workspaces.css",
         "./modules/features.css",
+        "./modules/sources.css",
+        "./modules/catalog.css",
         "./modules/changes.css",
         "./modules/documents.css",
     ]

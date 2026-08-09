@@ -744,14 +744,8 @@ textarea:hover {
     grid-column: 1 / -1;
   }
 
-  .catalog-toolbar,
-  .catalog-layout,
   .comparison-toolbar {
     grid-template-columns: 1fr;
-  }
-
-  .catalog-toolbar__action .button {
-    width: 100%;
   }
 }
 
@@ -865,18 +859,6 @@ textarea:hover {
     grid-template-columns: 1fr;
   }
 
-  .workspace-filter {
-    grid-template-areas:
-      "label"
-      "control"
-      "action";
-    grid-template-columns: 1fr;
-  }
-
-  .workspace-filter .button {
-    width: 100%;
-  }
-
   .activity-stream li {
     grid-template-columns: 32px minmax(0, 1fr);
   }
@@ -940,14 +922,4 @@ html {
 
 .document-revision-reason {
   min-height: 72px;
-}
-
-.source-reference {
-  display: inline-block;
-  max-width: 180px;
-  overflow: hidden;
-  color: var(--color-text-secondary);
-  font-size: 10.5px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }

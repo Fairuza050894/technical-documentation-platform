@@ -17,6 +17,7 @@ This index reports the requirement documents currently stored in the repository.
 | mvp-1-frontend-composition-foundation.md | MVP 1 Frontend Composition and CSS Foundation | 0 | 7 | Yes |
 | mvp-1-frontend-css-canonical-ownership.md | MVP 1 Frontend CSS Canonical Ownership | 0 | 10 | Yes |
 | mvp-1-frontend-feedback-status-ownership.md | MVP 1 Feedback and Status CSS Ownership | 0 | 8 | Yes |
+| mvp-1-frontend-registry-intake-ownership.md | MVP 1 Registry and Technical Intake CSS Ownership | 0 | 0 | Yes |
 | mvp-1-frontend-shared-button-ownership.md | MVP 1 Shared Button CSS Ownership | 0 | 7 | Yes |
 | mvp-1-frontend-shared-form-ownership.md | MVP 1 Shared Form CSS Ownership | 0 | 6 | Yes |
 | mvp-1-frontend-table-page-ownership.md | MVP 1 Table and Page Primitive CSS Ownership | 0 | 0 | Yes |

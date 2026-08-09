@@ -70,6 +70,7 @@ This register inventories Markdown documentation. Formal approval must be record
 | Unassigned | MVP 1 Frontend Composition and CSS Foundation | Requirements | Not specified | `docs/requirements/mvp-1-frontend-composition-foundation.md` (Not specified) |
 | Unassigned | MVP 1 Frontend CSS Canonical Ownership | Requirements | Not specified | `docs/requirements/mvp-1-frontend-css-canonical-ownership.md` (Not specified) |
 | Unassigned | MVP 1 Feedback and Status CSS Ownership | Requirements | Not specified | `docs/requirements/mvp-1-frontend-feedback-status-ownership.md` (Not specified) |
+| Unassigned | MVP 1 Registry and Technical Intake CSS Ownership | Requirements | Not specified | `docs/requirements/mvp-1-frontend-registry-intake-ownership.md` (Not specified) |
 | Unassigned | MVP 1 Shared Button CSS Ownership | Requirements | Not specified | `docs/requirements/mvp-1-frontend-shared-button-ownership.md` (Not specified) |
 | Unassigned | MVP 1 Shared Form CSS Ownership | Requirements | Not specified | `docs/requirements/mvp-1-frontend-shared-form-ownership.md` (Not specified) |
 | Unassigned | MVP 1 Table and Page Primitive CSS Ownership | Requirements | Not specified | `docs/requirements/mvp-1-frontend-table-page-ownership.md` (Not specified) |
