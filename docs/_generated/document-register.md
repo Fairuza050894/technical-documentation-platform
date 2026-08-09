@@ -74,6 +74,7 @@ This register inventories Markdown documentation. Formal approval must be record
 | Unassigned | MVP 1 Registry and Technical Intake CSS Ownership | Requirements | Not specified | `docs/requirements/mvp-1-frontend-registry-intake-ownership.md` (Not specified) |
 | Unassigned | MVP 1 Shared Button CSS Ownership | Requirements | Not specified | `docs/requirements/mvp-1-frontend-shared-button-ownership.md` (Not specified) |
 | Unassigned | MVP 1 Shared Form CSS Ownership | Requirements | Not specified | `docs/requirements/mvp-1-frontend-shared-form-ownership.md` (Not specified) |
+| Unassigned | MVP 1 Application Shell and Operational Overview CSS Ownership | Requirements | Not specified | `docs/requirements/mvp-1-frontend-shell-overview-ownership.md` (Not specified) |
 | Unassigned | MVP 1 Table and Page Primitive CSS Ownership | Requirements | Not specified | `docs/requirements/mvp-1-frontend-table-page-ownership.md` (Not specified) |
 | Unassigned | MVP 1 — OpenAPI Source Management | Requirements | Not specified | `docs/requirements/mvp-1-openapi-source-management.md` (Not specified) |
 | Unassigned | MVP 1 Requirement: Product UI Foundation and Operational Overview | Requirements | Not specified | `docs/requirements/mvp-1-product-ui-foundation.md` (Not specified) |

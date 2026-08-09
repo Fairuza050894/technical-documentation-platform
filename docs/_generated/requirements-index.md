@@ -21,6 +21,7 @@ This index reports the requirement documents currently stored in the repository.
 | mvp-1-frontend-registry-intake-ownership.md | MVP 1 Registry and Technical Intake CSS Ownership | 0 | 0 | Yes |
 | mvp-1-frontend-shared-button-ownership.md | MVP 1 Shared Button CSS Ownership | 0 | 7 | Yes |
 | mvp-1-frontend-shared-form-ownership.md | MVP 1 Shared Form CSS Ownership | 0 | 6 | Yes |
+| mvp-1-frontend-shell-overview-ownership.md | MVP 1 Application Shell and Operational Overview CSS Ownership | 0 | 0 | Yes |
 | mvp-1-frontend-table-page-ownership.md | MVP 1 Table and Page Primitive CSS Ownership | 0 | 0 | Yes |
 | mvp-1-openapi-source-management.md | MVP 1 — OpenAPI Source Management | 0 | 10 | No |
 | mvp-1-product-ui-foundation.md | MVP 1 Requirement: Product UI Foundation and Operational Overview | 0 | 11 | Yes |

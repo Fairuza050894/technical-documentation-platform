@@ -38,9 +38,9 @@ Ownership is based on responsibility, not on the route that happens to import la
 
 | Selector family | Canonical owner |
 | --- | --- |
-| application shell, sidebar, utility bar | `application-shell.css` |
+| application frame, sidebar, navigation, workspace context, utility bar | `application-shell.css` |
 | reusable buttons, forms, notices, tables, page primitives | `components.css` |
-| operational overview workspace | `modules/overview.css` |
+| operational overview signals, activity, health, rail, and page actions | `modules/overview.css` |
 | project workbench stage navigation, readiness summary, workflow map | `modules/workbench.css` |
 | workspace registry and switcher | `modules/workspaces.css` |
 | feature/module registry and documentation map | `modules/features.css` |

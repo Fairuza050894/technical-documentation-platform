@@ -44,18 +44,9 @@
   line-height: 1.55;
 }
 
-.page-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-}
-
 .environment-badge,
 .status-label,
-.record-count,
-.data-provenance {
+.record-count {
   display: inline-flex;
   min-height: 25px;
   align-items: center;
@@ -216,10 +207,7 @@
   gap: 18px;
 }
 
-.section-heading h2,
-.operations-section__heading h2,
-.rail-section__heading h2,
-.signal-region__heading h2 {
+.section-heading h2 {
   margin: 0;
   color: var(--color-text-primary);
   font-size: 15px;
@@ -228,10 +216,7 @@
   line-height: 1.35;
 }
 
-.section-heading p,
-.operations-section__heading p,
-.rail-section__heading p,
-.signal-region__heading p {
+.section-heading p {
   margin: 3px 0 0;
   color: var(--color-text-muted);
   font-size: 11.5px;
@@ -764,6 +749,11 @@ td strong {
   .section-heading--split {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .form-grid,
+  .system-status-grid {
+    grid-template-columns: 1fr;
   }
 }
 

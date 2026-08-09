@@ -12,35 +12,6 @@
   white-space: nowrap;
 }
 
-html {
-  color-scheme: light;
-  background: var(--color-background);
-  font-size: 14px;
-}
-
-body {
-  color: var(--color-text-primary);
-  background: var(--color-background);
-  -webkit-font-smoothing: antialiased;
-}
-
-button,
-input,
-select,
-textarea {
-  font: inherit;
-}
-
-button:focus-visible,
-a:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible,
-summary:focus-visible {
-  outline: 0;
-  box-shadow: var(--focus-ring);
-}
-
 /* Application chrome */
 
 .app-shell {
@@ -73,6 +44,11 @@ summary:focus-visible {
   margin: 0 4px 18px;
 }
 
+.product-mark strong,
+.product-mark small {
+  display: block;
+}
+
 .product-mark__symbol {
   display: grid;
   width: 32px;
@@ -83,6 +59,9 @@ summary:focus-visible {
   border-radius: var(--radius-medium);
   color: #dce7ff;
   background: #182332;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
 
 .product-mark__copy {
@@ -103,6 +82,7 @@ summary:focus-visible {
 
 .product-mark small {
   overflow: hidden;
+  margin-top: 2px;
   color: var(--color-sidebar-muted);
   font-size: 10.5px;
   text-overflow: ellipsis;
@@ -111,11 +91,12 @@ summary:focus-visible {
 
 .workspace-context {
   display: grid;
+  min-height: 48px;
   grid-template-columns: 24px minmax(0, 1fr) 14px;
   align-items: center;
   gap: 8px;
   margin: 0 2px 18px;
-  padding: 9px 9px;
+  padding: 7px 9px;
   border: 1px solid var(--color-sidebar-border);
   border-radius: var(--radius-medium);
   background: var(--color-sidebar-raised);
@@ -165,10 +146,10 @@ summary:focus-visible {
 
 .navigation-group h2 {
   margin: 0 9px 6px;
-  color: #788596;
+  color: #94a3b8;
   font-size: 9px;
   font-weight: 750;
-  letter-spacing: 0.095em;
+  letter-spacing: 0.055em;
   text-transform: uppercase;
 }
 
@@ -191,7 +172,7 @@ summary:focus-visible {
   padding: 6px 8px;
   border: 0;
   border-radius: var(--radius-medium);
-  color: #aeb9c7;
+  color: #c8d2df;
   background: transparent;
   font-size: 12px;
   font-weight: 520;
@@ -219,7 +200,7 @@ summary:focus-visible {
 }
 
 .navigation-item.is-active {
-  color: #ffffff;
+  color: #f8fafc;
   background: var(--color-sidebar-active);
   font-weight: 620;
 }
@@ -233,7 +214,7 @@ summary:focus-visible {
   width: 24px;
   height: 24px;
   place-items: center;
-  color: #8290a1;
+  color: #9eacbd;
 }
 
 .navigation-item:hover .navigation-item__icon,
@@ -285,8 +266,7 @@ summary:focus-visible {
 }
 
 .service-dot,
-.runtime-state__dot,
-.data-provenance__dot {
+.runtime-state__dot {
   width: 7px;
   height: 7px;
   flex: 0 0 auto;
@@ -295,8 +275,7 @@ summary:focus-visible {
 }
 
 .service-dot--available,
-.runtime-state--success .runtime-state__dot,
-.data-provenance__dot {
+.runtime-state--success .runtime-state__dot {
   background: #2aa66a;
 }
 
@@ -409,10 +388,115 @@ summary:focus-visible {
 
 .main-content {
   min-width: 0;
+  padding: 28px 32px 48px;
 }
 
 .workspace-canvas {
   width: min(100%, 1520px);
   margin: 0 auto;
   padding: 26px 30px 56px;
+}
+
+@media (max-width: 980px) {
+  .app-shell {
+    grid-template-columns: 210px minmax(0, 1fr);
+  }
+
+  .sidebar {
+    padding-right: 9px;
+    padding-left: 9px;
+  }
+
+  .workspace-canvas {
+    padding-right: 20px;
+    padding-left: 20px;
+  }
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    border-right: 0;
+    border-bottom: 1px solid var(--color-border-subtle);
+  }
+
+  .navigation-list {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .app-shell {
+    display: block;
+  }
+
+  .sidebar {
+    position: relative;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    padding: 12px;
+  }
+
+  .product-mark {
+    margin-bottom: 10px;
+  }
+
+  .workspace-context,
+  .sidebar-service,
+  .navigation-group h2 {
+    display: none;
+  }
+
+  .primary-navigation {
+    display: block;
+    overflow-x: auto;
+  }
+
+  .navigation-group {
+    display: inline;
+  }
+
+  .navigation-list {
+    display: inline-flex;
+    margin-right: 4px;
+  }
+
+  .navigation-item {
+    width: auto;
+    min-width: max-content;
+    grid-template-columns: 22px auto;
+    padding-right: 10px;
+    padding-left: 7px;
+  }
+
+  .navigation-item::before {
+    top: auto;
+    right: 8px;
+    bottom: -1px;
+    left: 8px;
+    width: auto;
+    height: 2px;
+  }
+
+  .utility-bar {
+    position: relative;
+    min-height: 46px;
+    padding: 0 16px;
+  }
+
+  .utility-status__item,
+  .utility-status__divider {
+    display: none;
+  }
+
+  .workspace-canvas {
+    padding: 20px 16px 44px;
+  }
+}
+
+@media (max-width: 640px) {
+  .main-content {
+    padding: 22px 18px 36px;
+  }
 }
