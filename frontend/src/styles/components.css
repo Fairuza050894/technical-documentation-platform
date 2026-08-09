@@ -122,6 +122,7 @@
 
 .notice {
   display: grid;
+  min-width: 0;
   min-height: 48px;
   grid-template-columns: 24px minmax(0, 1fr) auto;
   align-items: center;
@@ -157,7 +158,9 @@
 
 .notice__body {
   display: grid;
+  min-width: 0;
   gap: 1px;
+  overflow-wrap: anywhere;
 }
 
 .notice__body strong {
@@ -166,8 +169,12 @@
 }
 
 .notice__body small {
+  display: block;
+  min-width: 0;
   color: var(--color-text-secondary);
   font-size: 9.5px;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 .notice code {
@@ -751,6 +758,20 @@ td strong {
     flex-direction: column;
   }
 
+  .notice {
+    width: 100%;
+    max-width: 100%;
+    grid-template-columns: 24px minmax(0, 1fr);
+    padding-right: 20px;
+  }
+
+  .notice code,
+  .notice .button {
+    grid-column: 2;
+    max-width: 100%;
+    justify-self: start;
+  }
+
   .form-grid,
   .system-status-grid {
     grid-template-columns: 1fr;
@@ -760,17 +781,5 @@ td strong {
 @media (max-width: 720px) {
   .section-heading--split {
     gap: 8px;
-  }
-}
-
-@media (max-width: 520px) {
-  .notice {
-    grid-template-columns: 24px minmax(0, 1fr);
-  }
-
-  .notice code,
-  .notice .button {
-    grid-column: 2;
-    justify-self: start;
   }
 }

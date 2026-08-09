@@ -43,8 +43,10 @@ def test_application_shell_is_the_canonical_shell_owner() -> None:
 def test_shell_responsive_contract_is_preserved_in_shell_layer() -> None:
     shell = (STYLES / "application-shell.css").read_text(encoding="utf-8")
 
-    for breakpoint in ["980px", "900px", "760px", "640px"]:
+    for breakpoint in ["980px", "760px", "640px"]:
         assert f"@media (max-width: {breakpoint})" in shell
+
+    assert "@media (max-width: 900px)" not in shell
 
     for declaration in [
         "grid-template-columns: 210px minmax(0, 1fr);",
