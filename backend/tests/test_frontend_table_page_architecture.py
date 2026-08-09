@@ -88,6 +88,7 @@ def test_global_leakage_is_removed_and_contextual_overrides_remain() -> None:
     overview = (STYLES / "modules" / "overview.css").read_text(encoding="utf-8")
     workbench = (STYLES / "modules" / "workbench.css").read_text(encoding="utf-8")
     features = (STYLES / "modules" / "features.css").read_text(encoding="utf-8")
+    documents = (STYLES / "modules" / "documents.css").read_text(encoding="utf-8")
 
     assert not _has_rule_entry(overview, ".topbar")
     assert not _has_rule_entry(overview, ".table-frame th")
@@ -99,6 +100,6 @@ def test_global_leakage_is_removed_and_contextual_overrides_remain() -> None:
     assert ".embedded-workspace > .content-section:first-child" in workbench
     assert ".project-workbench-header__identity > .eyebrow" in workbench
     assert ".operations-section > .empty-state" in overview
-    assert ".document-section > .section-heading" in overview
-    assert ".document-section .table-frame" in overview
+    assert ".document-section > .section-heading" in documents
+    assert ".document-section .table-frame" in documents
     assert ".feature-registry .table-frame" in features

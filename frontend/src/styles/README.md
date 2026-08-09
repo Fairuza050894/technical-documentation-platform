@@ -46,8 +46,8 @@ Ownership is based on responsibility, not on the route that happens to import la
 | feature/module registry and documentation map | `modules/features.css` |
 | source registry and technical intake | `modules/sources.css` |
 | API catalog and evidence presentation | `modules/catalog.css` |
-| deterministic changes result workspace | `modules/changes.css` |
-| document-specific identity/workflow additions | `modules/documents.css` |
+| deterministic snapshot comparison and change result composition | `modules/changes.css` |
+| document lifecycle, versioning, preview, review, and comparison | `modules/documents.css` |
 
 A module-specific selector must not be declared in another module merely to gain later cascade
 precedence. When an existing compatibility override is migrated, first copy its effective

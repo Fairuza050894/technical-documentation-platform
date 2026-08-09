@@ -626,64 +626,6 @@
   border-radius: 50%;
 }
 
-.document-section {
-  padding: 0 0 22px;
-  overflow: visible;
-  border: 0;
-  border-top: 1px solid var(--color-border);
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
-.document-section:first-of-type {
-  border-top: 0;
-}
-
-.document-section > .section-heading {
-  min-height: 68px;
-  padding: 14px 0 12px;
-}
-
-.document-section .table-frame,
-.document-section .empty-state,
-.document-section .comparison-toolbar,
-.document-section .comparison-results,
-.document-section .document-metadata-grid,
-.document-section .document-workspace-grid,
-.document-section .document-preview-disclosure {
-  margin-inline: 0;
-}
-
-.document-generation-form {
-  padding: 16px;
-  border-color: var(--color-border-subtle);
-  border-radius: var(--radius-small);
-  background: var(--color-surface-subtle);
-}
-
-.document-generation-status {
-  margin: 10px 0 0;
-  padding-inline: 0;
-  border: 0;
-  background: transparent;
-}
-
-.document-section--history .table-frame,
-.document-section--comparison .table-frame {
-  border-color: var(--color-border-subtle);
-  border-radius: var(--radius-small);
-}
-
-.document-section--detail {
-  padding-top: 4px;
-}
-
-.document-panel {
-  border-color: var(--color-border-subtle);
-  background: var(--color-surface);
-}
-
 .field label {
   color: var(--color-text-secondary);
 }
@@ -744,9 +686,6 @@ textarea:hover {
     grid-column: 1 / -1;
   }
 
-  .comparison-toolbar {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (max-width: 760px) {
@@ -852,8 +791,6 @@ textarea:hover {
   }
 
   .form-grid,
-  .document-metadata-grid,
-  .comparison-summary,
   .system-status-grid,
   .status-grid {
     grid-template-columns: 1fr;
@@ -918,8 +855,4 @@ html {
   border-radius: 999px;
   font-size: 9.5px;
   white-space: nowrap;
-}
-
-.document-revision-reason {
-  min-height: 72px;
 }

@@ -33,7 +33,10 @@
 .changes-results .catalog-card {
   min-width: 0;
   overflow: hidden;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-small);
   background: var(--color-surface);
+  box-shadow: none;
 }
 
 .changes-results .catalog-card__heading {

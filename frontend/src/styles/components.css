@@ -360,8 +360,7 @@
   background: var(--color-accent-subtle);
 }
 
-.form-panel,
-.comparison-toolbar {
+.form-panel {
   margin-top: 14px;
   padding: 16px;
   border: 1px solid var(--color-border-subtle);
@@ -488,12 +487,6 @@ input[type="file"]::file-selector-button {
   margin-top: 14px;
   padding-top: 14px;
   border-top: 1px solid var(--color-border-subtle);
-}
-
-.comparison-toolbar {
-  grid-template-columns: repeat(2, minmax(210px, 1fr)) auto;
-  gap: 12px;
-  align-items: end;
 }
 
 /* Dense data presentation */
@@ -671,24 +664,7 @@ td strong {
   background: var(--color-surface-muted);
 }
 
-.document-panel {
-  padding: 16px;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-medium);
-  background: var(--color-surface);
-  box-shadow: none;
-}
-
-.catalog-card {
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-small);
-  box-shadow: none;
-}
-
-.status-grid,
-.system-status-grid,
-.document-metadata-grid,
-.comparison-summary {
+.status-grid {
   gap: 0;
   overflow: hidden;
   border: 1px solid var(--color-border-subtle);
@@ -697,9 +673,7 @@ td strong {
 }
 
 .status-card,
-.system-status-grid div,
-.document-metadata-grid div,
-.comparison-summary div {
+.system-status-grid div {
   border: 0;
   border-radius: 0;
   background: var(--color-surface);
@@ -711,6 +685,10 @@ td strong {
   grid-template-columns: minmax(220px, 1.8fr) repeat(3, minmax(120px, 1fr));
   gap: 1px;
   margin: 14px 0 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-small);
+  background: var(--color-border-subtle);
 }
 
 .system-status-grid > div {

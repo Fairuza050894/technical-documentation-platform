@@ -665,7 +665,7 @@ export function DocumentsWorkspace({
               )}
               onChange={setComparisonTargetId}
             />
-            <div className="catalog-toolbar__action">
+            <div className="document-comparison-action">
               <button
                 className="button button--primary"
                 type="button"
@@ -687,7 +687,7 @@ export function DocumentsWorkspace({
               <SummaryMetric label="Removed" value={comparison.removed_total} />
             </div>
 
-            <div className="workspace-filter">
+            <div className="document-change-filter">
               <label htmlFor="change-filter">Change filter</label>
               <select
                 id="change-filter"
@@ -734,7 +734,7 @@ export function DocumentsWorkspace({
                             {change.before_excerpt || "Not present"}
                           </span>
                           {change.before_checksum && (
-                            <code className="checksum-text">
+                            <code className="document-checksum-text">
                               {change.before_checksum.slice(0, 12)}
                             </code>
                           )}
@@ -744,7 +744,7 @@ export function DocumentsWorkspace({
                             {change.after_excerpt || "Not present"}
                           </span>
                           {change.after_checksum && (
-                            <code className="checksum-text">
+                            <code className="document-checksum-text">
                               {change.after_checksum.slice(0, 12)}
                             </code>
                           )}
