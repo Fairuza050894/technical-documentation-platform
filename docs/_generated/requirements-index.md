@@ -10,6 +10,7 @@ This index reports the requirement documents currently stored in the repository.
 | mvp-1-change-detection.md | MVP 1 Change Detection | 0 | 0 | Yes |
 | mvp-1-document-governance-foundation.md | MVP 1 — Enterprise Document Governance Foundation | 0 | 0 | Yes |
 | mvp-1-document-lifecycle-core.md | MVP 1 Requirement: Document Lifecycle Core | 0 | 12 | No |
+| mvp-1-document-readiness-and-missing-information.md | MVP 1 — Document Readiness and Missing Information | 0 | 0 | Yes |
 | mvp-1-documentation-governance.md | MVP 1 Requirement: Documentation Governance and Living Repository Docs | 0 | 12 | Yes |
 | mvp-1-documents-workspace.md | MVP 1 — Documents Workspace | 0 | 12 | No |
 | mvp-1-engineering-safety-baseline.md | MVP 1 Engineering Safety Baseline | 0 | 16 | Yes |

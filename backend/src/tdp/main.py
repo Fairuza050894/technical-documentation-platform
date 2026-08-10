@@ -51,6 +51,14 @@ from tdp.modules.projects.presentation.http.router import (
 from tdp.modules.projects.presentation.http.router import (
     workspace_projects_router,
 )
+from tdp.modules.readiness.application.service import ReadinessApplicationService
+from tdp.modules.readiness.domain.errors import ReadinessError
+from tdp.modules.readiness.presentation.http.router import (
+    readiness_error_handler,
+)
+from tdp.modules.readiness.presentation.http.router import (
+    router as readiness_router,
+)
 from tdp.modules.sources.application.service import SourceApplicationService
 from tdp.modules.sources.domain.errors import SourceError
 from tdp.modules.sources.infrastructure.local_artifact_store import LocalArtifactStore
@@ -147,6 +155,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         source_repository,
         catalog_repository,
     )
+    application.state.readiness_service = ReadinessApplicationService(
+        project_repository,
+        evidence_repository,
+        document_repository,
+    )
     application.state.document_governance_service = DocumentGovernanceApplicationService(
         document_repository,
         project_repository,
@@ -175,6 +188,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.add_exception_handler(EvidenceError, evidence_error_handler)
     application.add_exception_handler(FeatureError, feature_error_handler)
     application.add_exception_handler(ProjectError, project_error_handler)
+    application.add_exception_handler(ReadinessError, readiness_error_handler)
     application.add_exception_handler(SourceError, source_error_handler)
     application.add_exception_handler(WorkspaceError, workspace_error_handler)
     application.add_exception_handler(RequestValidationError, validation_error_handler)
@@ -182,6 +196,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.include_router(identity_router, prefix=runtime_settings.api_prefix)
     application.include_router(workspaces_router, prefix=runtime_settings.api_prefix)
     application.include_router(projects_router, prefix=runtime_settings.api_prefix)
+    application.include_router(readiness_router, prefix=runtime_settings.api_prefix)
     application.include_router(workspace_projects_router, prefix=runtime_settings.api_prefix)
     application.include_router(features_router, prefix=runtime_settings.api_prefix)
     application.include_router(sources_router, prefix=runtime_settings.api_prefix)

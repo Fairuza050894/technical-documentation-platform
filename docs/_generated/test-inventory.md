@@ -18,6 +18,7 @@
 | backend/tests/domain/test_feature.py | 2 |
 | backend/tests/domain/test_identity.py | 2 |
 | backend/tests/domain/test_project.py | 4 |
+| backend/tests/domain/test_readiness_policy.py | 4 |
 | backend/tests/domain/test_source.py | 3 |
 | backend/tests/domain/test_workspace.py | 2 |
 | backend/tests/infrastructure/test_local_artifact_store.py | 1 |
@@ -39,6 +40,7 @@
 | backend/tests/presentation/test_features_api.py | 3 |
 | backend/tests/presentation/test_identity_api.py | 1 |
 | backend/tests/presentation/test_projects_api.py | 3 |
+| backend/tests/presentation/test_readiness_api.py | 5 |
 | backend/tests/presentation/test_security_headers.py | 1 |
 | backend/tests/presentation/test_sources_api.py | 3 |
 | backend/tests/presentation/test_workspaces_api.py | 4 |
@@ -54,10 +56,11 @@
 | backend/tests/test_frontend_shell_overview_architecture.py | 5 |
 | backend/tests/test_frontend_table_page_architecture.py | 3 |
 | backend/tests/test_health.py | 4 |
+| backend/tests/test_readiness_architecture.py | 3 |
 | backend/tests/test_repository_documentation.py | 1 |
 | backend/tests/test_workspace_architecture.py | 2 |
 
-Backend total: **136** tests.
+Backend total: **148** tests.
 
 ## Frontend
 

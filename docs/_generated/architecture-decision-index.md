@@ -24,3 +24,4 @@ Architecture decisions are human-governed. This index is generated from `docs/de
 | ADR-017 | ADR-017: Compose the Frontend Shell and Split CSS by Responsibility | Accepted | 2026-08-04 |
 | ADR-018 | ADR-018: Establish a Project-Level Enterprise Document Governance Registry | Accepted | 2026-08-09 |
 | ADR-019 | ADR-019: Introduce an Evidence and Claims Bounded Context | Accepted | 2026-08-10 |
+| ADR-020 | ADR-020: Compute Document Readiness from Canonical State | Accepted | 2026-08-10 |

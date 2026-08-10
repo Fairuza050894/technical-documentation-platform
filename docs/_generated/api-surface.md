@@ -37,6 +37,8 @@ The table is derived from FastAPI route decorators. It records declared routes, 
 | GET | `/api/projects/{project_id}/evidence` | `backend/src/tdp/modules/evidence/presentation/http/router.py:157` |
 | POST | `/api/projects/{project_id}/evidence/catalog-snapshots/{synchronization_id}` | `backend/src/tdp/modules/evidence/presentation/http/router.py:137` |
 | POST | `/api/projects/{project_id}/evidence/source-artifacts/{source_id}` | `backend/src/tdp/modules/evidence/presentation/http/router.py:116` |
+| GET | `/api/projects/{project_id}/readiness` | `backend/src/tdp/modules/readiness/presentation/http/router.py:108` |
+| GET | `/api/projects/{project_id}/readiness/{document_type}` | `backend/src/tdp/modules/readiness/presentation/http/router.py:119` |
 | GET | `/api/projects/{project_id}/sources` | `backend/src/tdp/modules/sources/presentation/http/router.py:93` |
 | POST | `/api/projects/{project_id}/sources/openapi` | `backend/src/tdp/modules/sources/presentation/http/router.py:68` |
 | GET | `/api/sources/{source_id}` | `backend/src/tdp/modules/sources/presentation/http/router.py:103` |
