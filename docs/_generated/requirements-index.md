@@ -14,6 +14,7 @@ This index reports the requirement documents currently stored in the repository.
 | mvp-1-documents-workspace.md | MVP 1 — Documents Workspace | 0 | 12 | No |
 | mvp-1-engineering-safety-baseline.md | MVP 1 Engineering Safety Baseline | 0 | 16 | Yes |
 | mvp-1-enterprise-document-taxonomy-and-agentic-boundaries.md | MVP 1 Enterprise Document Taxonomy and Automation Boundaries | 0 | 25 | Yes |
+| mvp-1-evidence-claims-foundation.md | MVP 1 — Evidence and Claims Foundation | 0 | 0 | Yes |
 | mvp-1-feature-module-registry.md | MVP 1 — Feature / Module Registry and Documentation Map | 0 | 10 | No |
 | mvp-1-frontend-composition-foundation.md | MVP 1 Frontend Composition and CSS Foundation | 0 | 7 | Yes |
 | mvp-1-frontend-cross-route-acceptance.md | MVP 1 Final Cross-Route Frontend Acceptance | 0 | 0 | No |

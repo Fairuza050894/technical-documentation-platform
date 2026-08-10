@@ -24,6 +24,15 @@ from tdp.modules.documents.infrastructure.markdown_renderer import (
 )
 from tdp.modules.documents.infrastructure.sqlite_repository import SqliteDocumentRepository
 from tdp.modules.documents.presentation.http.router import router as documents_router
+from tdp.modules.evidence.application.service import EvidenceApplicationService
+from tdp.modules.evidence.domain.errors import EvidenceError
+from tdp.modules.evidence.infrastructure.sqlite_repository import SqliteEvidenceRepository
+from tdp.modules.evidence.presentation.http.router import (
+    evidence_error_handler,
+)
+from tdp.modules.evidence.presentation.http.router import (
+    router as evidence_router,
+)
 from tdp.modules.features.application.service import FeatureApplicationService
 from tdp.modules.features.domain.errors import FeatureError
 from tdp.modules.features.infrastructure.sqlite_repository import SqliteFeatureRepository
@@ -85,6 +94,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     catalog_repository = SqliteCatalogRepository(runtime_settings.database_path)
     document_repository = SqliteDocumentRepository(runtime_settings.database_path)
     feature_repository = SqliteFeatureRepository(runtime_settings.database_path)
+    evidence_repository = SqliteEvidenceRepository(runtime_settings.database_path)
     project_access = RepositoryBackedProjectAccess(
         project_repository,
         workspace_repository,
@@ -129,6 +139,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         catalog_repository,
         comparator,
     )
+    application.state.evidence_service = EvidenceApplicationService(
+        evidence_repository,
+        project_repository,
+        workspace_repository,
+        feature_repository,
+        source_repository,
+        catalog_repository,
+    )
     application.state.document_governance_service = DocumentGovernanceApplicationService(
         document_repository,
         project_repository,
@@ -154,6 +172,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.add_exception_handler(CatalogError, catalog_error_handler)
     application.add_exception_handler(ChangeDetectionError, change_detection_error_handler)
     application.add_exception_handler(DocumentError, document_error_handler)
+    application.add_exception_handler(EvidenceError, evidence_error_handler)
     application.add_exception_handler(FeatureError, feature_error_handler)
     application.add_exception_handler(ProjectError, project_error_handler)
     application.add_exception_handler(SourceError, source_error_handler)
@@ -168,6 +187,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.include_router(sources_router, prefix=runtime_settings.api_prefix)
     application.include_router(catalog_router, prefix=runtime_settings.api_prefix)
     application.include_router(changes_router, prefix=runtime_settings.api_prefix)
+    application.include_router(evidence_router, prefix=runtime_settings.api_prefix)
     application.include_router(documents_router, prefix=runtime_settings.api_prefix)
     return application
 

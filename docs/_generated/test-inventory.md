@@ -14,6 +14,7 @@
 | backend/tests/domain/test_document_governance.py | 3 |
 | backend/tests/domain/test_document_lifecycle.py | 3 |
 | backend/tests/domain/test_document_version_comparison.py | 2 |
+| backend/tests/domain/test_evidence_claims.py | 4 |
 | backend/tests/domain/test_feature.py | 2 |
 | backend/tests/domain/test_identity.py | 2 |
 | backend/tests/domain/test_project.py | 4 |
@@ -24,6 +25,7 @@
 | backend/tests/infrastructure/test_openapi_catalog_parser.py | 1 |
 | backend/tests/infrastructure/test_openapi_inspector.py | 4 |
 | backend/tests/infrastructure/test_project_workspace_migration.py | 1 |
+| backend/tests/infrastructure/test_sqlite_evidence_repository.py | 2 |
 | backend/tests/infrastructure/test_sqlite_feature_repository.py | 1 |
 | backend/tests/infrastructure/test_sqlite_project_repository.py | 1 |
 | backend/tests/infrastructure/test_sqlite_source_repository.py | 1 |
@@ -33,6 +35,7 @@
 | backend/tests/presentation/test_document_lifecycle_api.py | 5 |
 | backend/tests/presentation/test_document_version_comparison_api.py | 2 |
 | backend/tests/presentation/test_documents_api.py | 1 |
+| backend/tests/presentation/test_evidence_api.py | 3 |
 | backend/tests/presentation/test_features_api.py | 3 |
 | backend/tests/presentation/test_identity_api.py | 1 |
 | backend/tests/presentation/test_projects_api.py | 3 |
@@ -41,6 +44,7 @@
 | backend/tests/presentation/test_workspaces_api.py | 4 |
 | backend/tests/test_architecture.py | 9 |
 | backend/tests/test_config.py | 3 |
+| backend/tests/test_evidence_architecture.py | 3 |
 | backend/tests/test_feature_architecture.py | 2 |
 | backend/tests/test_frontend_architecture.py | 9 |
 | backend/tests/test_frontend_b4_responsive_contract.py | 3 |
@@ -53,7 +57,7 @@
 | backend/tests/test_repository_documentation.py | 1 |
 | backend/tests/test_workspace_architecture.py | 2 |
 
-Backend total: **124** tests.
+Backend total: **136** tests.
 
 ## Frontend
 

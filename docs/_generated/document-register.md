@@ -38,6 +38,7 @@ This register inventories Markdown documentation. Formal approval must be record
 | Unassigned | ADR-016: Living Repository Documentation and Deterministic Indexes | Decisions | Accepted | `docs/decisions/ADR-016-living-documentation-and-generated-indexes.md` (Not specified) |
 | Unassigned | ADR-017: Compose the Frontend Shell and Split CSS by Responsibility | Decisions | Accepted | `docs/decisions/ADR-017-frontend-composition-and-css-layers.md` (Not specified) |
 | Unassigned | ADR-018: Establish a Project-Level Enterprise Document Governance Registry | Decisions | Accepted | `docs/decisions/ADR-018-project-document-governance-registry.md` (Not specified) |
+| Unassigned | ADR-019: Introduce an Evidence and Claims Bounded Context | Decisions | Accepted | `docs/decisions/ADR-019-evidence-and-claims-bounded-context.md` (Not specified) |
 | Unassigned | Coding Standards | Engineering | Not specified | `docs/engineering/coding-standards.md` (Not specified) |
 | Unassigned | Definition of Done | Engineering | Not specified | `docs/engineering/definition-of-done.md` (Not specified) |
 | TDP-GOV-002 | Document Control | Governance | Controlled draft | `docs/governance/document-control.md` (Internal project documentation) |
@@ -68,6 +69,7 @@ This register inventories Markdown documentation. Formal approval must be record
 | Unassigned | MVP 1 — Documents Workspace | Requirements | Not specified | `docs/requirements/mvp-1-documents-workspace.md` (Not specified) |
 | Unassigned | MVP 1 Engineering Safety Baseline | Requirements | Not specified | `docs/requirements/mvp-1-engineering-safety-baseline.md` (Not specified) |
 | Unassigned | MVP 1 Enterprise Document Taxonomy and Automation Boundaries | Requirements | Not specified | `docs/requirements/mvp-1-enterprise-document-taxonomy-and-agentic-boundaries.md` (Not specified) |
+| Unassigned | MVP 1 — Evidence and Claims Foundation | Requirements | Not specified | `docs/requirements/mvp-1-evidence-claims-foundation.md` (Not specified) |
 | Unassigned | MVP 1 — Feature / Module Registry and Documentation Map | Requirements | Not specified | `docs/requirements/mvp-1-feature-module-registry.md` (Not specified) |
 | Unassigned | MVP 1 Frontend Composition and CSS Foundation | Requirements | Not specified | `docs/requirements/mvp-1-frontend-composition-foundation.md` (Not specified) |
 | Unassigned | MVP 1 Final Cross-Route Frontend Acceptance | Requirements | Not specified | `docs/requirements/mvp-1-frontend-cross-route-acceptance.md` (Not specified) |
