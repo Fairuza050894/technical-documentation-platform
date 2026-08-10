@@ -50,6 +50,7 @@
 | backend/tests/test_feature_architecture.py | 2 |
 | backend/tests/test_frontend_architecture.py | 9 |
 | backend/tests/test_frontend_b4_responsive_contract.py | 3 |
+| backend/tests/test_frontend_documentation_workbench_architecture.py | 3 |
 | backend/tests/test_frontend_documents_changes_architecture.py | 5 |
 | backend/tests/test_frontend_feedback_status_architecture.py | 3 |
 | backend/tests/test_frontend_registry_intake_architecture.py | 4 |
@@ -60,7 +61,7 @@
 | backend/tests/test_repository_documentation.py | 1 |
 | backend/tests/test_workspace_architecture.py | 2 |
 
-Backend total: **148** tests.
+Backend total: **151** tests.
 
 ## Frontend
 
@@ -76,11 +77,12 @@ Backend total: **148** tests.
 | frontend/src/modules/overview/OperationalOverview.test.tsx | 2 |
 | frontend/src/modules/projects/ProjectWorkspace.test.tsx | 4 |
 | frontend/src/modules/sources/SourceWorkspace.test.tsx | 2 |
-| frontend/src/modules/workbench/ProjectWorkbench.test.tsx | 5 |
+| frontend/src/modules/workbench/ProjectDocumentationOverview.test.tsx | 3 |
+| frontend/src/modules/workbench/ProjectWorkbench.test.tsx | 6 |
 | frontend/src/modules/workspaces/WorkspaceRegistry.test.tsx | 2 |
 | frontend/src/modules/workspaces/WorkspaceSwitcher.test.tsx | 5 |
 | frontend/src/shared/api/config.test.ts | 3 |
 
-Frontend total: **51** tests.
+Frontend total: **55** tests.
 
 Counts are structural and do not replace execution evidence from `make verify`.

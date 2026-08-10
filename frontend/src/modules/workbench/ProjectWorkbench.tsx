@@ -3,6 +3,9 @@ import { useEffect, useMemo, useState } from "react";
 import type { ProjectStage } from "../../app/router";
 import { ApiClientError } from "../../shared/api/client";
 import { Icon, type IconName } from "../../shared/ui/Icon";
+import { ProjectDocumentationOverview } from "./ProjectDocumentationOverview";
+import { getProjectDocumentationContext } from "./governanceApi";
+import type { ProjectDocumentationContext, ProjectReadiness } from "./governanceTypes";
 import { ApiCatalogWorkspace } from "../catalog/ApiCatalogWorkspace";
 import { listSynchronizations } from "../catalog/api";
 import type { SynchronizationRun } from "../catalog/types";
@@ -73,6 +76,11 @@ export function ProjectWorkbench({
   const [loadState, setLoadState] = useState<LoadState>("loading");
   const [loadError, setLoadError] = useState("");
   const [summaryError, setSummaryError] = useState("");
+  const [documentationContext, setDocumentationContext] =
+    useState<ProjectDocumentationContext | null>(null);
+  const [documentationLoadState, setDocumentationLoadState] =
+    useState<"loading" | "ready" | "error">("loading");
+  const [documentationError, setDocumentationError] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -82,6 +90,9 @@ export function ProjectWorkbench({
     setLoadState("loading");
     setLoadError("");
     setSummaryError("");
+    setDocumentationContext(null);
+    setDocumentationLoadState("loading");
+    setDocumentationError("");
 
     async function loadProject(): Promise<void> {
       try {
@@ -133,6 +144,24 @@ export function ProjectWorkbench({
             );
           }
         }
+
+        try {
+          const context = await getProjectDocumentationContext(resolved.id);
+          if (!active) {
+            return;
+          }
+          setDocumentationContext(context);
+          setDocumentationLoadState("ready");
+        } catch (error: unknown) {
+          if (active) {
+            setDocumentationLoadState("error");
+            setDocumentationError(
+              error instanceof Error
+                ? error.message
+                : "Document governance could not be loaded.",
+            );
+          }
+        }
       } catch (error: unknown) {
         if (!active) {
           return;
@@ -155,8 +184,11 @@ export function ProjectWorkbench({
   }, [onProjectResolved, projectId, workspaceId]);
 
   const nextAction = useMemo(
-    () => (project === null ? null : resolveNextAction(project, summary)),
-    [project, summary],
+    () =>
+      project === null
+        ? null
+        : resolveNextAction(project, summary, documentationContext?.readiness ?? null),
+    [documentationContext, project, summary],
   );
 
   if (loadState === "loading") {
@@ -288,6 +320,9 @@ export function ProjectWorkbench({
           summary={summary}
           summaryError={summaryError}
           nextAction={nextAction}
+          documentationContext={documentationContext}
+          documentationLoadState={documentationLoadState}
+          documentationError={documentationError}
           onNavigateStage={onNavigateStage}
         />
       )}
@@ -316,12 +351,18 @@ function ProjectOverview({
   summary,
   summaryError,
   nextAction,
+  documentationContext,
+  documentationLoadState,
+  documentationError,
   onNavigateStage,
 }: {
   project: Project;
   summary: ProjectSummary;
   summaryError: string;
   nextAction: NextAction;
+  documentationContext: ProjectDocumentationContext | null;
+  documentationLoadState: "loading" | "ready" | "error";
+  documentationError: string;
   onNavigateStage: (stage: ProjectStage) => void;
 }) {
   const readySources = summary.sources.filter((source) => source.status === "READY");
@@ -358,7 +399,15 @@ function ProjectOverview({
         </div>
       )}
 
-      <section className="project-summary-grid" aria-label="Project readiness summary">
+      <ProjectDocumentationOverview
+        projectStatus={project.status}
+        context={documentationContext}
+        loadState={documentationLoadState}
+        error={documentationError}
+        onNavigateStage={onNavigateStage}
+      />
+
+      <section className="project-summary-grid" aria-label="Technical evidence summary">
         <SummaryCard
           icon="projects"
           label="Active capabilities"
@@ -428,7 +477,11 @@ interface NextAction {
   actionLabel: string;
 }
 
-function resolveNextAction(project: Project, summary: ProjectSummary): NextAction {
+function resolveNextAction(
+  project: Project,
+  summary: ProjectSummary,
+  readiness: ProjectReadiness | null,
+): NextAction {
   if (project.status === "ARCHIVED") {
     return {
       stage: "overview",
@@ -471,6 +524,11 @@ function resolveNextAction(project: Project, summary: ProjectSummary): NextActio
     };
   }
 
+  const readinessAction = resolveReadinessNextAction(readiness);
+  if (readinessAction !== null) {
+    return readinessAction;
+  }
+
   if (summary.documents.length === 0) {
     return {
       stage: "documents",
@@ -511,6 +569,49 @@ function resolveNextAction(project: Project, summary: ProjectSummary): NextActio
     detail: "Review the latest version and prepare the next lifecycle action.",
     actionLabel: "Open documents",
   };
+}
+
+function resolveReadinessNextAction(readiness: ProjectReadiness | null): NextAction | null {
+  if (readiness === null) {
+    return null;
+  }
+
+  for (const item of readiness.items) {
+    if (item.requirement !== "REQUIRED" || item.readiness_state !== "NOT_READY") {
+      continue;
+    }
+    for (const finding of item.findings) {
+      if (finding.missing_input === "technical-evidence") {
+        return {
+          stage: "sources",
+          icon: "source",
+          title: `Add evidence for ${item.display_name}`,
+          detail: finding.remediation,
+          actionLabel: "Open source intake",
+        };
+      }
+      if (finding.missing_input.includes("CATALOG_SNAPSHOT")) {
+        return {
+          stage: "catalog",
+          icon: "catalog",
+          title: `Complete evidence for ${item.display_name}`,
+          detail: finding.remediation,
+          actionLabel: "Open API catalog",
+        };
+      }
+      if (finding.missing_input.startsWith("approved-documents")) {
+        return {
+          stage: "documents",
+          icon: "review",
+          title: "Review required document approvals",
+          detail: finding.remediation,
+          actionLabel: "Open document workflow",
+        };
+      }
+    }
+  }
+
+  return null;
 }
 
 function SummaryCard({

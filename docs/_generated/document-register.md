@@ -40,6 +40,7 @@ This register inventories Markdown documentation. Formal approval must be record
 | Unassigned | ADR-018: Establish a Project-Level Enterprise Document Governance Registry | Decisions | Accepted | `docs/decisions/ADR-018-project-document-governance-registry.md` (Not specified) |
 | Unassigned | ADR-019: Introduce an Evidence and Claims Bounded Context | Decisions | Accepted | `docs/decisions/ADR-019-evidence-and-claims-bounded-context.md` (Not specified) |
 | Unassigned | ADR-020: Compute Document Readiness from Canonical State | Decisions | Accepted | `docs/decisions/ADR-020-compute-document-readiness-from-canonical-state.md` (Not specified) |
+| Unassigned | ADR-021: Integrate Document Governance into the Existing Project Overview | Decisions | Accepted | `docs/decisions/ADR-021-integrate-document-governance-into-project-overview.md` (Not specified) |
 | Unassigned | Coding Standards | Engineering | Not specified | `docs/engineering/coding-standards.md` (Not specified) |
 | Unassigned | Definition of Done | Engineering | Not specified | `docs/engineering/definition-of-done.md` (Not specified) |
 | TDP-GOV-002 | Document Control | Governance | Controlled draft | `docs/governance/document-control.md` (Internal project documentation) |
@@ -86,6 +87,7 @@ This register inventories Markdown documentation. Formal approval must be record
 | Unassigned | MVP 1 — OpenAPI Source Management | Requirements | Not specified | `docs/requirements/mvp-1-openapi-source-management.md` (Not specified) |
 | Unassigned | MVP 1 Requirement: Product UI Foundation and Operational Overview | Requirements | Not specified | `docs/requirements/mvp-1-product-ui-foundation.md` (Not specified) |
 | Unassigned | MVP 1 Requirement: Project-Centric Workbench | Requirements | Not specified | `docs/requirements/mvp-1-project-centric-workbench.md` (Not specified) |
+| Unassigned | MVP 1 — Project Documentation Workbench Integration | Requirements | Not specified | `docs/requirements/mvp-1-project-documentation-workbench-integration.md` (Not specified) |
 | Unassigned | MVP 1 — Project Management Requirements | Requirements | Not specified | `docs/requirements/mvp-1-project-management.md` (Not specified) |
 | Unassigned | MVP 1 Requirement: Technical Source Overview | Requirements | Not specified | `docs/requirements/mvp-1-technical-source-overview.md` (Not specified) |
 | Unassigned | MVP 1 — Visual Refinement R1 | Requirements | Not specified | `docs/requirements/mvp-1-visual-refinement-r1.md` (Not specified) |

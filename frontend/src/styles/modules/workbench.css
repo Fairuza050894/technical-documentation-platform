@@ -282,7 +282,7 @@ button.workspace-context:focus-visible {
   padding: 18px 20px;
   border: 1px solid #cbd9ef;
   border-radius: var(--radius-large);
-  background: linear-gradient(100deg, #f7faff 0%, #ffffff 70%);
+  background: var(--color-surface);
   box-shadow: var(--shadow-low);
 }
 
@@ -312,6 +312,248 @@ button.workspace-context:focus-visible {
   color: var(--color-text-secondary);
   font-size: 11.5px;
   line-height: 1.5;
+}
+
+.project-documentation-overview {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.documentation-read-only-note {
+  margin: -4px 0 0;
+  padding: 9px 11px;
+  border-left: 3px solid var(--color-warning);
+  color: var(--color-text-secondary);
+  background: var(--color-warning-subtle);
+  font-size: 11px;
+}
+
+.documentation-governance-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+  border-block: 1px solid var(--color-border-subtle);
+}
+
+.documentation-governance-metric {
+  display: grid;
+  gap: 3px;
+  padding: 12px 16px;
+  border-right: 1px solid var(--color-border-subtle);
+}
+
+.documentation-governance-metric:last-child {
+  border-right: 0;
+}
+
+.documentation-governance-metric dt {
+  color: var(--color-text-secondary);
+  font-size: 9.5px;
+  font-weight: 720;
+  text-transform: uppercase;
+}
+
+.documentation-governance-metric dd {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 22px;
+  font-weight: 680;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+}
+
+.documentation-governance-metric span {
+  color: var(--color-text-muted);
+  font-size: 10px;
+}
+
+.documentation-governance-empty {
+  display: grid;
+  gap: 3px;
+  padding: 16px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-medium);
+}
+
+.documentation-governance-empty span {
+  color: var(--color-text-secondary);
+  font-size: 11px;
+}
+
+.documentation-readiness-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+  list-style: none;
+}
+
+.documentation-readiness-item {
+  display: grid;
+  grid-template-columns: minmax(190px, 1.1fr) minmax(200px, 1fr) minmax(220px, 1.4fr) auto;
+  align-items: center;
+  gap: 12px 16px;
+  padding: 13px 15px;
+  border-bottom: 1px solid var(--color-border-subtle);
+  background: var(--color-surface);
+}
+
+.documentation-readiness-item:last-child {
+  border-bottom: 0;
+}
+
+.documentation-readiness-item__identity,
+.documentation-readiness-item__summary {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.documentation-readiness-item__identity > span,
+.documentation-readiness-item__summary > span {
+  color: var(--color-text-muted);
+  font-size: 9.5px;
+  line-height: 1.45;
+}
+
+.documentation-readiness-item__title,
+.documentation-readiness-item__state {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.documentation-readiness-item__title strong {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 11.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.documentation-requirement {
+  color: var(--color-text-muted);
+  font-size: 8.5px;
+  font-weight: 720;
+  text-transform: uppercase;
+}
+
+.documentation-readiness-item__summary > strong {
+  color: var(--color-text-secondary);
+  font-size: 10.5px;
+  line-height: 1.45;
+}
+
+.documentation-readiness-item__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.documentation-readiness-item__actions .button {
+  min-height: 30px;
+  padding-inline: 8px;
+  font-size: 10px;
+}
+
+.documentation-readiness-details {
+  grid-column: 1 / -1;
+  padding-top: 1px;
+}
+
+.documentation-readiness-details > summary {
+  width: fit-content;
+  color: var(--color-accent);
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.documentation-readiness-details__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(220px, 0.8fr);
+  gap: 18px;
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-small);
+  background: var(--color-surface-subtle);
+}
+
+.documentation-readiness-details__body h3 {
+  margin: 0 0 8px;
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.documentation-finding-list,
+.documentation-traceability ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.documentation-finding-list li {
+  display: grid;
+  gap: 5px;
+}
+
+.documentation-finding-list__heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.documentation-finding-list__heading strong {
+  color: var(--color-text-primary);
+  font-size: 10.5px;
+}
+
+.documentation-finding-list p,
+.documentation-traceability p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.documentation-finding-list small,
+.documentation-traceability small {
+  color: var(--color-text-muted);
+  font-size: 9px;
+}
+
+.documentation-traceability {
+  min-width: 0;
+}
+
+.documentation-traceability li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 7px;
+  color: var(--color-text-secondary);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.documentation-traceability > small {
+  display: block;
+  margin-top: 9px;
+}
+
+.documentation-readiness-clear {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--color-success);
+  font-size: 10.5px;
 }
 
 .project-summary-grid {
@@ -488,6 +730,16 @@ button.workspace-context:focus-visible {
   color: var(--color-text-secondary);
 }
 
+@media (max-width: 1180px) {
+  .documentation-readiness-item {
+    grid-template-columns: minmax(190px, 1fr) minmax(190px, 1fr);
+  }
+
+  .documentation-readiness-item__actions {
+    justify-content: flex-start;
+  }
+}
+
 @media (max-width: 1260px) {
   .project-summary-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -506,6 +758,25 @@ button.workspace-context:focus-visible {
 }
 
 @media (max-width: 760px) {
+  .documentation-governance-summary,
+  .documentation-readiness-item,
+  .documentation-readiness-details__body {
+    grid-template-columns: 1fr;
+  }
+
+  .documentation-governance-metric {
+    border-right: 0;
+    border-bottom: 1px solid var(--color-border-subtle);
+  }
+
+  .documentation-governance-metric:last-child {
+    border-bottom: 0;
+  }
+
+  .documentation-readiness-item__actions .button {
+    width: 100%;
+  }
+
   .next-action-panel {
     grid-template-columns: 38px minmax(0, 1fr);
   }
