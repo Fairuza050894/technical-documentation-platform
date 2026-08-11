@@ -1,4 +1,4 @@
-from typing import ClassVar
+from typing import Any, ClassVar
 
 
 class DocumentError(Exception):
@@ -69,3 +69,27 @@ class DocumentVersionNotFoundError(DocumentError):
 
 class InvalidDocumentVersionComparisonError(DocumentError):
     code = "INVALID_DOCUMENT_VERSION_COMPARISON"
+
+
+class UnsupportedEnterpriseDocumentProfileError(DocumentError):
+    code = "UNSUPPORTED_ENTERPRISE_DOCUMENT_PROFILE"
+
+
+class EnterpriseDocumentGenerationBlockedError(DocumentError):
+    code = "ENTERPRISE_DOCUMENT_GENERATION_BLOCKED"
+
+    def __init__(
+        self,
+        *,
+        document_type: str,
+        readiness_state: str,
+        policy_version: str,
+        findings: tuple[Any, ...],
+    ) -> None:
+        self.document_type = document_type
+        self.readiness_state = readiness_state
+        self.policy_version = policy_version
+        self.findings = findings
+        super().__init__(
+            f"{document_type} generation is blocked by the canonical readiness policy."
+        )

@@ -14,6 +14,7 @@ This index reports the requirement documents currently stored in the repository.
 | mvp-1-documentation-governance.md | MVP 1 Requirement: Documentation Governance and Living Repository Docs | 0 | 12 | Yes |
 | mvp-1-documents-workspace.md | MVP 1 — Documents Workspace | 0 | 12 | No |
 | mvp-1-engineering-safety-baseline.md | MVP 1 Engineering Safety Baseline | 0 | 16 | Yes |
+| mvp-1-enterprise-document-generation-foundation.md | MVP 1 — Enterprise Document Generation Foundation | 0 | 5 | Yes |
 | mvp-1-enterprise-document-taxonomy-and-agentic-boundaries.md | MVP 1 Enterprise Document Taxonomy and Automation Boundaries | 0 | 25 | Yes |
 | mvp-1-evidence-claims-foundation.md | MVP 1 — Evidence and Claims Foundation | 0 | 0 | Yes |
 | mvp-1-feature-module-registry.md | MVP 1 — Feature / Module Registry and Documentation Map | 0 | 10 | No |

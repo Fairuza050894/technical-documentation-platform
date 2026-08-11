@@ -41,6 +41,7 @@ This register inventories Markdown documentation. Formal approval must be record
 | Unassigned | ADR-019: Introduce an Evidence and Claims Bounded Context | Decisions | Accepted | `docs/decisions/ADR-019-evidence-and-claims-bounded-context.md` (Not specified) |
 | Unassigned | ADR-020: Compute Document Readiness from Canonical State | Decisions | Accepted | `docs/decisions/ADR-020-compute-document-readiness-from-canonical-state.md` (Not specified) |
 | Unassigned | ADR-021: Integrate Document Governance into the Existing Project Overview | Decisions | Accepted | `docs/decisions/ADR-021-integrate-document-governance-into-project-overview.md` (Not specified) |
+| Unassigned | ADR-022: Establish Generic Enterprise Document Generation with LLD First | Decisions | Accepted | `docs/decisions/ADR-022-generic-enterprise-generation-lld-first.md` (Not specified) |
 | Unassigned | Coding Standards | Engineering | Not specified | `docs/engineering/coding-standards.md` (Not specified) |
 | Unassigned | Definition of Done | Engineering | Not specified | `docs/engineering/definition-of-done.md` (Not specified) |
 | TDP-GOV-002 | Document Control | Governance | Controlled draft | `docs/governance/document-control.md` (Internal project documentation) |
@@ -71,6 +72,7 @@ This register inventories Markdown documentation. Formal approval must be record
 | Unassigned | MVP 1 Requirement: Documentation Governance and Living Repository Docs | Requirements | Not specified | `docs/requirements/mvp-1-documentation-governance.md` (Not specified) |
 | Unassigned | MVP 1 — Documents Workspace | Requirements | Not specified | `docs/requirements/mvp-1-documents-workspace.md` (Not specified) |
 | Unassigned | MVP 1 Engineering Safety Baseline | Requirements | Not specified | `docs/requirements/mvp-1-engineering-safety-baseline.md` (Not specified) |
+| Unassigned | MVP 1 — Enterprise Document Generation Foundation | Requirements | Not specified | `docs/requirements/mvp-1-enterprise-document-generation-foundation.md` (Not specified) |
 | Unassigned | MVP 1 Enterprise Document Taxonomy and Automation Boundaries | Requirements | Not specified | `docs/requirements/mvp-1-enterprise-document-taxonomy-and-agentic-boundaries.md` (Not specified) |
 | Unassigned | MVP 1 — Evidence and Claims Foundation | Requirements | Not specified | `docs/requirements/mvp-1-evidence-claims-foundation.md` (Not specified) |
 | Unassigned | MVP 1 — Feature / Module Registry and Documentation Map | Requirements | Not specified | `docs/requirements/mvp-1-feature-module-registry.md` (Not specified) |

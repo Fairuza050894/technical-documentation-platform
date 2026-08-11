@@ -23,3 +23,11 @@ class DocumentWorkflowCommand:
 class CompareDocumentVersionsCommand:
     baseline_version_id: str
     target_version_id: str
+
+
+@dataclass(frozen=True, slots=True)
+class GenerateEnterpriseDocumentCommand:
+    project_id: str
+    document_type: str
+    principal: RequestPrincipal
+    revision_reason: str = ""

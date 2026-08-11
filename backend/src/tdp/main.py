@@ -14,15 +14,30 @@ from tdp.modules.changes.application.service import ChangeDetectionApplicationSe
 from tdp.modules.changes.domain.errors import ChangeDetectionError
 from tdp.modules.changes.domain.model import DeterministicCatalogComparator
 from tdp.modules.changes.presentation.http.router import router as changes_router
+from tdp.modules.documents.application.enterprise_generation_service import (
+    EnterpriseDocumentGenerationService,
+)
 from tdp.modules.documents.application.governance_service import (
     DocumentGovernanceApplicationService,
 )
 from tdp.modules.documents.application.service import DocumentApplicationService
-from tdp.modules.documents.domain.errors import DocumentError
+from tdp.modules.documents.domain.errors import (
+    DocumentError,
+    EnterpriseDocumentGenerationBlockedError,
+)
+from tdp.modules.documents.infrastructure.enterprise_generation_inputs import (
+    RepositoryBackedEnterpriseGenerationInputProvider,
+)
+from tdp.modules.documents.infrastructure.enterprise_markdown_renderer import (
+    DeterministicEnterpriseMarkdownRenderer,
+)
 from tdp.modules.documents.infrastructure.markdown_renderer import (
     DeterministicTechnicalSourceOverviewRenderer,
 )
 from tdp.modules.documents.infrastructure.sqlite_repository import SqliteDocumentRepository
+from tdp.modules.documents.presentation.http.router import (
+    enterprise_generation_blocked_handler,
+)
 from tdp.modules.documents.presentation.http.router import router as documents_router
 from tdp.modules.evidence.application.service import EvidenceApplicationService
 from tdp.modules.evidence.domain.errors import EvidenceError
@@ -155,10 +170,23 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         source_repository,
         catalog_repository,
     )
-    application.state.readiness_service = ReadinessApplicationService(
+    readiness_service = ReadinessApplicationService(
         project_repository,
         evidence_repository,
         document_repository,
+    )
+    application.state.readiness_service = readiness_service
+    application.state.enterprise_generation_service = EnterpriseDocumentGenerationService(
+        document_repository,
+        RepositoryBackedEnterpriseGenerationInputProvider(
+            project_repository,
+            workspace_repository,
+            source_repository,
+            catalog_repository,
+            evidence_repository,
+            readiness_service,
+        ),
+        DeterministicEnterpriseMarkdownRenderer(),
     )
     application.state.document_governance_service = DocumentGovernanceApplicationService(
         document_repository,
@@ -185,6 +213,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.add_exception_handler(CatalogError, catalog_error_handler)
     application.add_exception_handler(ChangeDetectionError, change_detection_error_handler)
     application.add_exception_handler(DocumentError, document_error_handler)
+    application.add_exception_handler(
+        EnterpriseDocumentGenerationBlockedError,
+        enterprise_generation_blocked_handler,
+    )
     application.add_exception_handler(EvidenceError, evidence_error_handler)
     application.add_exception_handler(FeatureError, feature_error_handler)
     application.add_exception_handler(ProjectError, project_error_handler)

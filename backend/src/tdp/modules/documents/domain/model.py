@@ -246,6 +246,7 @@ class DocumentVersion:
         breaking_change_count: int,
         revision_reason: str,
         created_by: str,
+        document_type: DocumentType = DocumentType.TECHNICAL_SOURCE_OVERVIEW,
         now: datetime | None = None,
     ) -> "DocumentVersion":
         timestamp = now or datetime.now(UTC)
@@ -256,7 +257,7 @@ class DocumentVersion:
             source_id=source_id,
             target_run_id=target_run_id,
             baseline_run_id=baseline_run_id,
-            document_type=DocumentType.TECHNICAL_SOURCE_OVERVIEW,
+            document_type=document_type,
             document_format=DocumentFormat.MARKDOWN,
             version_number=version_number,
             status=DocumentStatus.DRAFT,

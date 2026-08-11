@@ -6,6 +6,7 @@
 | File | Test functions |
 |---|---|
 | backend/tests/application/test_document_governance_service.py | 2 |
+| backend/tests/application/test_enterprise_generation_service.py | 2 |
 | backend/tests/application/test_feature_service.py | 2 |
 | backend/tests/application/test_project_service.py | 2 |
 | backend/tests/application/test_source_service.py | 3 |
@@ -14,6 +15,7 @@
 | backend/tests/domain/test_document_governance.py | 3 |
 | backend/tests/domain/test_document_lifecycle.py | 3 |
 | backend/tests/domain/test_document_version_comparison.py | 2 |
+| backend/tests/domain/test_enterprise_generation_profile.py | 2 |
 | backend/tests/domain/test_evidence_claims.py | 4 |
 | backend/tests/domain/test_feature.py | 2 |
 | backend/tests/domain/test_identity.py | 2 |
@@ -21,6 +23,7 @@
 | backend/tests/domain/test_readiness_policy.py | 4 |
 | backend/tests/domain/test_source.py | 3 |
 | backend/tests/domain/test_workspace.py | 2 |
+| backend/tests/infrastructure/test_enterprise_generation_renderer.py | 1 |
 | backend/tests/infrastructure/test_local_artifact_store.py | 1 |
 | backend/tests/infrastructure/test_markdown_renderer.py | 1 |
 | backend/tests/infrastructure/test_openapi_catalog_parser.py | 1 |
@@ -36,6 +39,7 @@
 | backend/tests/presentation/test_document_lifecycle_api.py | 5 |
 | backend/tests/presentation/test_document_version_comparison_api.py | 2 |
 | backend/tests/presentation/test_documents_api.py | 1 |
+| backend/tests/presentation/test_enterprise_generation_api.py | 3 |
 | backend/tests/presentation/test_evidence_api.py | 3 |
 | backend/tests/presentation/test_features_api.py | 3 |
 | backend/tests/presentation/test_identity_api.py | 1 |
@@ -46,6 +50,7 @@
 | backend/tests/presentation/test_workspaces_api.py | 4 |
 | backend/tests/test_architecture.py | 9 |
 | backend/tests/test_config.py | 3 |
+| backend/tests/test_enterprise_generation_architecture.py | 4 |
 | backend/tests/test_evidence_architecture.py | 3 |
 | backend/tests/test_feature_architecture.py | 2 |
 | backend/tests/test_frontend_architecture.py | 9 |
@@ -61,7 +66,7 @@
 | backend/tests/test_repository_documentation.py | 1 |
 | backend/tests/test_workspace_architecture.py | 2 |
 
-Backend total: **151** tests.
+Backend total: **163** tests.
 
 ## Frontend
 

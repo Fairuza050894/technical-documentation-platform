@@ -26,3 +26,4 @@ Architecture decisions are human-governed. This index is generated from `docs/de
 | ADR-019 | ADR-019: Introduce an Evidence and Claims Bounded Context | Accepted | 2026-08-10 |
 | ADR-020 | ADR-020: Compute Document Readiness from Canonical State | Accepted | 2026-08-10 |
 | ADR-021 | ADR-021: Integrate Document Governance into the Existing Project Overview | Accepted | 2026-08-10 |
+| ADR-022 | ADR-022: Establish Generic Enterprise Document Generation with LLD First | Accepted | 2026-08-10 |

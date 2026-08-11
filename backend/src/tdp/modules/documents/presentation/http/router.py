@@ -2,12 +2,13 @@ from dataclasses import asdict
 from typing import Annotated, Self, cast
 
 from fastapi import APIRouter, Depends, Request, status
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from tdp.modules.documents.application.commands import (
     CompareDocumentVersionsCommand,
     DocumentWorkflowCommand,
+    GenerateEnterpriseDocumentCommand,
     GenerateTechnicalSourceOverviewCommand,
 )
 from tdp.modules.documents.application.dto import (
@@ -15,6 +16,9 @@ from tdp.modules.documents.application.dto import (
     DocumentSummaryDto,
     DocumentVersionComparisonDto,
     WorkflowEventDto,
+)
+from tdp.modules.documents.application.enterprise_generation_service import (
+    EnterpriseDocumentGenerationService,
 )
 from tdp.modules.documents.application.governance_dto import (
     DocumentTypeDefinitionDto,
@@ -26,6 +30,7 @@ from tdp.modules.documents.application.governance_service import (
     DocumentGovernanceApplicationService,
 )
 from tdp.modules.documents.application.service import DocumentApplicationService
+from tdp.modules.documents.domain.errors import EnterpriseDocumentGenerationBlockedError
 from tdp.presentation.http.dependencies.identity import PrincipalDependency
 
 router = APIRouter(tags=["documents"])
@@ -36,6 +41,12 @@ class GenerateTechnicalSourceOverviewRequest(BaseModel):
 
     target_run_id: str
     baseline_run_id: str | None = None
+    revision_reason: str = Field(default="", max_length=500)
+
+
+class GenerateEnterpriseDocumentRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     revision_reason: str = Field(default="", max_length=500)
 
 
@@ -217,6 +228,15 @@ def get_document_service(request: Request) -> DocumentApplicationService:
     return cast(DocumentApplicationService, request.app.state.document_service)
 
 
+def get_enterprise_generation_service(
+    request: Request,
+) -> EnterpriseDocumentGenerationService:
+    return cast(
+        EnterpriseDocumentGenerationService,
+        request.app.state.enterprise_generation_service,
+    )
+
+
 def get_document_governance_service(request: Request) -> DocumentGovernanceApplicationService:
     return cast(
         DocumentGovernanceApplicationService,
@@ -225,6 +245,10 @@ def get_document_governance_service(request: Request) -> DocumentGovernanceAppli
 
 
 DocumentServiceDependency = Annotated[DocumentApplicationService, Depends(get_document_service)]
+EnterpriseGenerationServiceDependency = Annotated[
+    EnterpriseDocumentGenerationService,
+    Depends(get_enterprise_generation_service),
+]
 DocumentGovernanceServiceDependency = Annotated[
     DocumentGovernanceApplicationService,
     Depends(get_document_governance_service),
@@ -248,6 +272,29 @@ async def get_project_documentation_checklist(
 ) -> ProjectDocumentationChecklistResponse:
     checklist = await service.project_documentation_checklist(project_id)
     return ProjectDocumentationChecklistResponse.from_dto(checklist)
+
+
+@router.post(
+    "/projects/{project_id}/documents/{document_type}/generate",
+    response_model=DocumentDetailResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def generate_enterprise_document(
+    project_id: str,
+    document_type: str,
+    payload: GenerateEnterpriseDocumentRequest,
+    service: EnterpriseGenerationServiceDependency,
+    principal: PrincipalDependency,
+) -> DocumentDetailResponse:
+    document = await service.generate(
+        GenerateEnterpriseDocumentCommand(
+            project_id=project_id,
+            document_type=document_type,
+            principal=principal,
+            revision_reason=payload.revision_reason,
+        )
+    )
+    return DocumentDetailResponse.from_dto(document)
 
 
 @router.post(
@@ -415,6 +462,41 @@ async def compare_document_versions(
         )
     )
     return DocumentVersionComparisonResponse.from_dto(comparison)
+
+
+async def enterprise_generation_blocked_handler(
+    request: Request,
+    exc: Exception,
+) -> JSONResponse:
+    if not isinstance(exc, EnterpriseDocumentGenerationBlockedError):
+        raise exc
+    request_id = getattr(request.state, "request_id", "unknown")
+    details = [
+        {
+            "rule_code": item.rule_code,
+            "severity": item.severity,
+            "message": item.message,
+            "missing_input": item.missing_input,
+            "remediation": item.remediation,
+            "supporting_references": list(item.supporting_references),
+        }
+        for item in exc.findings
+    ]
+    return JSONResponse(
+        status_code=status.HTTP_409_CONFLICT,
+        content={
+            "error": {
+                "code": exc.code,
+                "message": str(exc),
+                "details": details,
+                "requestId": request_id,
+                "documentType": exc.document_type,
+                "readinessState": exc.readiness_state,
+                "policyVersion": exc.policy_version,
+            }
+        },
+        headers={"X-Request-ID": request_id},
+    )
 
 
 def _workflow_command(
