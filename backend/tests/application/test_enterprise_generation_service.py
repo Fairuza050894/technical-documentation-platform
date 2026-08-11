@@ -72,10 +72,10 @@ class InputProviderStub:
     async def collect(
         self,
         project_id: str,
-        _profile: EnterpriseDocumentGenerationProfile,
+        profile: EnterpriseDocumentGenerationProfile,
     ) -> EnterpriseGenerationContext:
         self.collect_calls += 1
-        return _context(project_id)
+        return _context(project_id, profile)
 
 
 class RendererStub:
@@ -96,9 +96,12 @@ def _principal() -> RequestPrincipal:
     )
 
 
-def _context(project_id: str) -> EnterpriseGenerationContext:
-    profile = enterprise_generation_profile(DocumentType.LLD)
-    assert profile is not None
+def _context(
+    project_id: str,
+    profile: EnterpriseDocumentGenerationProfile | None = None,
+) -> EnterpriseGenerationContext:
+    selected_profile = profile or enterprise_generation_profile(DocumentType.LLD)
+    assert selected_profile is not None
     readiness = GenerationReadinessSnapshot(
         policy_version="document-readiness-v1",
         state="READY",
@@ -106,7 +109,7 @@ def _context(project_id: str) -> EnterpriseGenerationContext:
         findings=(),
     )
     return EnterpriseGenerationContext(
-        profile=profile,
+        profile=selected_profile,
         readiness=readiness,
         project_id=project_id,
         project_key="DOCS",
@@ -204,3 +207,32 @@ def test_generation_creates_and_reuses_immutable_lld_version() -> None:
     assert duplicate.id == first.id
     assert duplicate.reused_existing_version is True
     assert len(repository.versions) == 1
+
+
+def test_same_generic_service_creates_as_built_version() -> None:
+    repository = DocumentRepositoryStub()
+    provider = InputProviderStub(
+        GenerationReadinessSnapshot(
+            policy_version="document-readiness-v1",
+            state="READY",
+            eligible=True,
+            findings=(),
+        )
+    )
+    service = EnterpriseDocumentGenerationService(repository, provider, RendererStub())
+
+    result = asyncio.run(
+        service.generate(
+            GenerateEnterpriseDocumentCommand(
+                project_id="project-1",
+                document_type="AS_BUILT",
+                principal=_principal(),
+                revision_reason="Generate governed As-Built draft.",
+            )
+        )
+    )
+
+    assert result.document_type == "AS_BUILT"
+    assert result.version == "1.0"
+    assert result.file_name == "docs-as-built-documentation-v1.0.md"
+    assert provider.collect_calls == 1

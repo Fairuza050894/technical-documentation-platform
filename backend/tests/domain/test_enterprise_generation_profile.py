@@ -11,17 +11,24 @@ from tdp.modules.documents.domain.model import (
 )
 
 
-def test_generation_profile_foundation_starts_with_lld_only() -> None:
+def test_generation_profiles_cover_lld_and_as_built_in_rollout_order() -> None:
     assert ENTERPRISE_GENERATION_PROFILE_SCHEMA_VERSION == "enterprise-generation-profile-v1"
     assert [profile.document_type for profile in ENTERPRISE_GENERATION_PROFILES] == [
-        DocumentType.LLD
+        DocumentType.LLD,
+        DocumentType.AS_BUILT,
     ]
-    profile = enterprise_generation_profile(DocumentType.LLD)
-    assert profile is not None
-    assert profile.profile_key == "enterprise-lld-v1"
-    assert profile.primary_evidence_kind == "CATALOG_SNAPSHOT"
-    assert profile.rendered_claim_classifications == ("OBSERVED", "INFERRED")
-    assert enterprise_generation_profile(DocumentType.AS_BUILT) is None
+
+    lld = enterprise_generation_profile(DocumentType.LLD)
+    assert lld is not None
+    assert lld.profile_key == "enterprise-lld-v1"
+    assert lld.primary_evidence_kind == "CATALOG_SNAPSHOT"
+    assert lld.rendered_claim_classifications == ("OBSERVED", "INFERRED")
+
+    as_built = enterprise_generation_profile(DocumentType.AS_BUILT)
+    assert as_built is not None
+    assert as_built.profile_key == "enterprise-as-built-v1"
+    assert as_built.primary_evidence_kind == "CATALOG_SNAPSHOT"
+    assert as_built.rendered_claim_classifications == ("OBSERVED",)
 
 
 def test_document_version_can_create_governed_enterprise_type_without_mutation() -> None:

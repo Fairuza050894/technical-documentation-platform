@@ -9,6 +9,8 @@ from tdp.modules.documents.domain.model import DocumentType
 
 class DeterministicEnterpriseMarkdownRenderer:
     def render(self, context: EnterpriseGenerationContext) -> str:
+        if context.profile.document_type is DocumentType.AS_BUILT:
+            return self._render_as_built(context)
         if context.profile.document_type is not DocumentType.LLD:
             raise ValueError(
                 f"Unsupported enterprise renderer profile: {context.profile.document_type.value}"
@@ -182,6 +184,191 @@ class DeterministicEnterpriseMarkdownRenderer:
                     "content and checksum."
                 ),
                 "- AI does not determine factual truth, readiness, or rendered technical facts.",
+                "",
+            ]
+        )
+        return "\n".join(lines).rstrip() + "\n"
+
+    def _render_as_built(self, context: EnterpriseGenerationContext) -> str:
+        operations = sorted(context.operations, key=lambda item: (item.path, item.method))
+        schemas = sorted(context.schemas, key=lambda item: item.name)
+        rendered_classifications = set(context.profile.rendered_claim_classifications)
+        observed = sorted(
+            (
+                item
+                for item in context.claims
+                if item.classification == "OBSERVED" and "OBSERVED" in rendered_classifications
+            ),
+            key=lambda item: item.id,
+        )
+        excluded = sorted(
+            (item for item in context.claims if item.classification != "OBSERVED"),
+            key=lambda item: (item.classification, item.id),
+        )
+        inferred_total = sum(item.classification == "INFERRED" for item in excluded)
+        unverified_total = sum(item.classification == "UNVERIFIED" for item in excluded)
+
+        lines = [
+            f"# As-Built Documentation: {self._text(context.project_name)}",
+            "",
+            (
+                "> Deterministically generated from governed normalized API evidence and "
+                "OBSERVED As-Built claims. No AI-generated factual content is used."
+            ),
+            "",
+            "## Document control",
+            "",
+            "| Field | Value |",
+            "| --- | --- |",
+            (
+                f"| Project | {self._cell(context.project_key)} — "
+                f"{self._cell(context.project_name)} |"
+            ),
+            f"| Workspace ID | `{self._code(context.workspace_id)}` |",
+            f"| Document type | `{context.profile.document_type.value}` |",
+            f"| Generation profile | `{context.profile.profile_key}` |",
+            f"| Readiness policy | `{self._code(context.readiness.policy_version)}` |",
+            f"| Readiness state | `{self._code(context.readiness.state)}` |",
+            f"| Source | {self._cell(context.source_name)} |",
+            f"| API title | {self._cell(context.api_title)} |",
+            f"| OpenAPI version | {self._cell(context.openapi_version)} |",
+            f"| API version | {self._cell(context.api_version)} |",
+            f"| Target synchronization | `{self._code(context.target_run_id)}` |",
+            f"| Source checksum | `{self._code(context.source_checksum)}` |",
+            f"| Primary evidence | `{self._code(context.primary_evidence_id)}` |",
+            f"| Snapshot completed at | {self._cell(context.snapshot_completed_at)} |",
+            "",
+            "## Scope and evidence boundary",
+            "",
+            self._paragraph(
+                context.project_description,
+                "No project description was provided.",
+            ),
+            "",
+            (
+                "This As-Built draft records only the implementation surface visible in the "
+                "selected normalized API Catalog snapshot and explicit OBSERVED claims relevant "
+                "to As-Built Documentation."
+            ),
+            "",
+            f"- Operations represented: **{len(operations)}**",
+            f"- Component schemas represented: **{len(schemas)}**",
+            f"- Observed As-Built claims represented: **{len(observed)}**",
+            f"- Project Catalog snapshots available: **{context.available_snapshot_count}**",
+            "",
+            "## Observed implementation assertions",
+            "",
+        ]
+
+        if observed:
+            for claim in observed:
+                lines.extend(self._claim_lines(claim, inferred=False))
+        else:
+            lines.extend(
+                [
+                    (
+                        "No OBSERVED As-Built claim is present in this rendering context. "
+                        "Canonical readiness normally blocks generation before this point."
+                    ),
+                    "",
+                ]
+            )
+
+        lines.extend(["## Normalized API implementation inventory", "", "### API operations", ""])
+        if operations:
+            for operation in operations:
+                lines.extend(self._operation_section(operation))
+        else:
+            lines.extend(["No operations were present in the selected snapshot.", ""])
+
+        lines.extend(["### Component schemas", ""])
+        if schemas:
+            for schema in schemas:
+                lines.extend(self._schema_section(schema))
+        else:
+            lines.extend(["No component schemas were present in the selected snapshot.", ""])
+
+        lines.extend(["## Readiness findings", ""])
+        if context.readiness.findings:
+            for finding in context.readiness.findings:
+                lines.extend(
+                    [
+                        f"### {self._text(finding.rule_code)}",
+                        "",
+                        f"- Severity: **{self._text(finding.severity)}**",
+                        f"- Finding: {self._text(finding.message)}",
+                        f"- Missing input: `{self._code(finding.missing_input)}`",
+                        f"- Remediation: {self._text(finding.remediation)}",
+                        "",
+                    ]
+                )
+        else:
+            lines.extend(
+                [
+                    "No blocker or warning remains under the current readiness policy.",
+                    "",
+                ]
+            )
+
+        lines.extend(
+            [
+                "## Evidence traceability",
+                "",
+                "| Evidence ID | Kind | Checksum | Source reference |",
+                "| --- | --- | --- | --- |",
+            ]
+        )
+        for evidence in sorted(context.evidence, key=lambda item: (item.kind, item.id)):
+            lines.append(
+                f"| `{self._code(evidence.id)}` | {self._cell(evidence.kind)} | "
+                f"`{self._code(evidence.checksum)}` | "
+                f"`{self._code(evidence.source_reference)}` |"
+            )
+
+        lines.extend(["", "## Excluded non-observed claim references", ""])
+        if excluded:
+            for claim in excluded:
+                lines.append(
+                    f"- `{self._code(claim.id)}` — **{self._text(claim.classification)}** — "
+                    "excluded from factual As-Built content."
+                )
+            lines.append("")
+        else:
+            lines.extend(["No non-observed As-Built claims were present.", ""])
+
+        lines.extend(
+            [
+                "## Known gaps and generation policy",
+                "",
+                (
+                    "- API and schema inventory is limited to the selected normalized "
+                    "Catalog snapshot."
+                ),
+                (
+                    "- Only OBSERVED claims explicitly relevant to AS_BUILT are rendered as "
+                    "confirmed implementation assertions."
+                ),
+                (
+                    f"- INFERRED As-Built claims excluded from factual sections: "
+                    f"**{inferred_total}**."
+                ),
+                (
+                    f"- UNVERIFIED As-Built claims excluded from factual sections: "
+                    f"**{unverified_total}**."
+                ),
+                (
+                    "- Deployment topology, runtime configuration, database topology, operational "
+                    "procedures, and user journeys are not asserted unless governed evidence "
+                    "explicitly supports them."
+                ),
+                (
+                    "- Regenerating from identical canonical inputs produces identical Markdown "
+                    "content and checksum."
+                ),
+                (
+                    "- AI does not determine factual truth, readiness, or rendered "
+                    "implementation facts."
+                ),
                 "",
             ]
         )

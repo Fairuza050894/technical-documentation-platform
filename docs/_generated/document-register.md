@@ -42,6 +42,7 @@ This register inventories Markdown documentation. Formal approval must be record
 | Unassigned | ADR-020: Compute Document Readiness from Canonical State | Decisions | Accepted | `docs/decisions/ADR-020-compute-document-readiness-from-canonical-state.md` (Not specified) |
 | Unassigned | ADR-021: Integrate Document Governance into the Existing Project Overview | Decisions | Accepted | `docs/decisions/ADR-021-integrate-document-governance-into-project-overview.md` (Not specified) |
 | Unassigned | ADR-022: Establish Generic Enterprise Document Generation with LLD First | Decisions | Accepted | `docs/decisions/ADR-022-generic-enterprise-generation-lld-first.md` (Not specified) |
+| Unassigned | ADR-023: Extend Generic Enterprise Generation with Strict As-Built Facts | Decisions | Accepted | `docs/decisions/ADR-023-as-built-observed-fact-generation.md` (Not specified) |
 | Unassigned | Coding Standards | Engineering | Not specified | `docs/engineering/coding-standards.md` (Not specified) |
 | Unassigned | Definition of Done | Engineering | Not specified | `docs/engineering/definition-of-done.md` (Not specified) |
 | TDP-GOV-002 | Document Control | Governance | Controlled draft | `docs/governance/document-control.md` (Internal project documentation) |
@@ -65,6 +66,7 @@ This register inventories Markdown documentation. Formal approval must be record
 | TDP-REL-002 | Release Readiness | Releases | Controlled draft | `docs/releases/release-readiness.md` (Internal project documentation) |
 | Unassigned | MVP 1 API Catalog Requirements | Requirements | Not specified | `docs/requirements/mvp-1-api-catalog.md` (Not specified) |
 | Unassigned | MVP 1 Archived Project Read-only Access | Requirements | Not specified | `docs/requirements/mvp-1-archived-project-read-only-access.md` (Not specified) |
+| Unassigned | MVP 1 — As-Built Enterprise Generation Profile | Requirements | Not specified | `docs/requirements/mvp-1-as-built-enterprise-generation-profile.md` (Not specified) |
 | Unassigned | MVP 1 Change Detection | Requirements | Not specified | `docs/requirements/mvp-1-change-detection.md` (Not specified) |
 | Unassigned | MVP 1 — Enterprise Document Governance Foundation | Requirements | Not specified | `docs/requirements/mvp-1-document-governance-foundation.md` (Not specified) |
 | Unassigned | MVP 1 Requirement: Document Lifecycle Core | Requirements | Not specified | `docs/requirements/mvp-1-document-lifecycle-core.md` (Not specified) |

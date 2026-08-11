@@ -7,6 +7,7 @@ This index reports the requirement documents currently stored in the repository.
 |---|---|---|---|---|
 | mvp-1-api-catalog.md | MVP 1 API Catalog Requirements | 0 | 0 | No |
 | mvp-1-archived-project-read-only-access.md | MVP 1 Archived Project Read-only Access | 0 | 12 | Yes |
+| mvp-1-as-built-enterprise-generation-profile.md | MVP 1 — As-Built Enterprise Generation Profile | 0 | 2 | Yes |
 | mvp-1-change-detection.md | MVP 1 Change Detection | 0 | 0 | Yes |
 | mvp-1-document-governance-foundation.md | MVP 1 — Enterprise Document Governance Foundation | 0 | 0 | Yes |
 | mvp-1-document-lifecycle-core.md | MVP 1 Requirement: Document Lifecycle Core | 0 | 12 | No |

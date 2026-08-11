@@ -1,3 +1,5 @@
+from dataclasses import replace
+
 from tdp.modules.documents.application.enterprise_generation_ports import (
     EnterpriseGenerationContext,
     GenerationClaimFact,
@@ -129,3 +131,57 @@ def test_enterprise_renderer_is_deterministic_and_preserves_claim_strength() -> 
     assert "Production uses blue-green deployment." not in first
     assert "UNVERIFIED LLD-relevant claims excluded from factual sections: **1**." in first
     assert "AI does not determine factual truth" in first
+
+
+def test_as_built_renderer_keeps_only_observed_statements_factual() -> None:
+    profile = enterprise_generation_profile(DocumentType.AS_BUILT)
+    assert profile is not None
+    base = _context()
+    context = replace(
+        base,
+        profile=profile,
+        readiness=GenerationReadinessSnapshot(
+            policy_version="document-readiness-v1",
+            state="READY",
+            eligible=True,
+            findings=(),
+        ),
+        claims=(
+            GenerationClaimFact(
+                id="claim-asbuilt-observed",
+                classification="OBSERVED",
+                statement="The orders endpoint is deployed as part of the implemented API surface.",
+                evidence_ids=("evidence-1",),
+                derivation_reference="",
+            ),
+            GenerationClaimFact(
+                id="claim-asbuilt-inferred",
+                classification="INFERRED",
+                statement="The service probably uses blue-green deployment.",
+                evidence_ids=("evidence-1",),
+                derivation_reference="rule:deployment-guess-v1",
+            ),
+            GenerationClaimFact(
+                id="claim-asbuilt-unverified",
+                classification="UNVERIFIED",
+                statement="The runtime database is PostgreSQL.",
+                evidence_ids=(),
+                derivation_reference="",
+            ),
+        ),
+    )
+
+    renderer = DeterministicEnterpriseMarkdownRenderer()
+    first = renderer.render(context)
+    second = renderer.render(context)
+
+    assert first == second
+    assert "# As-Built Documentation: Documentation Platform" in first
+    assert "The orders endpoint is deployed as part of the implemented API surface." in first
+    assert "The service probably uses blue-green deployment." not in first
+    assert "The runtime database is PostgreSQL." not in first
+    assert "`claim-asbuilt-inferred` — **INFERRED** — excluded" in first
+    assert "`claim-asbuilt-unverified` — **UNVERIFIED** — excluded" in first
+    assert "INFERRED As-Built claims excluded from factual sections: **1**." in first
+    assert "UNVERIFIED As-Built claims excluded from factual sections: **1**." in first
+    assert "`/paths/~1orders/get`" in first

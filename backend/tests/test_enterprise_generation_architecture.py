@@ -57,3 +57,16 @@ def test_legacy_technical_source_overview_route_remains_available() -> None:
     service = (_DOCUMENTS / "application" / "service.py").read_text(encoding="utf-8")
     assert "/documents/technical-source-overview" in router
     assert "GenerateTechnicalSourceOverviewCommand" in service
+
+
+def test_as_built_extension_does_not_create_a_parallel_generation_service() -> None:
+    service = (_DOCUMENTS / "application" / "enterprise_generation_service.py").read_text(
+        encoding="utf-8"
+    )
+    adapter = (_DOCUMENTS / "infrastructure" / "enterprise_generation_inputs.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert "GenerateAsBuilt" not in service
+    assert "DocumentType.AS_BUILT" not in service
+    assert "AS_BUILT" not in adapter
