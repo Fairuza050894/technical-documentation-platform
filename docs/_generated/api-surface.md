@@ -5,7 +5,7 @@ The table is derived from FastAPI route decorators. It records declared routes, 
 
 | Method | Path | Source |
 |---|---|---|
-| GET | `/api/claims/{claim_id}` | `backend/src/tdp/modules/evidence/presentation/http/router.py:214` |
+| GET | `/api/claims/{claim_id}` | `backend/src/tdp/modules/evidence/presentation/http/router.py:257` |
 | GET | `/api/document-types` | `backend/src/tdp/modules/documents/presentation/http/router.py:259` |
 | POST | `/api/document-version-comparisons` | `backend/src/tdp/modules/documents/presentation/http/router.py:454` |
 | GET | `/api/document-versions/{version_id}` | `backend/src/tdp/modules/documents/presentation/http/router.py:366` |
@@ -18,7 +18,7 @@ The table is derived from FastAPI route decorators. It records declared routes, 
 | GET | `/api/documents/{document_id}` | `backend/src/tdp/modules/documents/presentation/http/router.py:350` |
 | GET | `/api/documents/{document_id}/download` | `backend/src/tdp/modules/documents/presentation/http/router.py:358` |
 | GET | `/api/documents/{document_id}/versions` | `backend/src/tdp/modules/documents/presentation/http/router.py:340` |
-| GET | `/api/evidence/{artifact_id}` | `backend/src/tdp/modules/evidence/presentation/http/router.py:167` |
+| GET | `/api/evidence/{artifact_id}` | `backend/src/tdp/modules/evidence/presentation/http/router.py:210` |
 | GET | `/api/health` | `backend/src/tdp/presentation/http/routers/health.py:36` |
 | GET | `/api/health/live` | `backend/src/tdp/presentation/http/routers/health.py:36` |
 | GET | `/api/health/ready` | `backend/src/tdp/presentation/http/routers/health.py:47` |
@@ -28,16 +28,17 @@ The table is derived from FastAPI route decorators. It records declared routes, 
 | GET | `/api/projects/{project_id}` | `backend/src/tdp/modules/projects/presentation/http/router.py:96` |
 | GET | `/api/projects/{project_id}/api-catalog` | `backend/src/tdp/modules/catalog/presentation/http/router.py:179` |
 | POST | `/api/projects/{project_id}/archive` | `backend/src/tdp/modules/projects/presentation/http/router.py:104` |
-| GET | `/api/projects/{project_id}/claims` | `backend/src/tdp/modules/evidence/presentation/http/router.py:204` |
-| POST | `/api/projects/{project_id}/claims` | `backend/src/tdp/modules/evidence/presentation/http/router.py:179` |
+| GET | `/api/projects/{project_id}/claims` | `backend/src/tdp/modules/evidence/presentation/http/router.py:247` |
+| POST | `/api/projects/{project_id}/claims` | `backend/src/tdp/modules/evidence/presentation/http/router.py:222` |
 | POST | `/api/projects/{project_id}/comparisons` | `backend/src/tdp/modules/changes/presentation/http/router.py:39` |
 | GET | `/api/projects/{project_id}/documentation-checklist` | `backend/src/tdp/modules/documents/presentation/http/router.py:269` |
 | GET | `/api/projects/{project_id}/documents` | `backend/src/tdp/modules/documents/presentation/http/router.py:327` |
 | POST | `/api/projects/{project_id}/documents/technical-source-overview` | `backend/src/tdp/modules/documents/presentation/http/router.py:305` |
 | POST | `/api/projects/{project_id}/documents/{document_type}/generate` | `backend/src/tdp/modules/documents/presentation/http/router.py:282` |
-| GET | `/api/projects/{project_id}/evidence` | `backend/src/tdp/modules/evidence/presentation/http/router.py:157` |
-| POST | `/api/projects/{project_id}/evidence/catalog-snapshots/{synchronization_id}` | `backend/src/tdp/modules/evidence/presentation/http/router.py:137` |
-| POST | `/api/projects/{project_id}/evidence/source-artifacts/{source_id}` | `backend/src/tdp/modules/evidence/presentation/http/router.py:116` |
+| GET | `/api/projects/{project_id}/evidence` | `backend/src/tdp/modules/evidence/presentation/http/router.py:200` |
+| POST | `/api/projects/{project_id}/evidence/catalog-snapshots/{synchronization_id}` | `backend/src/tdp/modules/evidence/presentation/http/router.py:153` |
+| POST | `/api/projects/{project_id}/evidence/references` | `backend/src/tdp/modules/evidence/presentation/http/router.py:174` |
+| POST | `/api/projects/{project_id}/evidence/source-artifacts/{source_id}` | `backend/src/tdp/modules/evidence/presentation/http/router.py:132` |
 | GET | `/api/projects/{project_id}/readiness` | `backend/src/tdp/modules/readiness/presentation/http/router.py:108` |
 | GET | `/api/projects/{project_id}/readiness/{document_type}` | `backend/src/tdp/modules/readiness/presentation/http/router.py:119` |
 | GET | `/api/projects/{project_id}/sources` | `backend/src/tdp/modules/sources/presentation/http/router.py:93` |

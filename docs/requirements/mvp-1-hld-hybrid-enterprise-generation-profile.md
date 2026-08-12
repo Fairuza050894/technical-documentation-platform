@@ -15,13 +15,15 @@ HLD generation eligibility comes exclusively from 0010C.
 
 The HLD readiness profile requires:
 
-- any persisted governed Evidence Artifact as the blocking technical minimum; and
+- one governed technical Evidence Artifact — `SOURCE_ARTIFACT` or `CATALOG_SNAPSHOT` — as the
+  blocking minimum; and
 - an `OBSERVED` or deterministically `INFERRED` HLD-relevant Claim as a warning-level contextual
   enhancement.
 
 Therefore a Project with valid technical evidence but no HLD claim is `PARTIALLY_READY` and remains
-eligible. The generation layer must not silently strengthen this rule to require a
-`CATALOG_SNAPSHOT`.
+eligible. Semantic `USER_JOURNEY`, `DEPLOYMENT_RUNTIME`, or `UAT_RESULT` evidence alone does not
+satisfy the HLD technical-evidence blocker. The generation layer still does not impose a hidden
+Catalog prerequisite.
 
 ## Generation profile
 
@@ -131,7 +133,8 @@ frontend generation controls.
 ## Acceptance criteria
 
 - HLD generation uses the existing generic enterprise generation service;
-- HLD eligibility remains canonical 0010C `ANY_EVIDENCE`, with no hidden Catalog prerequisite;
+- HLD eligibility remains canonical readiness using technical evidence
+  `SOURCE_ARTIFACT | CATALOG_SNAPSHOT`, with no hidden Catalog prerequisite;
 - source-only governed evidence can generate an HLD with nullable synchronization provenance;
 - Catalog-backed HLD can render a compact normalized API boundary;
 - evidence selection is deterministic and profile-driven rather than HLD-specific in the adapter;

@@ -14,7 +14,7 @@ from tdp.modules.readiness.domain.policy import (
 
 
 def test_readiness_profiles_cover_the_ten_enterprise_document_types_in_order() -> None:
-    assert READINESS_POLICY_VERSION == "document-readiness-v1"
+    assert READINESS_POLICY_VERSION == "document-readiness-v2"
     assert [item.document_type for item in READINESS_PROFILES] == [
         "HLD",
         "LLD",
@@ -140,3 +140,66 @@ def test_handover_requires_approved_versions_of_the_required_bundle() -> None:
     )
     assert ready.state is ReadinessState.READY
     assert ready.eligible is True
+
+
+def test_semantic_evidence_does_not_satisfy_technical_evidence_profiles() -> None:
+    evaluator = DeterministicReadinessEvaluator()
+    evidence = (ReadinessEvidenceFact(reference="evidence:journey", kind="USER_JOURNEY"),)
+
+    hld = evaluator.evaluate(
+        profile=readiness_profile("HLD"),
+        evidence=evidence,
+        claims=(),
+        documents=(),
+    )
+    onboarding = evaluator.evaluate(
+        profile=readiness_profile("DEVELOPER_ONBOARDING_BRIEF"),
+        evidence=evidence,
+        claims=(),
+        documents=(),
+    )
+
+    assert hld.state is ReadinessState.NOT_READY
+    assert onboarding.state is ReadinessState.NOT_READY
+    assert hld.findings[0].rule_code == "HLD_TECHNICAL_EVIDENCE_REQUIRED"
+    assert onboarding.findings[0].rule_code == "ONBOARDING_TECHNICAL_EVIDENCE_REQUIRED"
+
+
+def test_semantic_evidence_kinds_satisfy_only_their_matching_readiness_rules() -> None:
+    evaluator = DeterministicReadinessEvaluator()
+    evidence = (
+        ReadinessEvidenceFact(reference="evidence:journey", kind="USER_JOURNEY"),
+        ReadinessEvidenceFact(reference="evidence:deployment", kind="DEPLOYMENT_RUNTIME"),
+        ReadinessEvidenceFact(reference="evidence:uat", kind="UAT_RESULT"),
+    )
+
+    user_guide = evaluator.evaluate(
+        profile=readiness_profile("USER_GUIDE"),
+        evidence=evidence,
+        claims=(),
+        documents=(),
+    )
+    journey_map = evaluator.evaluate(
+        profile=readiness_profile("JOURNEY_MAP"),
+        evidence=evidence,
+        claims=(),
+        documents=(),
+    )
+    installation = evaluator.evaluate(
+        profile=readiness_profile("INSTALLATION_GUIDE"),
+        evidence=evidence,
+        claims=(),
+        documents=(),
+    )
+    uat = evaluator.evaluate(
+        profile=readiness_profile("UAT_EVIDENCE"),
+        evidence=evidence,
+        claims=(),
+        documents=(),
+    )
+
+    assert user_guide.state is ReadinessState.PARTIALLY_READY
+    assert user_guide.eligible is True
+    assert journey_map.state is ReadinessState.READY
+    assert installation.state is ReadinessState.READY
+    assert uat.state is ReadinessState.READY

@@ -44,6 +44,7 @@ This register inventories Markdown documentation. Formal approval must be record
 | Unassigned | ADR-022: Establish Generic Enterprise Document Generation with LLD First | Decisions | Accepted | `docs/decisions/ADR-022-generic-enterprise-generation-lld-first.md` (Not specified) |
 | Unassigned | ADR-023: Extend Generic Enterprise Generation with Strict As-Built Facts | Decisions | Accepted | `docs/decisions/ADR-023-as-built-observed-fact-generation.md` (Not specified) |
 | Unassigned | ADR-024: Preserve HLD Any-Evidence Generation Eligibility | Decisions | Accepted | `docs/decisions/ADR-024-preserve-hld-any-evidence-generation-eligibility.md` (Not specified) |
+| Unassigned | ADR-025: Expand Governed Evidence Capability Before More Generators | Decisions | Accepted | `docs/decisions/ADR-025-expand-governed-evidence-capability.md` (Not specified) |
 | Unassigned | Coding Standards | Engineering | Not specified | `docs/engineering/coding-standards.md` (Not specified) |
 | Unassigned | Definition of Done | Engineering | Not specified | `docs/engineering/definition-of-done.md` (Not specified) |
 | TDP-GOV-002 | Document Control | Governance | Controlled draft | `docs/governance/document-control.md` (Internal project documentation) |
@@ -95,6 +96,7 @@ This register inventories Markdown documentation. Formal approval must be record
 | Unassigned | MVP 1 Requirement: Project-Centric Workbench | Requirements | Not specified | `docs/requirements/mvp-1-project-centric-workbench.md` (Not specified) |
 | Unassigned | MVP 1 — Project Documentation Workbench Integration | Requirements | Not specified | `docs/requirements/mvp-1-project-documentation-workbench-integration.md` (Not specified) |
 | Unassigned | MVP 1 — Project Management Requirements | Requirements | Not specified | `docs/requirements/mvp-1-project-management.md` (Not specified) |
+| Unassigned | MVP 1 — Referenced Semantic Evidence Capability | Requirements | Not specified | `docs/requirements/mvp-1-referenced-semantic-evidence-capability.md` (Not specified) |
 | Unassigned | MVP 1 Requirement: Technical Source Overview | Requirements | Not specified | `docs/requirements/mvp-1-technical-source-overview.md` (Not specified) |
 | Unassigned | MVP 1 — Visual Refinement R1 | Requirements | Not specified | `docs/requirements/mvp-1-visual-refinement-r1.md` (Not specified) |
 | Unassigned | MVP 1 Visual Refinement R2 | Requirements | Not specified | `docs/requirements/mvp-1-visual-refinement-r2.md` (Not specified) |

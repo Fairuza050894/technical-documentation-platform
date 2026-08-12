@@ -25,6 +25,20 @@ and schemas. Random synchronization identity is excluded from the normalized che
 
 Registration is idempotent by evidence kind and origin identity.
 
+0010H extends the canonical Evidence kind registry with governed referenced manifests:
+
+- `USER_JOURNEY`;
+- `DEPLOYMENT_RUNTIME`;
+- `UAT_RESULT`.
+
+These kinds reference evidence produced outside the current Source Registry and API Catalog. The
+client supplies only the controlled kind, stable origin identity, opaque provenance references,
+SHA-256 checksum, capture time, and optional Feature scope. The server fixes the source-system and
+collection-method classifications to `GOVERNED_REFERENCE` and `REFERENCE_REGISTRATION`.
+
+An exact retry returns the existing immutable artifact. Reusing the same evidence kind and origin
+with different immutable provenance returns a conflict instead of silently replacing history.
+
 ## Claims
 
 Claims are immutable statements with one classification:
@@ -73,14 +87,18 @@ archived Feature.
 
 ## API
 
-Write operations are deliberately governed rather than generic:
+Write operations remain governed:
 
 - register evidence from an existing Source record;
 - register evidence from an existing completed Catalog snapshot;
+- register one of the controlled referenced semantic Evidence kinds from an immutable provenance
+  manifest;
 - create a Claim referencing persisted evidence.
 
-No endpoint accepts arbitrary evidence checksum, source-system metadata, raw artifact paths, or
-credential data from the client.
+The referenced-evidence endpoint accepts a SHA-256 checksum because the content is held outside the
+platform, but it does not accept client-controlled source-system or collection-method
+classification. Unsupported Evidence kinds, raw payloads, local file references, and arbitrary
+extra metadata are rejected.
 
 Read endpoints list and retrieve evidence and claims.
 
@@ -99,9 +117,11 @@ Git collectors, live conformance, MCP, or frontend evidence management.
 
 ## Acceptance criteria
 
-- source and completed snapshot records can be registered as immutable Evidence Artifacts;
+- source, completed snapshot, and controlled referenced semantic evidence can be registered as
+  immutable Evidence Artifacts;
 - snapshot checksums are deterministic from normalized content;
-- duplicate origin registration returns the existing Evidence Artifact;
+- exact duplicate origin registration returns the existing Evidence Artifact and conflicting
+  immutable provenance is rejected;
 - observed, inferred, and unverified claim invariants are domain-enforced;
 - claim evidence cannot cross Project boundaries;
 - document relevance accepts only 0010A enterprise document types;

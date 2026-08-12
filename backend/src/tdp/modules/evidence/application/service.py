@@ -1,6 +1,8 @@
 import hashlib
 import json
+import re
 from dataclasses import asdict
+from datetime import datetime
 
 from tdp.modules.catalog.domain.model import (
     ApiOperation,
@@ -12,6 +14,7 @@ from tdp.modules.catalog.domain.repository import CatalogRepository
 from tdp.modules.documents.domain.governance import DOCUMENT_TYPE_REGISTRY
 from tdp.modules.evidence.application.commands import (
     CreateClaimCommand,
+    RegisterReferencedEvidenceCommand,
     RegisterSnapshotEvidenceCommand,
     RegisterSourceEvidenceCommand,
 )
@@ -21,6 +24,7 @@ from tdp.modules.evidence.domain.errors import (
     EvidenceArtifactNotFoundError,
     EvidenceFeatureArchivedError,
     EvidenceFeatureNotFoundError,
+    EvidenceOriginConflictError,
     EvidenceProjectArchivedError,
     EvidenceProjectNotFoundError,
     EvidenceSnapshotNotCompletedError,
@@ -31,13 +35,17 @@ from tdp.modules.evidence.domain.errors import (
     InvalidClaimClassificationError,
     InvalidClaimDocumentTypeError,
     InvalidClaimEvidenceError,
+    InvalidEvidenceKindError,
+    InvalidEvidenceReferenceError,
 )
 from tdp.modules.evidence.domain.model import (
+    REFERENCED_EVIDENCE_KINDS,
     Claim,
     ClaimClassification,
     ClaimId,
     EvidenceArtifact,
     EvidenceArtifactId,
+    EvidenceChecksum,
     EvidenceCollectionMethod,
     EvidenceKind,
     EvidenceSourceSystem,
@@ -144,6 +152,52 @@ class EvidenceApplicationService:
             collection_method=EvidenceCollectionMethod.DETERMINISTIC_NORMALIZATION,
             collected_by=command.principal.audit_actor,
             captured_at=run.completed_at,
+        )
+        await self._repository.add_artifact(artifact)
+        return EvidenceArtifactDto.from_domain(artifact)
+
+    async def register_referenced_evidence(
+        self,
+        command: RegisterReferencedEvidenceCommand,
+    ) -> EvidenceArtifactDto:
+        project = await self._require_project(command.project_id, writable=True)
+        feature_id = await self._validate_feature(
+            command.project_id,
+            command.feature_id,
+            writable=True,
+        )
+        kind = _referenced_evidence_kind(command.kind)
+        source_reference = _opaque_reference(command.source_reference, "Source reference")
+        content_reference = _opaque_reference(command.content_reference, "Content reference")
+        origin_id = _stable_origin(command.origin_id)
+        checksum = EvidenceChecksum(command.checksum)
+
+        existing = await self._repository.get_artifact_by_origin(kind, origin_id)
+        if existing is not None:
+            _require_matching_referenced_origin(
+                existing,
+                project_id=command.project_id,
+                feature_id=feature_id,
+                source_reference=source_reference,
+                checksum=str(checksum),
+                content_reference=content_reference,
+                captured_at=command.captured_at,
+            )
+            return EvidenceArtifactDto.from_domain(existing)
+
+        artifact = EvidenceArtifact.create(
+            workspace_id=project.workspace_id,
+            project_id=str(project.id),
+            feature_id=feature_id,
+            kind=kind,
+            source_system=EvidenceSourceSystem.GOVERNED_REFERENCE,
+            source_reference=source_reference,
+            origin_id=origin_id,
+            checksum=str(checksum),
+            content_reference=content_reference,
+            collection_method=EvidenceCollectionMethod.REFERENCE_REGISTRATION,
+            collected_by=command.principal.audit_actor,
+            captured_at=command.captured_at,
         )
         await self._repository.add_artifact(artifact)
         return EvidenceArtifactDto.from_domain(artifact)
@@ -262,6 +316,67 @@ class EvidenceApplicationService:
                 raise InvalidClaimEvidenceError(
                     "A feature-scoped claim cannot reference evidence scoped to another feature."
                 )
+
+
+_REFERENCE_PATTERN = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:[^\s]+$")
+
+
+def _referenced_evidence_kind(value: str) -> EvidenceKind:
+    try:
+        kind = EvidenceKind(value.strip().upper())
+    except ValueError as exc:
+        raise InvalidEvidenceKindError(
+            "Referenced evidence kind must be USER_JOURNEY, DEPLOYMENT_RUNTIME, or UAT_RESULT."
+        ) from exc
+    if kind not in REFERENCED_EVIDENCE_KINDS:
+        raise InvalidEvidenceKindError(
+            "Referenced evidence kind must be USER_JOURNEY, DEPLOYMENT_RUNTIME, or UAT_RESULT."
+        )
+    return kind
+
+
+def _opaque_reference(value: str, label: str) -> str:
+    normalized = value.strip()
+    if not _REFERENCE_PATTERN.fullmatch(normalized) or normalized.casefold().startswith("file:"):
+        raise InvalidEvidenceReferenceError(
+            f"{label} must be an opaque non-file reference with an explicit scheme."
+        )
+    return normalized
+
+
+def _stable_origin(value: str) -> str:
+    normalized = value.strip()
+    if not normalized or len(normalized) > 200 or any(char.isspace() for char in normalized):
+        raise InvalidEvidenceReferenceError(
+            "Evidence origin must contain 1-200 non-whitespace characters."
+        )
+    return normalized
+
+
+def _require_matching_referenced_origin(
+    existing: EvidenceArtifact,
+    *,
+    project_id: str,
+    feature_id: str | None,
+    source_reference: str,
+    checksum: str,
+    content_reference: str,
+    captured_at: datetime,
+) -> None:
+    if (
+        existing.project_id != project_id
+        or existing.feature_id != feature_id
+        or existing.source_system is not EvidenceSourceSystem.GOVERNED_REFERENCE
+        or existing.collection_method is not EvidenceCollectionMethod.REFERENCE_REGISTRATION
+        or existing.source_reference != source_reference
+        or str(existing.checksum) != checksum
+        or existing.content_reference != content_reference
+        or existing.captured_at != captured_at
+    ):
+        raise EvidenceOriginConflictError(
+            "The evidence kind and origin are already registered with different "
+            "immutable provenance."
+        )
 
 
 def _claim_classification(value: str) -> ClaimClassification:

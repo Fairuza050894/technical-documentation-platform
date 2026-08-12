@@ -5,18 +5,19 @@ from tdp.modules.readiness.domain.model import (
     ReadinessRuleKind,
 )
 
-READINESS_POLICY_VERSION = "document-readiness-v1"
+READINESS_POLICY_VERSION = "document-readiness-v2"
 
 _HLD = DocumentReadinessProfile(
     document_type="HLD",
     rules=(
         ReadinessRule(
             code="HLD_TECHNICAL_EVIDENCE_REQUIRED",
-            kind=ReadinessRuleKind.ANY_EVIDENCE,
+            kind=ReadinessRuleKind.EVIDENCE_KIND_ANY_OF,
             severity=ReadinessFindingSeverity.BLOCKER,
             message="High Level Design requires traceable technical boundary evidence.",
             missing_input="technical-evidence",
             remediation="Register validated source or normalized technical evidence.",
+            evidence_kinds=("SOURCE_ARTIFACT", "CATALOG_SNAPSHOT"),
         ),
         ReadinessRule(
             code="HLD_GOVERNED_CONTEXT_REQUIRED",
@@ -202,11 +203,12 @@ _DEVELOPER_ONBOARDING = DocumentReadinessProfile(
     rules=(
         ReadinessRule(
             code="ONBOARDING_TECHNICAL_EVIDENCE_REQUIRED",
-            kind=ReadinessRuleKind.ANY_EVIDENCE,
+            kind=ReadinessRuleKind.EVIDENCE_KIND_ANY_OF,
             severity=ReadinessFindingSeverity.BLOCKER,
             message="Developer onboarding requires traceable technical evidence.",
             missing_input="technical-evidence",
             remediation="Register validated source or normalized technical evidence.",
+            evidence_kinds=("SOURCE_ARTIFACT", "CATALOG_SNAPSHOT"),
         ),
         ReadinessRule(
             code="ONBOARDING_GOVERNED_CONTEXT_REQUIRED",

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 
 from tdp.identity.model import RequestPrincipal
 
@@ -14,6 +15,19 @@ class RegisterSourceEvidenceCommand:
 class RegisterSnapshotEvidenceCommand:
     project_id: str
     synchronization_id: str
+    principal: RequestPrincipal
+
+
+@dataclass(frozen=True, slots=True)
+class RegisterReferencedEvidenceCommand:
+    project_id: str
+    kind: str
+    source_reference: str
+    origin_id: str
+    checksum: str
+    content_reference: str
+    captured_at: datetime
+    feature_id: str | None
     principal: RequestPrincipal
 
 

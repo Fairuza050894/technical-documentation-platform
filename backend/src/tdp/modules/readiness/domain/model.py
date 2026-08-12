@@ -17,6 +17,7 @@ class ReadinessFindingSeverity(StrEnum):
 class ReadinessRuleKind(StrEnum):
     ANY_EVIDENCE = "ANY_EVIDENCE"
     EVIDENCE_KIND = "EVIDENCE_KIND"
+    EVIDENCE_KIND_ANY_OF = "EVIDENCE_KIND_ANY_OF"
     RELEVANT_CLAIM = "RELEVANT_CLAIM"
     APPROVED_DOCUMENTS = "APPROVED_DOCUMENTS"
 
@@ -50,6 +51,7 @@ class ReadinessRule:
     missing_input: str
     remediation: str
     evidence_kind: str = ""
+    evidence_kinds: tuple[str, ...] = ()
     allowed_claim_classifications: tuple[str, ...] = ()
     required_document_types: tuple[str, ...] = ()
 
@@ -144,6 +146,12 @@ class DeterministicReadinessEvaluator:
 
         if rule.kind is ReadinessRuleKind.EVIDENCE_KIND:
             matching = tuple(item for item in evidence if item.kind == rule.evidence_kind)
+            if matching:
+                return None
+            return _finding(document_type, rule)
+
+        if rule.kind is ReadinessRuleKind.EVIDENCE_KIND_ANY_OF:
+            matching = tuple(item for item in evidence if item.kind in rule.evidence_kinds)
             if matching:
                 return None
             return _finding(document_type, rule)

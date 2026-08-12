@@ -103,3 +103,31 @@ def test_sqlite_guards_evidence_and_claim_history_from_update_or_delete(tmp_path
             "DELETE FROM evidence_claims WHERE id = ?",
             (str(claim.id),),
         )
+
+
+def test_repository_persists_new_semantic_evidence_without_schema_migration(
+    tmp_path: Path,
+) -> None:
+    database_path = tmp_path / "semantic-evidence.sqlite3"
+    _create_parent_tables(database_path)
+    repository = SqliteEvidenceRepository(database_path)
+    artifact = EvidenceArtifact.create(
+        workspace_id="workspace-1",
+        project_id="project-1",
+        kind=EvidenceKind.DEPLOYMENT_RUNTIME,
+        source_system=EvidenceSourceSystem.GOVERNED_REFERENCE,
+        source_reference="deployment-run:release-2026-08-12",
+        origin_id="release-2026-08-12",
+        checksum="e" * 64,
+        content_reference="evidence-manifest:release-2026-08-12",
+        collection_method=EvidenceCollectionMethod.REFERENCE_REGISTRATION,
+        collected_by="Release Engineer",
+        captured_at=datetime(2026, 8, 12, 2, 0, tzinfo=UTC),
+    )
+
+    asyncio.run(repository.add_artifact(artifact))
+    restored = asyncio.run(repository.get_artifact(artifact.id))
+
+    assert restored == artifact
+    assert restored is not None
+    assert restored.kind is EvidenceKind.DEPLOYMENT_RUNTIME

@@ -4,10 +4,11 @@ from typing import Annotated, Literal, cast
 
 from fastapi import APIRouter, Depends, Request, status
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
 from tdp.modules.evidence.application.commands import (
     CreateClaimCommand,
+    RegisterReferencedEvidenceCommand,
     RegisterSnapshotEvidenceCommand,
     RegisterSourceEvidenceCommand,
 )
@@ -19,6 +20,7 @@ from tdp.modules.evidence.domain.errors import (
     EvidenceError,
     EvidenceFeatureArchivedError,
     EvidenceFeatureNotFoundError,
+    EvidenceOriginConflictError,
     EvidenceProjectArchivedError,
     EvidenceProjectNotFoundError,
     EvidenceSnapshotNotCompletedError,
@@ -33,12 +35,26 @@ from tdp.modules.evidence.domain.errors import (
     InvalidClaimIdError,
     InvalidClaimStatementError,
     InvalidEvidenceArtifactIdError,
+    InvalidEvidenceCaptureTimeError,
     InvalidEvidenceChecksumError,
+    InvalidEvidenceKindError,
     InvalidEvidenceReferenceError,
 )
 from tdp.presentation.http.dependencies.identity import PrincipalDependency
 
 router = APIRouter(tags=["evidence"])
+
+
+class RegisterReferencedEvidenceRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    kind: Literal["USER_JOURNEY", "DEPLOYMENT_RUNTIME", "UAT_RESULT"]
+    source_reference: str = Field(min_length=3, max_length=500)
+    origin_id: str = Field(min_length=1, max_length=200, pattern=r"^\S+$")
+    checksum: str = Field(min_length=64, max_length=64, pattern=r"^[A-Fa-f0-9]{64}$")
+    content_reference: str = Field(min_length=3, max_length=500)
+    captured_at: AwareDatetime
+    feature_id: str | None = None
 
 
 class CreateClaimRequest(BaseModel):
@@ -150,6 +166,33 @@ async def register_catalog_snapshot_evidence(
     return EvidenceArtifactResponse.from_dto(artifact)
 
 
+@router.post(
+    "/projects/{project_id}/evidence/references",
+    response_model=EvidenceArtifactResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def register_referenced_evidence(
+    project_id: str,
+    payload: RegisterReferencedEvidenceRequest,
+    service: EvidenceServiceDependency,
+    principal: PrincipalDependency,
+) -> EvidenceArtifactResponse:
+    artifact = await service.register_referenced_evidence(
+        RegisterReferencedEvidenceCommand(
+            project_id=project_id,
+            kind=payload.kind,
+            source_reference=payload.source_reference,
+            origin_id=payload.origin_id,
+            checksum=payload.checksum,
+            content_reference=payload.content_reference,
+            captured_at=payload.captured_at,
+            feature_id=payload.feature_id,
+            principal=principal,
+        )
+    )
+    return EvidenceArtifactResponse.from_dto(artifact)
+
+
 @router.get(
     "/projects/{project_id}/evidence",
     response_model=EvidenceCollectionResponse,
@@ -220,7 +263,9 @@ async def get_claim(
 
 _EVIDENCE_ERROR_STATUS: Mapping[type[EvidenceError], int] = {
     InvalidEvidenceArtifactIdError: 422,
+    InvalidEvidenceCaptureTimeError: 422,
     InvalidEvidenceChecksumError: 422,
+    InvalidEvidenceKindError: 422,
     InvalidEvidenceReferenceError: 422,
     InvalidClaimIdError: 422,
     InvalidClaimStatementError: 422,
@@ -235,6 +280,7 @@ _EVIDENCE_ERROR_STATUS: Mapping[type[EvidenceError], int] = {
     EvidenceSnapshotNotFoundError: 404,
     EvidenceFeatureNotFoundError: 404,
     ClaimNotFoundError: 404,
+    EvidenceOriginConflictError: 409,
     EvidenceProjectArchivedError: 409,
     EvidenceWorkspaceArchivedError: 409,
     EvidenceFeatureArchivedError: 409,

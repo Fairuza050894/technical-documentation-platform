@@ -5,8 +5,10 @@ import pytest
 from tdp.modules.evidence.domain.errors import (
     InvalidClaimDerivationError,
     InvalidClaimEvidenceError,
+    InvalidEvidenceCaptureTimeError,
 )
 from tdp.modules.evidence.domain.model import (
+    REFERENCED_EVIDENCE_KINDS,
     Claim,
     ClaimClassification,
     EvidenceArtifact,
@@ -97,4 +99,47 @@ def test_unverified_claim_cannot_carry_a_derivation_rule() -> None:
             derivation_reference="rule:unsupported",
             relevant_document_types=("HLD",),
             asserted_by="Technical Writer",
+        )
+
+
+def test_referenced_semantic_evidence_kinds_are_canonical_and_immutable() -> None:
+    assert [item.value for item in REFERENCED_EVIDENCE_KINDS] == [
+        "USER_JOURNEY",
+        "DEPLOYMENT_RUNTIME",
+        "UAT_RESULT",
+    ]
+
+    artifact = EvidenceArtifact.create(
+        workspace_id="workspace-1",
+        project_id="project-1",
+        kind=EvidenceKind.USER_JOURNEY,
+        source_system=EvidenceSourceSystem.GOVERNED_REFERENCE,
+        source_reference="journey-session:checkout-v1",
+        origin_id="journey-checkout-v1",
+        checksum="c" * 64,
+        content_reference="evidence-manifest:journey-checkout-v1",
+        collection_method=EvidenceCollectionMethod.REFERENCE_REGISTRATION,
+        collected_by="Technical Writer",
+        captured_at=datetime(2026, 8, 12, 2, 0, tzinfo=UTC),
+    )
+
+    assert artifact.kind is EvidenceKind.USER_JOURNEY
+    assert artifact.source_system is EvidenceSourceSystem.GOVERNED_REFERENCE
+    assert artifact.collection_method is EvidenceCollectionMethod.REFERENCE_REGISTRATION
+
+
+def test_evidence_capture_time_requires_timezone() -> None:
+    with pytest.raises(InvalidEvidenceCaptureTimeError):
+        EvidenceArtifact.create(
+            workspace_id="workspace-1",
+            project_id="project-1",
+            kind=EvidenceKind.UAT_RESULT,
+            source_system=EvidenceSourceSystem.GOVERNED_REFERENCE,
+            source_reference="uat-run:uat-001",
+            origin_id="uat-001",
+            checksum="d" * 64,
+            content_reference="evidence-manifest:uat-001",
+            collection_method=EvidenceCollectionMethod.REFERENCE_REGISTRATION,
+            collected_by="Technical Writer",
+            captured_at=datetime(2026, 8, 12, 2, 0),
         )

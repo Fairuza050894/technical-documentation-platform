@@ -58,6 +58,22 @@ paths:
     return response.json()
 
 
+def referenced_evidence_payload(
+    kind: str,
+    *,
+    origin_id: str,
+    checksum_character: str,
+) -> dict[str, object]:
+    return {
+        "kind": kind,
+        "source_reference": f"governed-source:{origin_id}",
+        "origin_id": origin_id,
+        "checksum": checksum_character * 64,
+        "content_reference": f"evidence-manifest:{origin_id}",
+        "captured_at": "2026-08-12T02:00:00+00:00",
+    }
+
+
 def test_source_and_snapshot_become_checksum_backed_evidence(tmp_path: Path) -> None:
     client = build_client(tmp_path)
     project = create_project(client)
@@ -202,3 +218,114 @@ def test_archived_project_keeps_evidence_and_claims_readable_but_blocks_mutation
     )
     assert blocked_evidence.status_code == 409
     assert blocked_evidence.json()["error"]["code"] == "EVIDENCE_PROJECT_ARCHIVED"
+
+
+def test_referenced_semantic_evidence_registration_is_governed_and_idempotent(
+    tmp_path: Path,
+) -> None:
+    client = build_client(tmp_path)
+    project = create_project(client)
+    project_id = str(project["id"])
+
+    created: list[dict[str, object]] = []
+    for kind, origin_id, checksum_character in (
+        ("USER_JOURNEY", "journey-checkout-v1", "a"),
+        ("DEPLOYMENT_RUNTIME", "deployment-release-v1", "b"),
+        ("UAT_RESULT", "uat-release-v1", "c"),
+    ):
+        payload = referenced_evidence_payload(
+            kind,
+            origin_id=origin_id,
+            checksum_character=checksum_character,
+        )
+        response = client.post(
+            f"/api/projects/{project_id}/evidence/references",
+            json=payload,
+        )
+        assert response.status_code == 201
+        artifact = response.json()
+        assert artifact["kind"] == kind
+        assert artifact["source_system"] == "GOVERNED_REFERENCE"
+        assert artifact["collection_method"] == "REFERENCE_REGISTRATION"
+        created.append(artifact)
+
+        repeated = client.post(
+            f"/api/projects/{project_id}/evidence/references",
+            json=payload,
+        )
+        assert repeated.status_code == 201
+        assert repeated.json()["id"] == artifact["id"]
+
+    collection = client.get(f"/api/projects/{project_id}/evidence")
+    assert collection.status_code == 200
+    assert collection.json()["total"] == 3
+    assert {item["id"] for item in collection.json()["items"]} == {
+        str(item["id"]) for item in created
+    }
+
+
+def test_referenced_evidence_rejects_conflicting_origin_and_metadata_spoofing(
+    tmp_path: Path,
+) -> None:
+    client = build_client(tmp_path)
+    project = create_project(client)
+    project_id = str(project["id"])
+    payload = referenced_evidence_payload(
+        "USER_JOURNEY",
+        origin_id="journey-conflict-v1",
+        checksum_character="d",
+    )
+
+    first = client.post(
+        f"/api/projects/{project_id}/evidence/references",
+        json=payload,
+    )
+    assert first.status_code == 201
+
+    conflicting = dict(payload)
+    conflicting["checksum"] = "e" * 64
+    conflict = client.post(
+        f"/api/projects/{project_id}/evidence/references",
+        json=conflicting,
+    )
+    assert conflict.status_code == 409
+    assert conflict.json()["error"]["code"] == "EVIDENCE_ORIGIN_CONFLICT"
+
+    spoofed = dict(payload)
+    spoofed["source_system"] = "API_CATALOG"
+    spoofed["collection_method"] = "DETERMINISTIC_NORMALIZATION"
+    spoof = client.post(
+        f"/api/projects/{project_id}/evidence/references",
+        json=spoofed,
+    )
+    assert spoof.status_code == 422
+
+    unsupported = referenced_evidence_payload(
+        "SOURCE_ARTIFACT",
+        origin_id="unsupported-source-v1",
+        checksum_character="f",
+    )
+    rejected = client.post(
+        f"/api/projects/{project_id}/evidence/references",
+        json=unsupported,
+    )
+    assert rejected.status_code == 422
+
+
+def test_archived_project_blocks_referenced_semantic_evidence(tmp_path: Path) -> None:
+    client = build_client(tmp_path)
+    project = create_project(client)
+    project_id = str(project["id"])
+    assert client.post(f"/api/projects/{project_id}/archive").status_code == 200
+
+    response = client.post(
+        f"/api/projects/{project_id}/evidence/references",
+        json=referenced_evidence_payload(
+            "UAT_RESULT",
+            origin_id="uat-after-archive",
+            checksum_character="a",
+        ),
+    )
+
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "EVIDENCE_PROJECT_ARCHIVED"

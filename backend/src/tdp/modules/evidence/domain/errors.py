@@ -15,12 +15,24 @@ class InvalidEvidenceChecksumError(EvidenceError):
     code = "INVALID_EVIDENCE_CHECKSUM"
 
 
+class InvalidEvidenceKindError(EvidenceError):
+    code = "INVALID_EVIDENCE_KIND"
+
+
+class InvalidEvidenceCaptureTimeError(EvidenceError):
+    code = "INVALID_EVIDENCE_CAPTURE_TIME"
+
+
 class InvalidEvidenceReferenceError(EvidenceError):
     code = "INVALID_EVIDENCE_REFERENCE"
 
 
 class EvidenceArtifactNotFoundError(EvidenceError):
     code = "EVIDENCE_ARTIFACT_NOT_FOUND"
+
+
+class EvidenceOriginConflictError(EvidenceError):
+    code = "EVIDENCE_ORIGIN_CONFLICT"
 
 
 class EvidenceProjectNotFoundError(EvidenceError):

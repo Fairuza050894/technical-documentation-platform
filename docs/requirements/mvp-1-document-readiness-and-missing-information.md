@@ -44,24 +44,30 @@ No probabilistic score or AI judgment participates in the state calculation.
 
 ## Policy version
 
-The initial policy is `document-readiness-v1`.
+The current policy is `document-readiness-v2`.
+
+Version 2 preserves the existing document semantics while narrowing technical-evidence rules so
+new semantic evidence cannot accidentally satisfy HLD or Developer Onboarding requirements.
 
 The policy defines profiles for all ten 0010A enterprise document types in canonical registry
 order. Profile coverage is locked by automated tests.
 
 ## Current evidence capability
 
-0010B currently provides only:
+The governed Evidence registry currently provides:
 
 - `SOURCE_ARTIFACT`;
-- `CATALOG_SNAPSHOT`.
+- `CATALOG_SNAPSHOT`;
+- `USER_JOURNEY`;
+- `DEPLOYMENT_RUNTIME`;
+- `UAT_RESULT`.
 
-The readiness engine must not pretend those evidence kinds prove operational procedures, user
-journeys, deployment/runtime state, or UAT execution.
+`USER_JOURNEY`, `DEPLOYMENT_RUNTIME`, and `UAT_RESULT` are immutable referenced provenance
+manifests. They satisfy only readiness rules that explicitly request those semantic kinds.
 
-Accordingly, the first policy explicitly reports future evidence requirements such as
-`USER_JOURNEY`, `DEPLOYMENT_RUNTIME`, and `UAT_RESULT` as missing inputs instead of fabricating
-coverage.
+HLD and Developer Onboarding require one of the technical kinds `SOURCE_ARTIFACT` or
+`CATALOG_SNAPSHOT`; user-journey, deployment, or UAT evidence alone must not satisfy those
+technical-evidence blockers.
 
 ## Initial profile semantics
 
@@ -116,7 +122,8 @@ collectors, live conformance, or MCP.
 - no blockers/warnings produce `READY`;
 - eligibility is exactly the absence of blockers;
 - As-Built inference does not substitute for observed evidence-backed claims;
-- unsupported evidence categories remain explicit missing-information findings;
+- semantic evidence satisfies only explicitly matching evidence-kind rules;
+- technical-evidence profiles are not unlocked by journey, deployment, or UAT evidence alone;
 - Project Handover requires approved required-document versions;
 - project summary exposes ready/partial/not-ready and required-policy totals;
 - archived Project readiness remains readable;

@@ -10,6 +10,7 @@ from tdp.modules.evidence.domain.errors import (
     InvalidClaimIdError,
     InvalidClaimStatementError,
     InvalidEvidenceArtifactIdError,
+    InvalidEvidenceCaptureTimeError,
     InvalidEvidenceChecksumError,
     InvalidEvidenceReferenceError,
 )
@@ -20,16 +21,28 @@ _CHECKSUM_PATTERN = re.compile(r"^[a-f0-9]{64}$")
 class EvidenceKind(StrEnum):
     SOURCE_ARTIFACT = "SOURCE_ARTIFACT"
     CATALOG_SNAPSHOT = "CATALOG_SNAPSHOT"
+    USER_JOURNEY = "USER_JOURNEY"
+    DEPLOYMENT_RUNTIME = "DEPLOYMENT_RUNTIME"
+    UAT_RESULT = "UAT_RESULT"
+
+
+REFERENCED_EVIDENCE_KINDS: tuple[EvidenceKind, ...] = (
+    EvidenceKind.USER_JOURNEY,
+    EvidenceKind.DEPLOYMENT_RUNTIME,
+    EvidenceKind.UAT_RESULT,
+)
 
 
 class EvidenceSourceSystem(StrEnum):
     SOURCE_REGISTRY = "SOURCE_REGISTRY"
     API_CATALOG = "API_CATALOG"
+    GOVERNED_REFERENCE = "GOVERNED_REFERENCE"
 
 
 class EvidenceCollectionMethod(StrEnum):
     SOURCE_IMPORT = "SOURCE_IMPORT"
     DETERMINISTIC_NORMALIZATION = "DETERMINISTIC_NORMALIZATION"
+    REFERENCE_REGISTRATION = "REFERENCE_REGISTRATION"
 
 
 class ClaimClassification(StrEnum):
@@ -129,6 +142,10 @@ class EvidenceArtifact:
         feature_id: str | None = None,
         now: datetime | None = None,
     ) -> "EvidenceArtifact":
+        if captured_at.tzinfo is None or captured_at.utcoffset() is None:
+            raise InvalidEvidenceCaptureTimeError(
+                "Evidence capture time must include an explicit timezone."
+            )
         return cls(
             id=EvidenceArtifactId.new(),
             workspace_id=_required_text(workspace_id, "Workspace reference", 100),

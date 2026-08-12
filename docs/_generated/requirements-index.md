@@ -35,6 +35,7 @@ This index reports the requirement documents currently stored in the repository.
 | mvp-1-project-centric-workbench.md | MVP 1 Requirement: Project-Centric Workbench | 0 | 15 | Yes |
 | mvp-1-project-documentation-workbench-integration.md | MVP 1 — Project Documentation Workbench Integration | 0 | 0 | Yes |
 | mvp-1-project-management.md | MVP 1 — Project Management Requirements | 5 | 0 | Yes |
+| mvp-1-referenced-semantic-evidence-capability.md | MVP 1 — Referenced Semantic Evidence Capability | 0 | 5 | Yes |
 | mvp-1-technical-source-overview.md | MVP 1 Requirement: Technical Source Overview | 0 | 7 | Yes |
 | mvp-1-visual-refinement-r1.md | MVP 1 — Visual Refinement R1 | 0 | 7 | Yes |
 | mvp-1-visual-refinement-r2.md | MVP 1 Visual Refinement R2 | 0 | 9 | No |
