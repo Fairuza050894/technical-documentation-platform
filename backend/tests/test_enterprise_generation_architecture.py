@@ -70,3 +70,43 @@ def test_as_built_extension_does_not_create_a_parallel_generation_service() -> N
     assert "GenerateAsBuilt" not in service
     assert "DocumentType.AS_BUILT" not in service
     assert "AS_BUILT" not in adapter
+
+
+def test_hld_evidence_selection_remains_generic_and_does_not_recreate_readiness_policy() -> None:
+    service = (_DOCUMENTS / "application" / "enterprise_generation_service.py").read_text(
+        encoding="utf-8"
+    )
+    adapter = (_DOCUMENTS / "infrastructure" / "enterprise_generation_inputs.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert "DocumentType.HLD" not in service
+    assert "DocumentType.HLD" not in adapter
+    assert "profile.accepted_evidence_kinds" in adapter
+    assert "EvidenceKind.CATALOG_SNAPSHOT" in adapter
+    assert "EvidenceKind.SOURCE_ARTIFACT" in adapter
+    assert "HLD_TECHNICAL_EVIDENCE_REQUIRED" not in adapter
+
+
+def test_source_only_document_provenance_is_nullable_end_to_end() -> None:
+    repository_root = _BACKEND.parent
+    model = (_DOCUMENTS / "domain" / "model.py").read_text(encoding="utf-8")
+    dto = (_DOCUMENTS / "application" / "dto.py").read_text(encoding="utf-8")
+    router = (_DOCUMENTS / "presentation" / "http" / "router.py").read_text(encoding="utf-8")
+    repository = (_DOCUMENTS / "infrastructure" / "sqlite_repository.py").read_text(
+        encoding="utf-8"
+    )
+    frontend_types = (
+        repository_root / "frontend" / "src" / "modules" / "documents" / "types.ts"
+    ).read_text(encoding="utf-8")
+    workspace = (
+        repository_root / "frontend" / "src" / "modules" / "documents" / "DocumentsWorkspace.tsx"
+    ).read_text(encoding="utf-8")
+
+    assert "target_run_id: str | None" in model
+    assert "target_run_id: str | None" in dto
+    assert "target_run_id: str | None" in router
+    assert "target_run_id TEXT," in repository
+    assert "_migrate_nullable_target_run_id" in repository
+    assert "target_run_id: string | null" in frontend_types
+    assert "Source evidence" in workspace

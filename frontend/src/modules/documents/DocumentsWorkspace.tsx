@@ -451,7 +451,7 @@ export function DocumentsWorkspace({
                 <tr>
                   <th>Version</th>
                   <th>Status</th>
-                  <th>Source snapshot</th>
+                  <th>Generation basis</th>
                   <th>Revision</th>
                   <th>Generated</th>
                   <th className="table-action-column">Action</th>
@@ -490,7 +490,11 @@ export function DocumentsWorkspace({
                       )}
                     </td>
                     <td>
-                      <code>{version.target_run_id.slice(0, 8)}</code>
+                      {version.target_run_id ? (
+                        <code>{version.target_run_id.slice(0, 8)}</code>
+                      ) : (
+                        <span>Source evidence</span>
+                      )}
                       <span className="table-secondary-text">
                         Baseline: {version.baseline_run_id?.slice(0, 8) ?? "None"}
                       </span>

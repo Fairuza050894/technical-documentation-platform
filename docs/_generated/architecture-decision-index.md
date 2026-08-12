@@ -28,3 +28,4 @@ Architecture decisions are human-governed. This index is generated from `docs/de
 | ADR-021 | ADR-021: Integrate Document Governance into the Existing Project Overview | Accepted | 2026-08-10 |
 | ADR-022 | ADR-022: Establish Generic Enterprise Document Generation with LLD First | Accepted | 2026-08-10 |
 | ADR-023 | ADR-023: Extend Generic Enterprise Generation with Strict As-Built Facts | Accepted | 2026-08-11 |
+| ADR-024 | ADR-024: Preserve HLD Any-Evidence Generation Eligibility | Accepted | 2026-08-11 |

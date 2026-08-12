@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS document_versions (
     document_id TEXT NOT NULL,
     project_id TEXT NOT NULL,
     source_id TEXT NOT NULL,
-    target_run_id TEXT NOT NULL,
+    target_run_id TEXT,
     baseline_run_id TEXT,
     document_type TEXT NOT NULL,
     document_format TEXT NOT NULL,
@@ -181,7 +181,92 @@ class SqliteDocumentRepository(DocumentRepository):
         with self._connect() as connection:
             connection.execute("PRAGMA journal_mode = WAL")
             connection.executescript(_SCHEMA)
+            self._migrate_nullable_target_run_id(connection)
             self._migrate_generated_documents(connection)
+
+    @staticmethod
+    def _migrate_nullable_target_run_id(connection: sqlite3.Connection) -> None:
+        columns = {
+            str(row["name"]): row
+            for row in connection.execute("PRAGMA table_info(document_versions)").fetchall()
+        }
+        target_column = columns.get("target_run_id")
+        if target_column is None or int(target_column["notnull"]) == 0:
+            return
+
+        connection.commit()
+        connection.execute("PRAGMA foreign_keys = OFF")
+        try:
+            connection.executescript(
+                """
+                BEGIN IMMEDIATE;
+                CREATE TABLE document_versions_nullable_target (
+                    id TEXT PRIMARY KEY,
+                    document_id TEXT NOT NULL,
+                    project_id TEXT NOT NULL,
+                    source_id TEXT NOT NULL,
+                    target_run_id TEXT,
+                    baseline_run_id TEXT,
+                    document_type TEXT NOT NULL,
+                    document_format TEXT NOT NULL,
+                    version_major INTEGER NOT NULL,
+                    version_minor INTEGER NOT NULL,
+                    status TEXT NOT NULL,
+                    title TEXT NOT NULL,
+                    file_name TEXT NOT NULL,
+                    content TEXT NOT NULL,
+                    checksum TEXT NOT NULL,
+                    operation_count INTEGER NOT NULL,
+                    schema_count INTEGER NOT NULL,
+                    breaking_change_count INTEGER NOT NULL,
+                    revision_reason TEXT NOT NULL,
+                    created_by TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    submitted_at TEXT,
+                    approved_at TEXT,
+                    superseded_at TEXT,
+                    UNIQUE(document_id, version_major, version_minor),
+                    UNIQUE(document_id, checksum),
+                    FOREIGN KEY(document_id) REFERENCES documents(id),
+                    FOREIGN KEY(project_id) REFERENCES projects(id),
+                    FOREIGN KEY(source_id) REFERENCES sources(id),
+                    FOREIGN KEY(target_run_id) REFERENCES catalog_sync_runs(id),
+                    FOREIGN KEY(baseline_run_id) REFERENCES catalog_sync_runs(id)
+                );
+                INSERT INTO document_versions_nullable_target (
+                    id, document_id, project_id, source_id, target_run_id,
+                    baseline_run_id, document_type, document_format,
+                    version_major, version_minor, status, title, file_name,
+                    content, checksum, operation_count, schema_count,
+                    breaking_change_count, revision_reason, created_by,
+                    created_at, updated_at, submitted_at, approved_at, superseded_at
+                )
+                SELECT
+                    id, document_id, project_id, source_id, target_run_id,
+                    baseline_run_id, document_type, document_format,
+                    version_major, version_minor, status, title, file_name,
+                    content, checksum, operation_count, schema_count,
+                    breaking_change_count, revision_reason, created_by,
+                    created_at, updated_at, submitted_at, approved_at, superseded_at
+                FROM document_versions;
+                DROP TABLE document_versions;
+                ALTER TABLE document_versions_nullable_target RENAME TO document_versions;
+                CREATE INDEX idx_document_versions_project_created
+                ON document_versions(project_id, created_at DESC, id DESC);
+                CREATE INDEX idx_document_versions_document_number
+                ON document_versions(document_id, version_major DESC, version_minor DESC);
+                CREATE INDEX idx_document_versions_status
+                ON document_versions(document_id, status, approved_at DESC);
+                COMMIT;
+                """
+            )
+        except Exception:
+            if connection.in_transaction:
+                connection.rollback()
+            raise
+        finally:
+            connection.execute("PRAGMA foreign_keys = ON")
 
     def _get_series(self, document_id: DocumentId) -> DocumentSeries | None:
         with self._connect() as connection:
@@ -594,13 +679,14 @@ class SqliteDocumentRepository(DocumentRepository):
 
     @staticmethod
     def _version_from_row(row: sqlite3.Row) -> DocumentVersion:
+        target_run_id = row["target_run_id"]
         baseline_run_id = row["baseline_run_id"]
         return DocumentVersion(
             id=DocumentVersionId.from_string(str(row["id"])),
             document_id=DocumentId.from_string(str(row["document_id"])),
             project_id=str(row["project_id"]),
             source_id=str(row["source_id"]),
-            target_run_id=str(row["target_run_id"]),
+            target_run_id=(str(target_run_id) if target_run_id is not None else None),
             baseline_run_id=(str(baseline_run_id) if baseline_run_id is not None else None),
             document_type=DocumentType(str(row["document_type"])),
             document_format=DocumentFormat(str(row["document_format"])),

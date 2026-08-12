@@ -125,6 +125,7 @@ def _context(
         source_checksum="a" * 64,
         snapshot_completed_at="2026-08-10T10:00:00+00:00",
         primary_evidence_id="evidence-1",
+        primary_evidence_kind="CATALOG_SNAPSHOT",
         available_snapshot_count=1,
         evidence=(
             GenerationEvidenceFact(

@@ -7,14 +7,20 @@ export type DocumentStatus =
 
 export type DocumentSectionChangeKind = "ADDED" | "MODIFIED" | "REMOVED";
 
+export type GeneratedDocumentType =
+  | "TECHNICAL_SOURCE_OVERVIEW"
+  | "HLD"
+  | "LLD"
+  | "AS_BUILT";
+
 export interface GeneratedDocumentSummary {
   id: string;
   document_id: string;
   project_id: string;
   source_id: string;
-  target_run_id: string;
+  target_run_id: string | null;
   baseline_run_id: string | null;
-  document_type: "TECHNICAL_SOURCE_OVERVIEW";
+  document_type: GeneratedDocumentType;
   document_format: "MARKDOWN";
   version: string;
   status: DocumentStatus;

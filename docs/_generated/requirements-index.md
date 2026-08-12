@@ -29,6 +29,7 @@ This index reports the requirement documents currently stored in the repository.
 | mvp-1-frontend-shared-form-ownership.md | MVP 1 Shared Form CSS Ownership | 0 | 6 | Yes |
 | mvp-1-frontend-shell-overview-ownership.md | MVP 1 Application Shell and Operational Overview CSS Ownership | 0 | 0 | Yes |
 | mvp-1-frontend-table-page-ownership.md | MVP 1 Table and Page Primitive CSS Ownership | 0 | 0 | Yes |
+| mvp-1-hld-hybrid-enterprise-generation-profile.md | MVP 1 — HLD Hybrid Enterprise Generation Profile | 0 | 0 | Yes |
 | mvp-1-openapi-source-management.md | MVP 1 — OpenAPI Source Management | 0 | 10 | No |
 | mvp-1-product-ui-foundation.md | MVP 1 Requirement: Product UI Foundation and Operational Overview | 0 | 11 | Yes |
 | mvp-1-project-centric-workbench.md | MVP 1 Requirement: Project-Centric Workbench | 0 | 15 | Yes |

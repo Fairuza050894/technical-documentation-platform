@@ -207,7 +207,7 @@ class DocumentVersion:
     document_id: DocumentId
     project_id: str
     source_id: str
-    target_run_id: str
+    target_run_id: str | None
     baseline_run_id: str | None
     document_type: DocumentType
     document_format: DocumentFormat
@@ -235,7 +235,7 @@ class DocumentVersion:
         document_id: DocumentId,
         project_id: str,
         source_id: str,
-        target_run_id: str,
+        target_run_id: str | None,
         baseline_run_id: str | None,
         version_number: DocumentVersionNumber,
         title: str,

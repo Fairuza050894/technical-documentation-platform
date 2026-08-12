@@ -52,6 +52,7 @@ def _context() -> EnterpriseGenerationContext:
         source_checksum="a" * 64,
         snapshot_completed_at="2026-08-10T10:00:00+00:00",
         primary_evidence_id="evidence-1",
+        primary_evidence_kind="CATALOG_SNAPSHOT",
         available_snapshot_count=1,
         evidence=(
             GenerationEvidenceFact(
@@ -185,3 +186,106 @@ def test_as_built_renderer_keeps_only_observed_statements_factual() -> None:
     assert "INFERRED As-Built claims excluded from factual sections: **1**." in first
     assert "UNVERIFIED As-Built claims excluded from factual sections: **1**." in first
     assert "`/paths/~1orders/get`" in first
+
+
+def test_hld_renderer_supports_source_only_evidence_without_inventing_catalog_details() -> None:
+    profile = enterprise_generation_profile(DocumentType.HLD)
+    assert profile is not None
+    base = _context()
+    context = replace(
+        base,
+        profile=profile,
+        readiness=GenerationReadinessSnapshot(
+            policy_version="document-readiness-v1",
+            state="PARTIALLY_READY",
+            eligible=True,
+            findings=(
+                GenerationReadinessFinding(
+                    rule_code="HLD_GOVERNED_CONTEXT_REQUIRED",
+                    severity="WARNING",
+                    message="Governed architectural context is not yet complete.",
+                    missing_input="governed-hld-context",
+                    remediation="Add an observed or deterministically inferred HLD claim.",
+                    supporting_references=(),
+                ),
+            ),
+        ),
+        target_run_id=None,
+        snapshot_completed_at=None,
+        primary_evidence_id="source-evidence-1",
+        primary_evidence_kind="SOURCE_ARTIFACT",
+        available_snapshot_count=0,
+        evidence=(
+            GenerationEvidenceFact(
+                id="source-evidence-1",
+                kind="SOURCE_ARTIFACT",
+                checksum="c" * 64,
+                source_reference="source:source-1",
+                content_reference="source-artifact:source-1",
+                captured_at="2026-08-10T09:00:00+00:00",
+            ),
+        ),
+        claims=(
+            GenerationClaimFact(
+                id="claim-hld-unverified",
+                classification="UNVERIFIED",
+                statement="Production uses an undocumented active-active topology.",
+                evidence_ids=(),
+                derivation_reference="",
+            ),
+        ),
+        operations=(),
+        schemas=(),
+    )
+
+    renderer = DeterministicEnterpriseMarkdownRenderer()
+    first = renderer.render(context)
+    second = renderer.render(context)
+
+    assert first == second
+    assert "# High Level Design: Documentation Platform" in first
+    assert "Primary evidence kind | `SOURCE_ARTIFACT`" in first
+    assert "Not applicable — source evidence" in first
+    assert "HLD_GOVERNED_CONTEXT_REQUIRED" in first
+    assert "no Catalog snapshot exists" in first
+    assert "does not invent a synchronization or implementation detail" in first
+    assert "Production uses an undocumented active-active topology." not in first
+    assert "UNVERIFIED HLD-relevant claims excluded from factual sections: **1**." in first
+    assert "`/paths/~1orders/get`" not in first
+
+
+def test_hld_renderer_labels_inferred_architectural_context() -> None:
+    profile = enterprise_generation_profile(DocumentType.HLD)
+    assert profile is not None
+    base = _context()
+    context = replace(
+        base,
+        profile=profile,
+        readiness=GenerationReadinessSnapshot(
+            policy_version="document-readiness-v1",
+            state="READY",
+            eligible=True,
+            findings=(),
+        ),
+        claims=(
+            GenerationClaimFact(
+                id="claim-hld-inferred",
+                classification="INFERRED",
+                statement="The API boundary suggests a commerce-facing service capability.",
+                evidence_ids=("evidence-1",),
+                derivation_reference="rule:api-boundary-capability-v1",
+            ),
+        ),
+    )
+
+    rendered = DeterministicEnterpriseMarkdownRenderer().render(context)
+
+    expected_inferred = " ".join(
+        (
+            "**Inferred** — The API boundary suggests a commerce-facing service",
+            "capability.",
+        )
+    )
+    assert expected_inferred in rendered
+    assert "rule:api-boundary-capability-v1" in rendered
+    assert "### Normalized API boundary" in rendered

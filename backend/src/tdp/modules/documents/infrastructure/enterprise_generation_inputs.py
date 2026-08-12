@@ -25,7 +25,7 @@ from tdp.modules.documents.domain.generation import (
     GenerationReadinessFinding,
     GenerationReadinessSnapshot,
 )
-from tdp.modules.evidence.domain.model import Claim, EvidenceArtifact
+from tdp.modules.evidence.domain.model import Claim, EvidenceArtifact, EvidenceKind
 from tdp.modules.evidence.domain.repository import EvidenceRepository
 from tdp.modules.projects.domain.model import Project, ProjectId, ProjectStatus
 from tdp.modules.projects.domain.repository import ProjectRepository
@@ -88,37 +88,57 @@ class RepositoryBackedEnterpriseGenerationInputProvider:
         project = await self._require_writable_project(project_id)
         readiness = await self.readiness(project_id, profile)
         artifacts = await self._evidence_repository.list_artifacts_by_project(project_id)
+        accepted_evidence_kinds = set(profile.accepted_evidence_kinds)
         primary_candidates = [
-            artifact
-            for artifact in artifacts
-            if artifact.kind.value == profile.primary_evidence_kind
+            artifact for artifact in artifacts if artifact.kind.value in accepted_evidence_kinds
         ]
         if not primary_candidates:
+            accepted = ", ".join(profile.accepted_evidence_kinds)
             raise InvalidDocumentGenerationError(
-                f"{profile.display_name} requires {profile.primary_evidence_kind} evidence."
+                f"{profile.display_name} requires one of these evidence kinds: {accepted}."
             )
         primary = max(primary_candidates, key=_artifact_sort_key)
 
-        run = await self._catalog_repository.get_run(
-            SynchronizationId.from_string(primary.origin_id)
-        )
-        if run is None or run.project_id != project_id:
-            raise InvalidDocumentGenerationError(
-                "The selected evidence no longer resolves to a Project synchronization."
+        if primary.kind is EvidenceKind.CATALOG_SNAPSHOT:
+            run = await self._catalog_repository.get_run(
+                SynchronizationId.from_string(primary.origin_id)
             )
-        if run.status is not SynchronizationStatus.COMPLETED or run.completed_at is None:
-            raise InvalidDocumentGenerationError(
-                "Enterprise generation requires a completed synchronization evidence origin."
-            )
+            if run is None or run.project_id != project_id:
+                raise InvalidDocumentGenerationError(
+                    "The selected evidence no longer resolves to a Project synchronization."
+                )
+            if run.status is not SynchronizationStatus.COMPLETED or run.completed_at is None:
+                raise InvalidDocumentGenerationError(
+                    "Enterprise generation requires a completed synchronization evidence origin."
+                )
 
-        source = await self._source_repository.get(SourceId.from_string(run.source_id))
-        if source is None:
-            raise InvalidDocumentGenerationError(
-                "The selected synchronization source could not be resolved."
-            )
+            source = await self._source_repository.get(SourceId.from_string(run.source_id))
+            if source is None or str(source.project_id) != project_id:
+                raise InvalidDocumentGenerationError(
+                    "The selected synchronization source could not be resolved for this Project."
+                )
 
-        operations = await self._catalog_repository.list_operations_by_run(run.id)
-        schemas = await self._catalog_repository.list_schemas_by_run(run.id)
+            operations = await self._catalog_repository.list_operations_by_run(run.id)
+            schemas = await self._catalog_repository.list_schemas_by_run(run.id)
+            target_run_id: str | None = str(run.id)
+            source_checksum = run.source_checksum
+            snapshot_completed_at: str | None = run.completed_at.isoformat()
+        elif primary.kind is EvidenceKind.SOURCE_ARTIFACT:
+            source = await self._source_repository.get(SourceId.from_string(primary.origin_id))
+            if source is None or str(source.project_id) != project_id:
+                raise InvalidDocumentGenerationError(
+                    "The selected source evidence could not be resolved for this Project."
+                )
+
+            operations = []
+            schemas = []
+            target_run_id = None
+            source_checksum = str(source.checksum)
+            snapshot_completed_at = None
+        else:
+            raise InvalidDocumentGenerationError(
+                f"Unsupported enterprise generation evidence kind: {primary.kind.value}."
+            )
         claims = await self._evidence_repository.list_claims_by_project(project_id)
         relevant_claims = tuple(
             sorted(
@@ -149,11 +169,14 @@ class RepositoryBackedEnterpriseGenerationInputProvider:
             api_title=source.api_title,
             api_version=source.api_version,
             openapi_version=source.openapi_version,
-            target_run_id=str(run.id),
-            source_checksum=run.source_checksum,
-            snapshot_completed_at=run.completed_at.isoformat(),
+            target_run_id=target_run_id,
+            source_checksum=source_checksum,
+            snapshot_completed_at=snapshot_completed_at,
             primary_evidence_id=str(primary.id),
-            available_snapshot_count=len(primary_candidates),
+            primary_evidence_kind=primary.kind.value,
+            available_snapshot_count=sum(
+                artifact.kind is EvidenceKind.CATALOG_SNAPSHOT for artifact in artifacts
+            ),
             evidence=tuple(_evidence_fact(item) for item in relevant_evidence),
             claims=tuple(_claim_fact(item) for item in relevant_claims),
             operations=tuple(_operation_fact(item) for item in operations),

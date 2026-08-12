@@ -10,7 +10,7 @@ class DocumentSummaryDto:
     document_id: str
     project_id: str
     source_id: str
-    target_run_id: str
+    target_run_id: str | None
     baseline_run_id: str | None
     document_type: str
     document_format: str

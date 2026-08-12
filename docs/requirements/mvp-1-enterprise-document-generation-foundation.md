@@ -20,18 +20,24 @@ implemented and proven.
 
 ## Generic generation profile
 
-Profile schema version: `enterprise-generation-profile-v1`.
+Profile schema version: `enterprise-generation-profile-v2`.
 
 The initial profile is:
 
 - profile key: `enterprise-lld-v1`;
 - document type: `LLD`;
-- primary evidence kind: `CATALOG_SNAPSHOT`;
+- accepted evidence kinds: `CATALOG_SNAPSHOT`;
+- compatibility primary evidence kind: `CATALOG_SNAPSHOT`;
 - rendered governed claim classifications: `OBSERVED`, `INFERRED`;
 - output format: Markdown.
 
 The generation service resolves a profile by canonical `DocumentType`. Unsupported enterprise
 types fail explicitly instead of silently falling back to another generator.
+
+The v2 profile contract permits an ordered set of accepted evidence kinds so later document types
+can preserve canonical readiness rules that are broader than one Catalog snapshot. The
+`primary_evidence_kind` property remains a compatibility view of the first accepted kind; the
+cross-context adapter selects deterministically from the full accepted set.
 
 ## Readiness gate
 

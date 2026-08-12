@@ -43,6 +43,7 @@ This register inventories Markdown documentation. Formal approval must be record
 | Unassigned | ADR-021: Integrate Document Governance into the Existing Project Overview | Decisions | Accepted | `docs/decisions/ADR-021-integrate-document-governance-into-project-overview.md` (Not specified) |
 | Unassigned | ADR-022: Establish Generic Enterprise Document Generation with LLD First | Decisions | Accepted | `docs/decisions/ADR-022-generic-enterprise-generation-lld-first.md` (Not specified) |
 | Unassigned | ADR-023: Extend Generic Enterprise Generation with Strict As-Built Facts | Decisions | Accepted | `docs/decisions/ADR-023-as-built-observed-fact-generation.md` (Not specified) |
+| Unassigned | ADR-024: Preserve HLD Any-Evidence Generation Eligibility | Decisions | Accepted | `docs/decisions/ADR-024-preserve-hld-any-evidence-generation-eligibility.md` (Not specified) |
 | Unassigned | Coding Standards | Engineering | Not specified | `docs/engineering/coding-standards.md` (Not specified) |
 | Unassigned | Definition of Done | Engineering | Not specified | `docs/engineering/definition-of-done.md` (Not specified) |
 | TDP-GOV-002 | Document Control | Governance | Controlled draft | `docs/governance/document-control.md` (Internal project documentation) |
@@ -88,6 +89,7 @@ This register inventories Markdown documentation. Formal approval must be record
 | Unassigned | MVP 1 Shared Form CSS Ownership | Requirements | Not specified | `docs/requirements/mvp-1-frontend-shared-form-ownership.md` (Not specified) |
 | Unassigned | MVP 1 Application Shell and Operational Overview CSS Ownership | Requirements | Not specified | `docs/requirements/mvp-1-frontend-shell-overview-ownership.md` (Not specified) |
 | Unassigned | MVP 1 Table and Page Primitive CSS Ownership | Requirements | Not specified | `docs/requirements/mvp-1-frontend-table-page-ownership.md` (Not specified) |
+| Unassigned | MVP 1 — HLD Hybrid Enterprise Generation Profile | Requirements | Not specified | `docs/requirements/mvp-1-hld-hybrid-enterprise-generation-profile.md` (Not specified) |
 | Unassigned | MVP 1 — OpenAPI Source Management | Requirements | Not specified | `docs/requirements/mvp-1-openapi-source-management.md` (Not specified) |
 | Unassigned | MVP 1 Requirement: Product UI Foundation and Operational Overview | Requirements | Not specified | `docs/requirements/mvp-1-product-ui-foundation.md` (Not specified) |
 | Unassigned | MVP 1 Requirement: Project-Centric Workbench | Requirements | Not specified | `docs/requirements/mvp-1-project-centric-workbench.md` (Not specified) |

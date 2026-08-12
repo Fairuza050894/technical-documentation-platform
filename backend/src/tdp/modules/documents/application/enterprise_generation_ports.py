@@ -66,10 +66,11 @@ class EnterpriseGenerationContext:
     api_title: str
     api_version: str
     openapi_version: str
-    target_run_id: str
+    target_run_id: str | None
     source_checksum: str
-    snapshot_completed_at: str
+    snapshot_completed_at: str | None
     primary_evidence_id: str
+    primary_evidence_kind: str
     available_snapshot_count: int
     evidence: tuple[GenerationEvidenceFact, ...]
     claims: tuple[GenerationClaimFact, ...]
