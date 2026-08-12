@@ -48,3 +48,12 @@ of truth.
   coupling the Evidence domain to those technologies;
 - referenced evidence records provenance but does not itself prove semantic correctness;
 - access-control hardening can evolve independently from the Evidence kind and readiness contracts.
+
+## Follow-up: governed materialization
+
+ADR-026 refines the readiness consequence of this decision. Referenced semantic evidence remains
+valid provenance immediately after registration, but it does not satisfy generation-oriented
+readiness until a typed normalized materialization is checksum-verified and persisted.
+
+This refinement prevents an opaque content reference from being treated as though the platform had
+already obtained renderable governed facts.

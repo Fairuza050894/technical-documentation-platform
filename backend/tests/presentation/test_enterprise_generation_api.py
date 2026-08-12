@@ -144,7 +144,7 @@ def test_generation_is_blocked_with_canonical_readiness_details(tmp_path: Path) 
     assert payload["code"] == "ENTERPRISE_DOCUMENT_GENERATION_BLOCKED"
     assert payload["documentType"] == "LLD"
     assert payload["readinessState"] == "NOT_READY"
-    assert payload["policyVersion"] == "document-readiness-v2"
+    assert payload["policyVersion"] == "document-readiness-v3"
     assert payload["details"][0]["rule_code"] == "LLD_NORMALIZED_TECHNICAL_EVIDENCE_REQUIRED"
 
 
@@ -429,7 +429,7 @@ def test_hld_generation_remains_blocked_without_any_governed_evidence(tmp_path: 
     payload = response.json()["error"]
     assert payload["documentType"] == "HLD"
     assert payload["readinessState"] == "NOT_READY"
-    assert payload["policyVersion"] == "document-readiness-v2"
+    assert payload["policyVersion"] == "document-readiness-v3"
     assert any(
         item["rule_code"] == "HLD_TECHNICAL_EVIDENCE_REQUIRED" for item in payload["details"]
     )

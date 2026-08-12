@@ -30,3 +30,4 @@ Architecture decisions are human-governed. This index is generated from `docs/de
 | ADR-023 | ADR-023: Extend Generic Enterprise Generation with Strict As-Built Facts | Accepted | 2026-08-11 |
 | ADR-024 | ADR-024: Preserve HLD Any-Evidence Generation Eligibility | Accepted | 2026-08-11 |
 | ADR-025 | ADR-025: Expand Governed Evidence Capability Before More Generators | Accepted | 2026-08-12 |
+| ADR-026 | ADR-026: Materialize Semantic Evidence Before Generation | Accepted | 2026-08-12 |

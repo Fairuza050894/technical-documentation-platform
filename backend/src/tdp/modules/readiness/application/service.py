@@ -51,10 +51,14 @@ class ReadinessApplicationService:
             raise ReadinessProjectNotFoundError(f"Project {project_id} was not found.")
 
         evidence = await self._evidence_repository.list_artifacts_by_project(project_id)
+        materializations = await self._evidence_repository.list_materializations_by_project(
+            project_id
+        )
         claims = await self._evidence_repository.list_claims_by_project(project_id)
         versions = await self._document_repository.list_versions_by_project(project_id)
 
-        evidence_facts = _evidence_facts(evidence)
+        materialized_ids = {str(item.evidence_id) for item in materializations}
+        evidence_facts = _evidence_facts(evidence, materialized_ids)
         claim_facts = _claim_facts(claims)
         latest_versions = _latest_governed_versions(versions)
         document_facts = _document_facts(latest_versions)
@@ -113,11 +117,13 @@ class ReadinessApplicationService:
 
 def _evidence_facts(
     evidence: list[EvidenceArtifact],
+    materialized_ids: set[str],
 ) -> tuple[ReadinessEvidenceFact, ...]:
     return tuple(
         ReadinessEvidenceFact(
             reference=f"evidence:{item.id}",
             kind=item.kind.value,
+            materialized=str(item.id) in materialized_ids,
         )
         for item in evidence
     )

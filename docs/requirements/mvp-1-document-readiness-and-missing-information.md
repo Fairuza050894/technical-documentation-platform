@@ -44,10 +44,12 @@ No probabilistic score or AI judgment participates in the state calculation.
 
 ## Policy version
 
-The current policy is `document-readiness-v2`.
+The current policy is `document-readiness-v3`.
 
-Version 2 preserves the existing document semantics while narrowing technical-evidence rules so
-new semantic evidence cannot accidentally satisfy HLD or Developer Onboarding requirements.
+Version 2 narrowed technical-evidence rules so semantic evidence could not accidentally satisfy HLD
+or Developer Onboarding requirements. Version 3 additionally requires semantic evidence to have a
+checksum-verified typed materialization before it satisfies User Guide, Journey Map, Installation
+Guide, or UAT Evidence readiness.
 
 The policy defines profiles for all ten 0010A enterprise document types in canonical registry
 order. Profile coverage is locked by automated tests.
@@ -62,8 +64,10 @@ The governed Evidence registry currently provides:
 - `DEPLOYMENT_RUNTIME`;
 - `UAT_RESULT`.
 
-`USER_JOURNEY`, `DEPLOYMENT_RUNTIME`, and `UAT_RESULT` are immutable referenced provenance
-manifests. They satisfy only readiness rules that explicitly request those semantic kinds.
+`USER_JOURNEY`, `DEPLOYMENT_RUNTIME`, and `UAT_RESULT` begin as immutable referenced provenance
+records. Registration alone does not satisfy readiness. The artifact must also have a governed
+`semantic-evidence-manifest-v1` materialization whose canonical checksum matches the Evidence
+Artifact checksum.
 
 HLD and Developer Onboarding require one of the technical kinds `SOURCE_ARTIFACT` or
 `CATALOG_SNAPSHOT`; user-journey, deployment, or UAT evidence alone must not satisfy those
@@ -122,7 +126,9 @@ collectors, live conformance, or MCP.
 - no blockers/warnings produce `READY`;
 - eligibility is exactly the absence of blockers;
 - As-Built inference does not substitute for observed evidence-backed claims;
-- semantic evidence satisfies only explicitly matching evidence-kind rules;
+- materialized semantic evidence satisfies only explicitly matching evidence-kind rules;
+- registered but unmaterialized semantic evidence remains a blocker with an explainable
+  `UNMATERIALIZED` supporting reference;
 - technical-evidence profiles are not unlocked by journey, deployment, or UAT evidence alone;
 - Project Handover requires approved required-document versions;
 - project summary exposes ready/partial/not-ready and required-policy totals;

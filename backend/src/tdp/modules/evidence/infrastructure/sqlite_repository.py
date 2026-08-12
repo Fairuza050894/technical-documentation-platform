@@ -3,6 +3,7 @@ import sqlite3
 from datetime import datetime
 from pathlib import Path
 
+from tdp.modules.evidence.domain.materialization import EvidenceMaterialization
 from tdp.modules.evidence.domain.model import (
     Claim,
     ClaimClassification,
@@ -38,6 +39,21 @@ CREATE TABLE IF NOT EXISTS evidence_artifacts (
 );
 CREATE INDEX IF NOT EXISTS idx_evidence_project_captured
 ON evidence_artifacts(project_id, captured_at DESC, id ASC);
+
+CREATE TABLE IF NOT EXISTS evidence_materializations (
+    evidence_id TEXT PRIMARY KEY,
+    project_id TEXT NOT NULL,
+    evidence_kind TEXT NOT NULL,
+    schema_version TEXT NOT NULL,
+    canonical_manifest TEXT NOT NULL,
+    checksum TEXT NOT NULL,
+    materialized_by TEXT NOT NULL,
+    materialized_at TEXT NOT NULL,
+    FOREIGN KEY(evidence_id) REFERENCES evidence_artifacts(id),
+    FOREIGN KEY(project_id) REFERENCES projects(id)
+);
+CREATE INDEX IF NOT EXISTS idx_evidence_materializations_project
+ON evidence_materializations(project_id, materialized_at DESC, evidence_id ASC);
 
 CREATE TABLE IF NOT EXISTS evidence_claims (
     id TEXT PRIMARY KEY,
@@ -82,6 +98,18 @@ CREATE TRIGGER IF NOT EXISTS evidence_artifacts_immutable_delete
 BEFORE DELETE ON evidence_artifacts
 BEGIN
     SELECT RAISE(ABORT, 'evidence artifacts are immutable');
+END;
+
+CREATE TRIGGER IF NOT EXISTS evidence_materializations_immutable_update
+BEFORE UPDATE ON evidence_materializations
+BEGIN
+    SELECT RAISE(ABORT, 'evidence materializations are immutable');
+END;
+
+CREATE TRIGGER IF NOT EXISTS evidence_materializations_immutable_delete
+BEFORE DELETE ON evidence_materializations
+BEGIN
+    SELECT RAISE(ABORT, 'evidence materializations are immutable');
 END;
 
 CREATE TRIGGER IF NOT EXISTS evidence_claims_immutable_update
@@ -149,6 +177,27 @@ class SqliteEvidenceRepository(EvidenceRepository):
         project_id: str,
     ) -> list[EvidenceArtifact]:
         return await asyncio.to_thread(self._list_artifacts_by_project, project_id)
+
+    async def add_materialization(
+        self,
+        materialization: EvidenceMaterialization,
+    ) -> None:
+        await asyncio.to_thread(self._add_materialization, materialization)
+
+    async def get_materialization(
+        self,
+        artifact_id: EvidenceArtifactId,
+    ) -> EvidenceMaterialization | None:
+        return await asyncio.to_thread(self._get_materialization, artifact_id)
+
+    async def list_materializations_by_project(
+        self,
+        project_id: str,
+    ) -> list[EvidenceMaterialization]:
+        return await asyncio.to_thread(
+            self._list_materializations_by_project,
+            project_id,
+        )
 
     async def add_claim(self, claim: Claim) -> None:
         await asyncio.to_thread(self._add_claim, claim)
@@ -222,6 +271,57 @@ class SqliteEvidenceRepository(EvidenceRepository):
                 (project_id,),
             ).fetchall()
         return [self._artifact_from_row(row) for row in rows]
+
+    def _add_materialization(
+        self,
+        materialization: EvidenceMaterialization,
+    ) -> None:
+        with self._connect() as connection:
+            connection.execute(
+                """
+                INSERT INTO evidence_materializations (
+                    evidence_id, project_id, evidence_kind, schema_version,
+                    canonical_manifest, checksum, materialized_by, materialized_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    str(materialization.evidence_id),
+                    materialization.project_id,
+                    materialization.kind.value,
+                    materialization.schema_version,
+                    materialization.canonical_manifest,
+                    str(materialization.checksum),
+                    materialization.materialized_by,
+                    materialization.materialized_at.isoformat(),
+                ),
+            )
+
+    def _get_materialization(
+        self,
+        artifact_id: EvidenceArtifactId,
+    ) -> EvidenceMaterialization | None:
+        with self._connect() as connection:
+            row = connection.execute(
+                "SELECT * FROM evidence_materializations WHERE evidence_id = ?",
+                (str(artifact_id),),
+            ).fetchone()
+        return self._materialization_from_row(row) if row is not None else None
+
+    def _list_materializations_by_project(
+        self,
+        project_id: str,
+    ) -> list[EvidenceMaterialization]:
+        with self._connect() as connection:
+            rows = connection.execute(
+                """
+                SELECT * FROM evidence_materializations
+                WHERE project_id = ?
+                ORDER BY materialized_at DESC, evidence_id ASC
+                """,
+                (project_id,),
+            ).fetchall()
+        return [self._materialization_from_row(row) for row in rows]
 
     def _add_claim(self, claim: Claim) -> None:
         with self._connect() as connection:
@@ -328,6 +428,19 @@ class SqliteEvidenceRepository(EvidenceRepository):
             collected_by=str(row["collected_by"]),
             captured_at=datetime.fromisoformat(str(row["captured_at"])),
             created_at=datetime.fromisoformat(str(row["created_at"])),
+        )
+
+    @staticmethod
+    def _materialization_from_row(row: sqlite3.Row) -> EvidenceMaterialization:
+        return EvidenceMaterialization(
+            evidence_id=EvidenceArtifactId.from_string(str(row["evidence_id"])),
+            project_id=str(row["project_id"]),
+            kind=EvidenceKind(str(row["evidence_kind"])),
+            schema_version=str(row["schema_version"]),
+            canonical_manifest=str(row["canonical_manifest"]),
+            checksum=EvidenceChecksum(str(row["checksum"])),
+            materialized_by=str(row["materialized_by"]),
+            materialized_at=datetime.fromisoformat(str(row["materialized_at"])),
         )
 
     @staticmethod

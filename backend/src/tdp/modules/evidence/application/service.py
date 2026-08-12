@@ -2,7 +2,7 @@ import hashlib
 import json
 import re
 from dataclasses import asdict
-from datetime import datetime
+from datetime import UTC, datetime
 
 from tdp.modules.catalog.domain.model import (
     ApiOperation,
@@ -14,16 +14,23 @@ from tdp.modules.catalog.domain.repository import CatalogRepository
 from tdp.modules.documents.domain.governance import DOCUMENT_TYPE_REGISTRY
 from tdp.modules.evidence.application.commands import (
     CreateClaimCommand,
+    MaterializeEvidenceCommand,
     RegisterReferencedEvidenceCommand,
     RegisterSnapshotEvidenceCommand,
     RegisterSourceEvidenceCommand,
 )
-from tdp.modules.evidence.application.dto import ClaimDto, EvidenceArtifactDto
+from tdp.modules.evidence.application.dto import (
+    ClaimDto,
+    EvidenceArtifactDto,
+    EvidenceMaterializationDto,
+)
 from tdp.modules.evidence.domain.errors import (
     ClaimNotFoundError,
     EvidenceArtifactNotFoundError,
     EvidenceFeatureArchivedError,
     EvidenceFeatureNotFoundError,
+    EvidenceMaterializationConflictError,
+    EvidenceMaterializationNotFoundError,
     EvidenceOriginConflictError,
     EvidenceProjectArchivedError,
     EvidenceProjectNotFoundError,
@@ -36,7 +43,12 @@ from tdp.modules.evidence.domain.errors import (
     InvalidClaimDocumentTypeError,
     InvalidClaimEvidenceError,
     InvalidEvidenceKindError,
+    InvalidEvidenceManifestError,
     InvalidEvidenceReferenceError,
+)
+from tdp.modules.evidence.domain.materialization import (
+    EvidenceMaterialization,
+    canonicalize_semantic_evidence_manifest,
 )
 from tdp.modules.evidence.domain.model import (
     REFERENCED_EVIDENCE_KINDS,
@@ -201,6 +213,63 @@ class EvidenceApplicationService:
         )
         await self._repository.add_artifact(artifact)
         return EvidenceArtifactDto.from_domain(artifact)
+
+    async def materialize_referenced_evidence(
+        self,
+        command: MaterializeEvidenceCommand,
+    ) -> EvidenceMaterializationDto:
+        await self._require_project(command.project_id, writable=True)
+        artifact_id = EvidenceArtifactId.from_string(command.artifact_id)
+        artifact = await self._repository.get_artifact(artifact_id)
+        if artifact is None or artifact.project_id != command.project_id:
+            raise EvidenceArtifactNotFoundError(
+                f"Evidence artifact {command.artifact_id} was not found "
+                f"for project {command.project_id}."
+            )
+        if artifact.kind not in REFERENCED_EVIDENCE_KINDS:
+            raise InvalidEvidenceManifestError(
+                "Only referenced semantic Evidence Artifacts can be materialized."
+            )
+        await self._validate_feature(
+            command.project_id,
+            artifact.feature_id,
+            writable=True,
+        )
+
+        canonical = canonicalize_semantic_evidence_manifest(
+            artifact.kind,
+            command.manifest,
+        )
+        existing = await self._repository.get_materialization(artifact.id)
+        if existing is not None:
+            if existing.canonical_manifest != canonical.canonical_json:
+                raise EvidenceMaterializationConflictError(
+                    "The Evidence Artifact already has a different immutable materialization."
+                )
+            return EvidenceMaterializationDto.from_domain(existing)
+
+        materialization = EvidenceMaterialization.create(
+            evidence_id=artifact.id,
+            project_id=artifact.project_id,
+            expected_checksum=artifact.checksum,
+            manifest=canonical,
+            materialized_by=command.principal.audit_actor,
+            materialized_at=datetime.now(UTC),
+        )
+        await self._repository.add_materialization(materialization)
+        return EvidenceMaterializationDto.from_domain(materialization)
+
+    async def get_materialization(
+        self,
+        artifact_id: str,
+    ) -> EvidenceMaterializationDto:
+        parsed_id = EvidenceArtifactId.from_string(artifact_id)
+        materialization = await self._repository.get_materialization(parsed_id)
+        if materialization is None:
+            raise EvidenceMaterializationNotFoundError(
+                f"Evidence artifact {artifact_id} has no governed materialization."
+            )
+        return EvidenceMaterializationDto.from_domain(materialization)
 
     async def list_evidence(self, project_id: str) -> list[EvidenceArtifactDto]:
         await self._require_project(project_id, writable=False)

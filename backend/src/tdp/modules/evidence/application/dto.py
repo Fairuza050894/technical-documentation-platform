@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from tdp.modules.evidence.domain.materialization import EvidenceMaterialization
 from tdp.modules.evidence.domain.model import Claim, EvidenceArtifact
 
 
@@ -37,6 +38,32 @@ class EvidenceArtifactDto:
             collected_by=artifact.collected_by,
             captured_at=artifact.captured_at.isoformat(),
             created_at=artifact.created_at.isoformat(),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class EvidenceMaterializationDto:
+    evidence_id: str
+    project_id: str
+    kind: str
+    schema_version: str
+    checksum: str
+    materialized_by: str
+    materialized_at: str
+
+    @classmethod
+    def from_domain(
+        cls,
+        materialization: EvidenceMaterialization,
+    ) -> "EvidenceMaterializationDto":
+        return cls(
+            evidence_id=str(materialization.evidence_id),
+            project_id=materialization.project_id,
+            kind=materialization.kind.value,
+            schema_version=materialization.schema_version,
+            checksum=str(materialization.checksum),
+            materialized_by=materialization.materialized_by,
+            materialized_at=materialization.materialized_at.isoformat(),
         )
 
 

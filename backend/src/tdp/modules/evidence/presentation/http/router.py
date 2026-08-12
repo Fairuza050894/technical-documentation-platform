@@ -8,11 +8,16 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
 from tdp.modules.evidence.application.commands import (
     CreateClaimCommand,
+    MaterializeEvidenceCommand,
     RegisterReferencedEvidenceCommand,
     RegisterSnapshotEvidenceCommand,
     RegisterSourceEvidenceCommand,
 )
-from tdp.modules.evidence.application.dto import ClaimDto, EvidenceArtifactDto
+from tdp.modules.evidence.application.dto import (
+    ClaimDto,
+    EvidenceArtifactDto,
+    EvidenceMaterializationDto,
+)
 from tdp.modules.evidence.application.service import EvidenceApplicationService
 from tdp.modules.evidence.domain.errors import (
     ClaimNotFoundError,
@@ -20,6 +25,9 @@ from tdp.modules.evidence.domain.errors import (
     EvidenceError,
     EvidenceFeatureArchivedError,
     EvidenceFeatureNotFoundError,
+    EvidenceMaterializationChecksumMismatchError,
+    EvidenceMaterializationConflictError,
+    EvidenceMaterializationNotFoundError,
     EvidenceOriginConflictError,
     EvidenceProjectArchivedError,
     EvidenceProjectNotFoundError,
@@ -38,6 +46,7 @@ from tdp.modules.evidence.domain.errors import (
     InvalidEvidenceCaptureTimeError,
     InvalidEvidenceChecksumError,
     InvalidEvidenceKindError,
+    InvalidEvidenceManifestError,
     InvalidEvidenceReferenceError,
 )
 from tdp.presentation.http.dependencies.identity import PrincipalDependency
@@ -55,6 +64,12 @@ class RegisterReferencedEvidenceRequest(BaseModel):
     content_reference: str = Field(min_length=3, max_length=500)
     captured_at: AwareDatetime
     feature_id: str | None = None
+
+
+class MaterializeEvidenceRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    manifest: dict[str, object]
 
 
 class CreateClaimRequest(BaseModel):
@@ -92,6 +107,23 @@ class EvidenceArtifactResponse(BaseModel):
 class EvidenceCollectionResponse(BaseModel):
     items: list[EvidenceArtifactResponse]
     total: int
+
+
+class EvidenceMaterializationResponse(BaseModel):
+    evidence_id: str
+    project_id: str
+    kind: str
+    schema_version: str
+    checksum: str
+    materialized_by: str
+    materialized_at: str
+
+    @classmethod
+    def from_dto(
+        cls,
+        materialization: EvidenceMaterializationDto,
+    ) -> "EvidenceMaterializationResponse":
+        return cls.model_validate(asdict(materialization))
 
 
 class ClaimResponse(BaseModel):
@@ -193,6 +225,40 @@ async def register_referenced_evidence(
     return EvidenceArtifactResponse.from_dto(artifact)
 
 
+@router.post(
+    "/projects/{project_id}/evidence/{artifact_id}/materialization",
+    response_model=EvidenceMaterializationResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def materialize_referenced_evidence(
+    project_id: str,
+    artifact_id: str,
+    payload: MaterializeEvidenceRequest,
+    service: EvidenceServiceDependency,
+    principal: PrincipalDependency,
+) -> EvidenceMaterializationResponse:
+    materialization = await service.materialize_referenced_evidence(
+        MaterializeEvidenceCommand(
+            project_id=project_id,
+            artifact_id=artifact_id,
+            manifest=payload.manifest,
+            principal=principal,
+        )
+    )
+    return EvidenceMaterializationResponse.from_dto(materialization)
+
+
+@router.get(
+    "/evidence/{artifact_id}/materialization",
+    response_model=EvidenceMaterializationResponse,
+)
+async def get_evidence_materialization(
+    artifact_id: str,
+    service: EvidenceServiceDependency,
+) -> EvidenceMaterializationResponse:
+    return EvidenceMaterializationResponse.from_dto(await service.get_materialization(artifact_id))
+
+
 @router.get(
     "/projects/{project_id}/evidence",
     response_model=EvidenceCollectionResponse,
@@ -266,6 +332,7 @@ _EVIDENCE_ERROR_STATUS: Mapping[type[EvidenceError], int] = {
     InvalidEvidenceCaptureTimeError: 422,
     InvalidEvidenceChecksumError: 422,
     InvalidEvidenceKindError: 422,
+    InvalidEvidenceManifestError: 422,
     InvalidEvidenceReferenceError: 422,
     InvalidClaimIdError: 422,
     InvalidClaimStatementError: 422,
@@ -274,12 +341,15 @@ _EVIDENCE_ERROR_STATUS: Mapping[type[EvidenceError], int] = {
     InvalidClaimDerivationError: 422,
     InvalidClaimDocumentTypeError: 422,
     EvidenceArtifactNotFoundError: 404,
+    EvidenceMaterializationNotFoundError: 404,
     EvidenceProjectNotFoundError: 404,
     EvidenceWorkspaceNotFoundError: 404,
     EvidenceSourceNotFoundError: 404,
     EvidenceSnapshotNotFoundError: 404,
     EvidenceFeatureNotFoundError: 404,
     ClaimNotFoundError: 404,
+    EvidenceMaterializationChecksumMismatchError: 409,
+    EvidenceMaterializationConflictError: 409,
     EvidenceOriginConflictError: 409,
     EvidenceProjectArchivedError: 409,
     EvidenceWorkspaceArchivedError: 409,

@@ -5,7 +5,7 @@ from tdp.modules.readiness.domain.model import (
     ReadinessRuleKind,
 )
 
-READINESS_POLICY_VERSION = "document-readiness-v2"
+READINESS_POLICY_VERSION = "document-readiness-v3"
 
 _HLD = DocumentReadinessProfile(
     document_type="HLD",
@@ -105,11 +105,14 @@ _USER_GUIDE = DocumentReadinessProfile(
     rules=(
         ReadinessRule(
             code="USER_GUIDE_JOURNEY_EVIDENCE_REQUIRED",
-            kind=ReadinessRuleKind.EVIDENCE_KIND,
+            kind=ReadinessRuleKind.MATERIALIZED_EVIDENCE_KIND,
             severity=ReadinessFindingSeverity.BLOCKER,
             message="User Guide drafting requires validated user-journey evidence.",
             missing_input="evidence-kind:USER_JOURNEY",
-            remediation="Capture validated user-facing journey evidence before governed drafting.",
+            remediation=(
+                "Register and materialize checksum-verified typed USER_JOURNEY evidence "
+                "before governed drafting."
+            ),
             evidence_kind="USER_JOURNEY",
         ),
         ReadinessRule(
@@ -129,12 +132,12 @@ _INSTALLATION_GUIDE = DocumentReadinessProfile(
     rules=(
         ReadinessRule(
             code="INSTALLATION_DEPLOYMENT_EVIDENCE_REQUIRED",
-            kind=ReadinessRuleKind.EVIDENCE_KIND,
+            kind=ReadinessRuleKind.MATERIALIZED_EVIDENCE_KIND,
             severity=ReadinessFindingSeverity.BLOCKER,
             message="Installation Guide drafting requires deployment or runtime evidence.",
             missing_input="evidence-kind:DEPLOYMENT_RUNTIME",
             remediation=(
-                "Add validated CI/CD, IaC, container, environment, runtime, or deployment evidence."
+                "Register and materialize checksum-verified typed deployment/runtime evidence."
             ),
             evidence_kind="DEPLOYMENT_RUNTIME",
         ),
@@ -171,13 +174,11 @@ _UAT_EVIDENCE = DocumentReadinessProfile(
     rules=(
         ReadinessRule(
             code="UAT_EXECUTION_EVIDENCE_REQUIRED",
-            kind=ReadinessRuleKind.EVIDENCE_KIND,
+            kind=ReadinessRuleKind.MATERIALIZED_EVIDENCE_KIND,
             severity=ReadinessFindingSeverity.BLOCKER,
             message="UAT Evidence requires traceable acceptance-test execution evidence.",
             missing_input="evidence-kind:UAT_RESULT",
-            remediation=(
-                "Capture governed UAT scenarios, execution results, and supporting evidence."
-            ),
+            remediation=("Register and materialize checksum-verified typed UAT result evidence."),
             evidence_kind="UAT_RESULT",
         ),
     ),
@@ -188,11 +189,14 @@ _JOURNEY_MAP = DocumentReadinessProfile(
     rules=(
         ReadinessRule(
             code="JOURNEY_OBSERVATION_EVIDENCE_REQUIRED",
-            kind=ReadinessRuleKind.EVIDENCE_KIND,
+            kind=ReadinessRuleKind.MATERIALIZED_EVIDENCE_KIND,
             severity=ReadinessFindingSeverity.BLOCKER,
             message="Journey Map generation requires observed or validated journey evidence.",
             missing_input="evidence-kind:USER_JOURNEY",
-            remediation="Capture a validated user/system journey before generating a Journey Map.",
+            remediation=(
+                "Register and materialize checksum-verified typed USER_JOURNEY evidence "
+                "before generating a Journey Map."
+            ),
             evidence_kind="USER_JOURNEY",
         ),
     ),

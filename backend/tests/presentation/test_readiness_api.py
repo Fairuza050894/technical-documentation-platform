@@ -5,6 +5,10 @@ from fastapi.testclient import TestClient
 
 from tdp.config import Settings
 from tdp.main import create_app
+from tdp.modules.evidence.domain.materialization import (
+    canonicalize_semantic_evidence_manifest,
+)
+from tdp.modules.evidence.domain.model import EvidenceKind
 
 
 def build_client(tmp_path: Path) -> TestClient:
@@ -59,27 +63,106 @@ paths:
     return response.json()
 
 
+def semantic_manifest(kind: str, origin_id: str) -> dict[str, object]:
+    if kind == "USER_JOURNEY":
+        payload: dict[str, object] = {
+            "journey_name": "Checkout",
+            "actors": ["Operator"],
+            "preconditions": ["The operator is signed in."],
+            "steps": [
+                {
+                    "sequence": 1,
+                    "actor": "Operator",
+                    "action": "Submit the checkout form.",
+                    "expected_outcome": "The order is accepted.",
+                    "source_reference": f"journey-step:{origin_id}",
+                }
+            ],
+            "outcomes": ["The order is visible in monitoring."],
+        }
+    elif kind == "DEPLOYMENT_RUNTIME":
+        payload = {
+            "environment": "staging",
+            "runtime_components": [
+                {
+                    "name": "api",
+                    "version": "1.4.0",
+                    "source_reference": f"deployment-run:{origin_id}",
+                }
+            ],
+            "prerequisites": ["Container runtime is available."],
+            "configuration_keys": ["DATABASE_URL"],
+            "deployment_steps": [
+                {
+                    "sequence": 1,
+                    "instruction": "Apply the approved deployment bundle.",
+                    "source_reference": f"pipeline-step:{origin_id}",
+                }
+            ],
+            "verification_checks": [
+                {
+                    "name": "Readiness",
+                    "expected_result": "The service reports healthy.",
+                    "source_reference": f"pipeline-check:{origin_id}",
+                }
+            ],
+            "rollback_references": [f"runbook:{origin_id}"],
+        }
+    else:
+        payload = {
+            "run_reference": f"uat-run:{origin_id}",
+            "executed_at": "2026-08-12T02:00:00+00:00",
+            "scenarios": [
+                {
+                    "scenario_id": "UAT-001",
+                    "title": "Checkout succeeds",
+                    "status": "PASSED",
+                    "expected_result": "The order is created.",
+                    "actual_result": "The order was created.",
+                    "evidence_references": [f"uat-evidence:{origin_id}"],
+                }
+            ],
+        }
+    return {
+        "schema_version": "semantic-evidence-manifest-v1",
+        "kind": kind,
+        "payload": payload,
+    }
+
+
 def register_referenced_evidence(
     client: TestClient,
     project_id: str,
     *,
     kind: str,
     origin_id: str,
-    checksum_character: str,
+    materialize: bool,
 ) -> dict[str, object]:
+    manifest = semantic_manifest(kind, origin_id)
+    canonical = canonicalize_semantic_evidence_manifest(
+        EvidenceKind(kind),
+        manifest,
+    )
     response = client.post(
         f"/api/projects/{project_id}/evidence/references",
         json={
             "kind": kind,
             "source_reference": f"governed-source:{origin_id}",
             "origin_id": origin_id,
-            "checksum": checksum_character * 64,
+            "checksum": str(canonical.checksum),
             "content_reference": f"evidence-manifest:{origin_id}",
             "captured_at": "2026-08-12T02:00:00+00:00",
         },
     )
     assert response.status_code == 201
-    return response.json()
+    artifact = response.json()
+    if materialize:
+        materialized = client.post(
+            f"/api/projects/{project_id}/evidence/{artifact['id']}/materialization",
+            json={"manifest": manifest},
+        )
+        assert materialized.status_code == 201
+    return artifact
 
 
 def test_empty_project_exposes_explainable_not_ready_profiles(tmp_path: Path) -> None:
@@ -91,7 +174,7 @@ def test_empty_project_exposes_explainable_not_ready_profiles(tmp_path: Path) ->
 
     assert response.status_code == 200
     payload = response.json()
-    assert payload["policy_version"] == "document-readiness-v2"
+    assert payload["policy_version"] == "document-readiness-v3"
     assert payload["total"] == 10
     assert payload["required_total"] == 7
     assert payload["not_ready_total"] == 10
@@ -188,39 +271,51 @@ def test_readiness_rejects_unknown_project(tmp_path: Path) -> None:
     assert response.json()["error"]["code"] == "READINESS_PROJECT_NOT_FOUND"
 
 
-def test_semantic_evidence_unlocks_matching_profiles_without_unlocking_hld(
+def test_semantic_evidence_requires_materialization_before_unlocking_profiles(
     tmp_path: Path,
 ) -> None:
     client = build_client(tmp_path)
     project = create_project(client)
     project_id = str(project["id"])
 
-    register_referenced_evidence(
-        client,
-        project_id,
-        kind="USER_JOURNEY",
-        origin_id="journey-v1",
-        checksum_character="a",
-    )
-    register_referenced_evidence(
-        client,
-        project_id,
-        kind="DEPLOYMENT_RUNTIME",
-        origin_id="deployment-v1",
-        checksum_character="b",
-    )
-    register_referenced_evidence(
-        client,
-        project_id,
-        kind="UAT_RESULT",
-        origin_id="uat-v1",
-        checksum_character="c",
-    )
+    artifacts: list[dict[str, object]] = []
+    for kind, origin_id in (
+        ("USER_JOURNEY", "journey-v1"),
+        ("DEPLOYMENT_RUNTIME", "deployment-v1"),
+        ("UAT_RESULT", "uat-v1"),
+    ):
+        artifacts.append(
+            register_referenced_evidence(
+                client,
+                project_id,
+                kind=kind,
+                origin_id=origin_id,
+                materialize=False,
+            )
+        )
+
+    before = client.get(f"/api/projects/{project_id}/readiness")
+    assert before.status_code == 200
+    before_by_type = {item["document_type"]: item for item in before.json()["items"]}
+    assert before_by_type["USER_GUIDE"]["readiness_state"] == "NOT_READY"
+    assert before_by_type["JOURNEY_MAP"]["readiness_state"] == "NOT_READY"
+    assert before_by_type["INSTALLATION_GUIDE"]["readiness_state"] == "NOT_READY"
+    assert before_by_type["UAT_EVIDENCE"]["readiness_state"] == "NOT_READY"
+
+    for artifact in artifacts:
+        kind = str(artifact["kind"])
+        origin_id = str(artifact["origin_id"])
+        manifest = semantic_manifest(kind, origin_id)
+        response = client.post(
+            f"/api/projects/{project_id}/evidence/{artifact['id']}/materialization",
+            json={"manifest": manifest},
+        )
+        assert response.status_code == 201
 
     response = client.get(f"/api/projects/{project_id}/readiness")
     assert response.status_code == 200
     payload = response.json()
-    assert payload["policy_version"] == "document-readiness-v2"
+    assert payload["policy_version"] == "document-readiness-v3"
     by_type = {item["document_type"]: item for item in payload["items"]}
 
     assert by_type["HLD"]["readiness_state"] == "NOT_READY"

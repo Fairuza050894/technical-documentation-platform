@@ -17,6 +17,7 @@
 | backend/tests/domain/test_document_version_comparison.py | 2 |
 | backend/tests/domain/test_enterprise_generation_profile.py | 2 |
 | backend/tests/domain/test_evidence_claims.py | 6 |
+| backend/tests/domain/test_evidence_materialization.py | 4 |
 | backend/tests/domain/test_feature.py | 2 |
 | backend/tests/domain/test_identity.py | 2 |
 | backend/tests/domain/test_project.py | 4 |
@@ -30,7 +31,7 @@
 | backend/tests/infrastructure/test_openapi_catalog_parser.py | 1 |
 | backend/tests/infrastructure/test_openapi_inspector.py | 4 |
 | backend/tests/infrastructure/test_project_workspace_migration.py | 1 |
-| backend/tests/infrastructure/test_sqlite_evidence_repository.py | 3 |
+| backend/tests/infrastructure/test_sqlite_evidence_repository.py | 4 |
 | backend/tests/infrastructure/test_sqlite_feature_repository.py | 1 |
 | backend/tests/infrastructure/test_sqlite_project_repository.py | 1 |
 | backend/tests/infrastructure/test_sqlite_source_repository.py | 1 |
@@ -41,7 +42,7 @@
 | backend/tests/presentation/test_document_version_comparison_api.py | 2 |
 | backend/tests/presentation/test_documents_api.py | 1 |
 | backend/tests/presentation/test_enterprise_generation_api.py | 9 |
-| backend/tests/presentation/test_evidence_api.py | 6 |
+| backend/tests/presentation/test_evidence_api.py | 11 |
 | backend/tests/presentation/test_features_api.py | 3 |
 | backend/tests/presentation/test_identity_api.py | 1 |
 | backend/tests/presentation/test_projects_api.py | 3 |
@@ -67,7 +68,7 @@
 | backend/tests/test_repository_documentation.py | 1 |
 | backend/tests/test_workspace_architecture.py | 2 |
 
-Backend total: **186** tests.
+Backend total: **196** tests.
 
 ## Frontend
 

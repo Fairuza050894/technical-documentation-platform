@@ -47,12 +47,30 @@ provenance returns `EVIDENCE_ORIGIN_CONFLICT`.
 No evidence table migration is required because Evidence kind, source system, and collection method
 are persisted as strings and the existing append-only triggers remain valid.
 
-## Readiness policy v2
+## Materialization and readiness
+
+Registration preserves provenance, but registration alone does not make opaque referenced evidence
+safe for deterministic document generation.
+
+0010I adds checksum-verified typed semantic materialization for each referenced Evidence Artifact.
+The normalized materialization is persisted separately from the immutable provenance record. Raw
+source files, browser recordings, CI logs, screenshots, and other source payloads remain outside the
+Evidence tables.
+
+A semantic Evidence Artifact satisfies generation-oriented readiness only after:
+
+1. its typed manifest matches the Evidence kind;
+2. the manifest validates against `semantic-evidence-manifest-v1`;
+3. direct file/HTTP references and secret-bearing values are absent from normalized facts;
+4. the deterministic canonical-manifest SHA-256 matches the immutable Evidence Artifact checksum;
+5. the immutable materialization is persisted.
+
+## Readiness policy v3
 
 Adding semantic kinds changes the meaning of a literal `ANY_EVIDENCE` rule. Journey or UAT evidence
 must not count as the technical boundary evidence required by HLD or Developer Onboarding.
 
-`document-readiness-v2` therefore introduces an any-of evidence-kind rule and defines:
+`document-readiness-v3` preserves the technical any-of rule and defines:
 
 - HLD technical evidence: `SOURCE_ARTIFACT | CATALOG_SNAPSHOT`;
 - Developer Onboarding technical evidence: `SOURCE_ARTIFACT | CATALOG_SNAPSHOT`;
@@ -61,13 +79,16 @@ must not count as the technical boundary evidence required by HLD or Developer O
 - Installation Guide evidence: `DEPLOYMENT_RUNTIME`;
 - UAT Evidence input: `UAT_RESULT`.
 
-Readiness remains computed from canonical persisted Evidence facts and remains the source of truth.
+Readiness remains computed from canonical persisted Evidence facts and materialization state. A
+registered but unmaterialized semantic artifact stays traceable but does not satisfy
+generation-oriented readiness.
 
 ## Security and trust boundary
 
 Referenced evidence registration establishes immutable provenance, not semantic truth.
 
-- raw evidence is not copied into the Evidence tables;
+- raw evidence is not copied into the Evidence tables; only validated normalized semantic facts
+  are materialized;
 - credentials and tokens are not evidence metadata;
 - client-controlled source-system or collection-method labels are not accepted;
 - unsupported Evidence kinds cannot be registered through the referenced-evidence endpoint;
@@ -94,8 +115,9 @@ Guide, UAT Evidence, or Journey Map, Template CRUD, AI drafting, or MCP.
 - client source-system and collection-method spoofing is rejected;
 - exact retries are idempotent and conflicting immutable provenance is rejected;
 - no Evidence persistence migration is introduced;
-- semantic evidence satisfies its explicit readiness rules;
+- registered semantic evidence requires checksum-verified materialization before satisfying its
+  explicit readiness rules;
 - semantic evidence alone does not satisfy HLD or Developer Onboarding technical blockers;
-- readiness policy identity is `document-readiness-v2`;
+- readiness policy identity is `document-readiness-v3`;
 - archived mutation guards and append-only evidence history remain intact;
 - focused tests and the full repository quality gate pass.

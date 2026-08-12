@@ -4,6 +4,10 @@ from fastapi.testclient import TestClient
 
 from tdp.config import Settings
 from tdp.main import create_app
+from tdp.modules.evidence.domain.materialization import (
+    canonicalize_semantic_evidence_manifest,
+)
+from tdp.modules.evidence.domain.model import EvidenceKind
 
 
 def build_client(tmp_path: Path) -> TestClient:
@@ -329,3 +333,230 @@ def test_archived_project_blocks_referenced_semantic_evidence(tmp_path: Path) ->
 
     assert response.status_code == 409
     assert response.json()["error"]["code"] == "EVIDENCE_PROJECT_ARCHIVED"
+
+
+def deployment_materialization_manifest() -> dict[str, object]:
+    return {
+        "schema_version": "semantic-evidence-manifest-v1",
+        "kind": "DEPLOYMENT_RUNTIME",
+        "payload": {
+            "environment": "staging",
+            "runtime_components": [
+                {
+                    "name": "api",
+                    "version": "1.4.0",
+                    "source_reference": "deployment-run:release-42",
+                }
+            ],
+            "prerequisites": ["Container runtime is available."],
+            "configuration_keys": ["DATABASE_URL", "LOG_LEVEL"],
+            "deployment_steps": [
+                {
+                    "sequence": 1,
+                    "instruction": "Apply the approved deployment bundle.",
+                    "source_reference": "pipeline-step:deploy",
+                }
+            ],
+            "verification_checks": [
+                {
+                    "name": "Readiness endpoint",
+                    "expected_result": "The service reports healthy.",
+                    "source_reference": "pipeline-step:verify",
+                }
+            ],
+            "rollback_references": ["runbook:rollback-release-42"],
+        },
+    }
+
+
+def test_referenced_evidence_materialization_is_checksum_verified_and_idempotent(
+    tmp_path: Path,
+) -> None:
+    client = build_client(tmp_path)
+    project = create_project(client)
+    project_id = str(project["id"])
+    manifest = deployment_materialization_manifest()
+    canonical = canonicalize_semantic_evidence_manifest(
+        EvidenceKind.DEPLOYMENT_RUNTIME,
+        manifest,
+    )
+    registered = client.post(
+        f"/api/projects/{project_id}/evidence/references",
+        json={
+            "kind": "DEPLOYMENT_RUNTIME",
+            "source_reference": "deployment-run:release-42",
+            "origin_id": "release-42",
+            "checksum": str(canonical.checksum),
+            "content_reference": "evidence-manifest:release-42",
+            "captured_at": "2026-08-12T04:00:00+00:00",
+        },
+    )
+    assert registered.status_code == 201
+    artifact = registered.json()
+
+    first = client.post(
+        f"/api/projects/{project_id}/evidence/{artifact['id']}/materialization",
+        json={"manifest": manifest},
+    )
+    repeated = client.post(
+        f"/api/projects/{project_id}/evidence/{artifact['id']}/materialization",
+        json={"manifest": manifest},
+    )
+    fetched = client.get(f"/api/evidence/{artifact['id']}/materialization")
+
+    assert first.status_code == 201
+    assert repeated.status_code == 201
+    assert fetched.status_code == 200
+    assert first.json() == repeated.json() == fetched.json()
+    assert first.json()["kind"] == "DEPLOYMENT_RUNTIME"
+    assert first.json()["checksum"] == str(canonical.checksum)
+    assert "canonical_manifest" not in first.json()
+
+
+def test_materialization_rejects_checksum_mismatch_and_missing_lookup(
+    tmp_path: Path,
+) -> None:
+    client = build_client(tmp_path)
+    project = create_project(client)
+    project_id = str(project["id"])
+    registered = client.post(
+        f"/api/projects/{project_id}/evidence/references",
+        json=referenced_evidence_payload(
+            "DEPLOYMENT_RUNTIME",
+            origin_id="release-mismatch",
+            checksum_character="f",
+        ),
+    )
+    assert registered.status_code == 201
+    artifact = registered.json()
+
+    missing = client.get(f"/api/evidence/{artifact['id']}/materialization")
+    assert missing.status_code == 404
+    assert missing.json()["error"]["code"] == "EVIDENCE_MATERIALIZATION_NOT_FOUND"
+
+    mismatch = client.post(
+        f"/api/projects/{project_id}/evidence/{artifact['id']}/materialization",
+        json={"manifest": deployment_materialization_manifest()},
+    )
+    assert mismatch.status_code == 409
+    assert mismatch.json()["error"]["code"] == "EVIDENCE_MATERIALIZATION_CHECKSUM_MISMATCH"
+
+
+def test_archived_project_blocks_new_materialization(tmp_path: Path) -> None:
+    client = build_client(tmp_path)
+    project = create_project(client)
+    project_id = str(project["id"])
+    manifest = deployment_materialization_manifest()
+    canonical = canonicalize_semantic_evidence_manifest(
+        EvidenceKind.DEPLOYMENT_RUNTIME,
+        manifest,
+    )
+    registered = client.post(
+        f"/api/projects/{project_id}/evidence/references",
+        json={
+            "kind": "DEPLOYMENT_RUNTIME",
+            "source_reference": "deployment-run:release-archive",
+            "origin_id": "release-archive",
+            "checksum": str(canonical.checksum),
+            "content_reference": "evidence-manifest:release-archive",
+            "captured_at": "2026-08-12T04:00:00+00:00",
+        },
+    ).json()
+
+    assert client.post(f"/api/projects/{project_id}/archive").status_code == 200
+    blocked = client.post(
+        f"/api/projects/{project_id}/evidence/{registered['id']}/materialization",
+        json={"manifest": manifest},
+    )
+    assert blocked.status_code == 409
+    assert blocked.json()["error"]["code"] == "EVIDENCE_PROJECT_ARCHIVED"
+
+
+def test_materialization_conflict_does_not_replace_history(tmp_path: Path) -> None:
+    client = build_client(tmp_path)
+    project = create_project(client)
+    project_id = str(project["id"])
+    manifest = deployment_materialization_manifest()
+    canonical = canonicalize_semantic_evidence_manifest(
+        EvidenceKind.DEPLOYMENT_RUNTIME,
+        manifest,
+    )
+    artifact = client.post(
+        f"/api/projects/{project_id}/evidence/references",
+        json={
+            "kind": "DEPLOYMENT_RUNTIME",
+            "source_reference": "deployment-run:release-conflict",
+            "origin_id": "release-conflict",
+            "checksum": str(canonical.checksum),
+            "content_reference": "evidence-manifest:release-conflict",
+            "captured_at": "2026-08-12T04:00:00+00:00",
+        },
+    ).json()
+    assert (
+        client.post(
+            f"/api/projects/{project_id}/evidence/{artifact['id']}/materialization",
+            json={"manifest": manifest},
+        ).status_code
+        == 201
+    )
+
+    changed = deployment_materialization_manifest()
+    changed_payload = changed["payload"]
+    assert isinstance(changed_payload, dict)
+    changed_payload["environment"] = "production"
+    response = client.post(
+        f"/api/projects/{project_id}/evidence/{artifact['id']}/materialization",
+        json={"manifest": changed},
+    )
+
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "EVIDENCE_MATERIALIZATION_CONFLICT"
+
+
+def test_archived_feature_blocks_new_materialization(tmp_path: Path) -> None:
+    client = build_client(tmp_path)
+    project = create_project(client)
+    project_id = str(project["id"])
+    workspace_id = str(project["workspace_id"])
+    feature_base_path = f"/api/workspaces/{workspace_id}/projects/{project_id}/features"
+    feature = client.post(
+        feature_base_path,
+        json={
+            "key": "CHECKOUT",
+            "name": "Checkout",
+            "description": "Checkout journey.",
+            "kind": "FEATURE",
+            "owner": "Documentation Team",
+        },
+    )
+    assert feature.status_code == 201
+    feature_id = str(feature.json()["id"])
+
+    manifest = deployment_materialization_manifest()
+    canonical = canonicalize_semantic_evidence_manifest(
+        EvidenceKind.DEPLOYMENT_RUNTIME,
+        manifest,
+    )
+    artifact = client.post(
+        f"/api/projects/{project_id}/evidence/references",
+        json={
+            "kind": "DEPLOYMENT_RUNTIME",
+            "source_reference": "deployment-run:feature-release",
+            "origin_id": "feature-release",
+            "checksum": str(canonical.checksum),
+            "content_reference": "evidence-manifest:feature-release",
+            "captured_at": "2026-08-12T04:00:00+00:00",
+            "feature_id": feature_id,
+        },
+    )
+    assert artifact.status_code == 201
+
+    archived = client.post(f"{feature_base_path}/{feature_id}/archive")
+    assert archived.status_code == 200
+
+    blocked = client.post(
+        f"/api/projects/{project_id}/evidence/{artifact.json()['id']}/materialization",
+        json={"manifest": manifest},
+    )
+    assert blocked.status_code == 409
+    assert blocked.json()["error"]["code"] == "EVIDENCE_FEATURE_ARCHIVED"

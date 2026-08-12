@@ -14,7 +14,7 @@ from tdp.modules.readiness.domain.policy import (
 
 
 def test_readiness_profiles_cover_the_ten_enterprise_document_types_in_order() -> None:
-    assert READINESS_POLICY_VERSION == "document-readiness-v2"
+    assert READINESS_POLICY_VERSION == "document-readiness-v3"
     assert [item.document_type for item in READINESS_PROFILES] == [
         "HLD",
         "LLD",
@@ -165,14 +165,40 @@ def test_semantic_evidence_does_not_satisfy_technical_evidence_profiles() -> Non
     assert onboarding.findings[0].rule_code == "ONBOARDING_TECHNICAL_EVIDENCE_REQUIRED"
 
 
-def test_semantic_evidence_kinds_satisfy_only_their_matching_readiness_rules() -> None:
+def test_semantic_evidence_requires_materialization_for_readiness() -> None:
     evaluator = DeterministicReadinessEvaluator()
-    evidence = (
-        ReadinessEvidenceFact(reference="evidence:journey", kind="USER_JOURNEY"),
-        ReadinessEvidenceFact(reference="evidence:deployment", kind="DEPLOYMENT_RUNTIME"),
-        ReadinessEvidenceFact(reference="evidence:uat", kind="UAT_RESULT"),
+    unmaterialized = (
+        ReadinessEvidenceFact(
+            reference="evidence:journey",
+            kind="USER_JOURNEY",
+        ),
+        ReadinessEvidenceFact(
+            reference="evidence:deployment",
+            kind="DEPLOYMENT_RUNTIME",
+        ),
+        ReadinessEvidenceFact(
+            reference="evidence:uat",
+            kind="UAT_RESULT",
+        ),
     )
 
+    blocked = evaluator.evaluate(
+        profile=readiness_profile("INSTALLATION_GUIDE"),
+        evidence=unmaterialized,
+        claims=(),
+        documents=(),
+    )
+    assert blocked.state is ReadinessState.NOT_READY
+    assert blocked.findings[0].supporting_references == ("evidence:deployment:UNMATERIALIZED",)
+
+    evidence = tuple(
+        ReadinessEvidenceFact(
+            reference=item.reference,
+            kind=item.kind,
+            materialized=True,
+        )
+        for item in unmaterialized
+    )
     user_guide = evaluator.evaluate(
         profile=readiness_profile("USER_GUIDE"),
         evidence=evidence,

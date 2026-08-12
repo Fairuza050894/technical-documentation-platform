@@ -32,6 +32,14 @@ class RegisterReferencedEvidenceCommand:
 
 
 @dataclass(frozen=True, slots=True)
+class MaterializeEvidenceCommand:
+    project_id: str
+    artifact_id: str
+    manifest: dict[str, object]
+    principal: RequestPrincipal
+
+
+@dataclass(frozen=True, slots=True)
 class CreateClaimCommand:
     project_id: str
     statement: str

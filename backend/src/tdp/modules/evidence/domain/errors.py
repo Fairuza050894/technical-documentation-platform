@@ -35,6 +35,22 @@ class EvidenceOriginConflictError(EvidenceError):
     code = "EVIDENCE_ORIGIN_CONFLICT"
 
 
+class InvalidEvidenceManifestError(EvidenceError):
+    code = "INVALID_EVIDENCE_MANIFEST"
+
+
+class EvidenceMaterializationChecksumMismatchError(EvidenceError):
+    code = "EVIDENCE_MATERIALIZATION_CHECKSUM_MISMATCH"
+
+
+class EvidenceMaterializationConflictError(EvidenceError):
+    code = "EVIDENCE_MATERIALIZATION_CONFLICT"
+
+
+class EvidenceMaterializationNotFoundError(EvidenceError):
+    code = "EVIDENCE_MATERIALIZATION_NOT_FOUND"
+
+
 class EvidenceProjectNotFoundError(EvidenceError):
     code = "EVIDENCE_PROJECT_NOT_FOUND"
 
