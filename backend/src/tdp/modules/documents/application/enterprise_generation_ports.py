@@ -61,7 +61,7 @@ class EnterpriseGenerationContext:
     project_name: str
     project_description: str
     workspace_id: str
-    source_id: str
+    source_id: str | None
     source_name: str
     api_title: str
     api_version: str

@@ -208,6 +208,14 @@ def test_generation_creates_and_reuses_immutable_lld_version() -> None:
     assert duplicate.id == first.id
     assert duplicate.reused_existing_version is True
     assert len(repository.versions) == 1
+    provenance = repository.versions[0].provenance
+    assert any(
+        item.kind.value == "EVIDENCE_ARTIFACT"
+        and item.reference == "evidence:evidence-1"
+        and item.evidence_kind == "CATALOG_SNAPSHOT"
+        and item.checksum == "b" * 64
+        for item in provenance
+    )
 
 
 def test_same_generic_service_creates_as_built_version() -> None:

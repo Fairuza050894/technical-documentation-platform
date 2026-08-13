@@ -90,3 +90,9 @@ Source ID or silently requiring unrelated technical evidence.
 - no enterprise document generator is added;
 - no AI, browser, external HTTP resolver, CI/CD integration, MCP, or frontend authoring UI is added;
 - focused tests and the complete repository quality gate pass.
+
+## Document provenance follow-up
+
+ADR-027 and the governed Document Version provenance requirement remove the mandatory Source identity
+assumption. Future semantic generators can persist `EVIDENCE_ARTIFACT` provenance references without
+copying materialized manifests or fabricating Source/Catalog identifiers.

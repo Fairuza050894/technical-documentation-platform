@@ -12,6 +12,7 @@ from tdp.modules.documents.domain.errors import (
 )
 from tdp.modules.documents.domain.generation import enterprise_generation_profile
 from tdp.modules.documents.domain.model import (
+    DocumentProvenanceReference,
     DocumentSeries,
     DocumentType,
     DocumentVersion,
@@ -97,6 +98,14 @@ class EnterpriseDocumentGenerationService:
             revision_reason=command.revision_reason,
             created_by=command.principal.audit_actor,
             document_type=document_type,
+            provenance=tuple(
+                DocumentProvenanceReference.evidence_artifact(
+                    evidence_id=item.id,
+                    evidence_kind=item.kind,
+                    checksum=item.checksum,
+                )
+                for item in context.evidence
+            ),
         )
         series.register_version(version.id, now=version.created_at)
         await self._repository.add_version(series, version, version.generated_event())

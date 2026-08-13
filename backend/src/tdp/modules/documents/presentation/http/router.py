@@ -61,11 +61,18 @@ class CompareDocumentVersionsRequest(BaseModel):
     target_version_id: str
 
 
+class DocumentProvenanceResponse(BaseModel):
+    kind: str
+    reference: str
+    evidence_kind: str | None
+    checksum: str | None
+
+
 class DocumentSummaryResponse(BaseModel):
     id: str
     document_id: str
     project_id: str
-    source_id: str
+    source_id: str | None
     target_run_id: str | None
     baseline_run_id: str | None
     document_type: str
@@ -85,6 +92,7 @@ class DocumentSummaryResponse(BaseModel):
     submitted_at: str | None
     approved_at: str | None
     superseded_at: str | None
+    provenance: list[DocumentProvenanceResponse]
 
     @classmethod
     def from_dto(cls, document: DocumentSummaryDto) -> Self:

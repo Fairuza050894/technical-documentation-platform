@@ -14,6 +14,7 @@
 | backend/tests/domain/test_change_detection.py | 1 |
 | backend/tests/domain/test_document_governance.py | 3 |
 | backend/tests/domain/test_document_lifecycle.py | 3 |
+| backend/tests/domain/test_document_provenance.py | 2 |
 | backend/tests/domain/test_document_version_comparison.py | 2 |
 | backend/tests/domain/test_enterprise_generation_profile.py | 2 |
 | backend/tests/domain/test_evidence_claims.py | 6 |
@@ -68,7 +69,7 @@
 | backend/tests/test_repository_documentation.py | 1 |
 | backend/tests/test_workspace_architecture.py | 2 |
 
-Backend total: **196** tests.
+Backend total: **198** tests.
 
 ## Frontend
 

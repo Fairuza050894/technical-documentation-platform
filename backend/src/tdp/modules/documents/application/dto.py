@@ -1,7 +1,31 @@
 from dataclasses import dataclass
 
 from tdp.modules.documents.domain.comparison import DocumentVersionComparison
-from tdp.modules.documents.domain.model import DocumentVersion, DocumentWorkflowEvent
+from tdp.modules.documents.domain.model import (
+    DocumentProvenanceReference,
+    DocumentVersion,
+    DocumentWorkflowEvent,
+)
+
+
+@dataclass(frozen=True, slots=True)
+class DocumentProvenanceDto:
+    kind: str
+    reference: str
+    evidence_kind: str | None
+    checksum: str | None
+
+    @classmethod
+    def from_domain(
+        cls,
+        provenance: DocumentProvenanceReference,
+    ) -> "DocumentProvenanceDto":
+        return cls(
+            kind=provenance.kind.value,
+            reference=provenance.reference,
+            evidence_kind=provenance.evidence_kind,
+            checksum=provenance.checksum,
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -9,7 +33,7 @@ class DocumentSummaryDto:
     id: str
     document_id: str
     project_id: str
-    source_id: str
+    source_id: str | None
     target_run_id: str | None
     baseline_run_id: str | None
     document_type: str
@@ -29,6 +53,7 @@ class DocumentSummaryDto:
     submitted_at: str | None
     approved_at: str | None
     superseded_at: str | None
+    provenance: tuple[DocumentProvenanceDto, ...]
 
     @classmethod
     def from_domain(cls, version: DocumentVersion) -> "DocumentSummaryDto":
@@ -61,6 +86,9 @@ class DocumentSummaryDto:
             ),
             superseded_at=(
                 version.superseded_at.isoformat() if version.superseded_at is not None else None
+            ),
+            provenance=tuple(
+                DocumentProvenanceDto.from_domain(item) for item in version.provenance
             ),
         )
 
@@ -102,6 +130,7 @@ class DocumentDetailDto(DocumentSummaryDto):
             submitted_at=summary.submitted_at,
             approved_at=summary.approved_at,
             superseded_at=summary.superseded_at,
+            provenance=summary.provenance,
             content=version.content,
             reused_existing_version=reused_existing_version,
         )

@@ -150,3 +150,10 @@ This slice does not implement:
 - existing document lifecycle/read/download behavior works for generated LLD;
 - archived Project/Workspace mutation remains blocked;
 - focused tests and the full repository quality gate pass.
+
+## Provenance evolution
+
+The generic enterprise generation service persists its selected governed Evidence Artifact
+references into the immutable Document Version provenance relation. This does not change generated
+Markdown or readiness eligibility; it only preserves truthful structured provenance for later
+semantic profiles.

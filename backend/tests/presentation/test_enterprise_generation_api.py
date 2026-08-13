@@ -336,6 +336,17 @@ def test_hld_generation_accepts_source_artifact_without_catalog_snapshot(tmp_pat
     document = response.json()
     assert document["document_type"] == "HLD"
     assert document["target_run_id"] is None
+    assert any(
+        item["kind"] == "SOURCE_REGISTRY" and item["reference"].startswith("source:")
+        for item in document["provenance"]
+    )
+    assert any(
+        item["kind"] == "EVIDENCE_ARTIFACT"
+        and item["reference"] == f"evidence:{evidence['id']}"
+        and item["evidence_kind"] == "SOURCE_ARTIFACT"
+        and item["checksum"] == evidence["checksum"]
+        for item in document["provenance"]
+    )
     assert document["operation_count"] == 0
     assert document["schema_count"] == 0
     assert "# High Level Design: Generation Foundation" in document["content"]
@@ -369,6 +380,18 @@ def test_hld_generation_uses_catalog_snapshot_when_selected_as_evidence(tmp_path
     document = response.json()
     assert document["document_type"] == "HLD"
     assert document["target_run_id"] is not None
+    assert any(
+        item["kind"] == "CATALOG_SYNCHRONIZATION"
+        and item["reference"] == f"synchronization:{document['target_run_id']}"
+        for item in document["provenance"]
+    )
+    assert any(
+        item["kind"] == "EVIDENCE_ARTIFACT"
+        and item["reference"] == f"evidence:{evidence['id']}"
+        and item["evidence_kind"] == "CATALOG_SNAPSHOT"
+        and item["checksum"] == evidence["checksum"]
+        for item in document["provenance"]
+    )
     assert document["operation_count"] == 1
     assert document["schema_count"] == 1
     assert "Primary evidence kind | `CATALOG_SNAPSHOT`" in document["content"]

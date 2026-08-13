@@ -8,6 +8,8 @@ from uuid import NAMESPACE_URL, uuid5
 from tdp.modules.documents.domain.model import (
     DocumentFormat,
     DocumentId,
+    DocumentProvenanceKind,
+    DocumentProvenanceReference,
     DocumentSeries,
     DocumentStatus,
     DocumentType,
@@ -40,7 +42,7 @@ CREATE TABLE IF NOT EXISTS document_versions (
     id TEXT PRIMARY KEY,
     document_id TEXT NOT NULL,
     project_id TEXT NOT NULL,
-    source_id TEXT NOT NULL,
+    source_id TEXT,
     target_run_id TEXT,
     baseline_run_id TEXT,
     document_type TEXT NOT NULL,
@@ -76,6 +78,32 @@ CREATE INDEX IF NOT EXISTS idx_document_versions_document_number
 ON document_versions(document_id, version_major DESC, version_minor DESC);
 CREATE INDEX IF NOT EXISTS idx_document_versions_status
 ON document_versions(document_id, status, approved_at DESC);
+
+CREATE TABLE IF NOT EXISTS document_version_provenance (
+    version_id TEXT NOT NULL,
+    ordinal INTEGER NOT NULL,
+    provenance_kind TEXT NOT NULL,
+    provenance_reference TEXT NOT NULL,
+    evidence_kind TEXT,
+    checksum TEXT,
+    PRIMARY KEY(version_id, ordinal),
+    UNIQUE(version_id, provenance_kind, provenance_reference),
+    FOREIGN KEY(version_id) REFERENCES document_versions(id)
+);
+CREATE INDEX IF NOT EXISTS idx_document_version_provenance_reference
+ON document_version_provenance(provenance_kind, provenance_reference, version_id);
+
+CREATE TRIGGER IF NOT EXISTS document_version_provenance_immutable_update
+BEFORE UPDATE ON document_version_provenance
+BEGIN
+    SELECT RAISE(ABORT, 'document version provenance is immutable');
+END;
+
+CREATE TRIGGER IF NOT EXISTS document_version_provenance_immutable_delete
+BEFORE DELETE ON document_version_provenance
+BEGIN
+    SELECT RAISE(ABORT, 'document version provenance is immutable');
+END;
 
 CREATE TABLE IF NOT EXISTS document_workflow_events (
     id TEXT PRIMARY KEY,
@@ -181,17 +209,21 @@ class SqliteDocumentRepository(DocumentRepository):
         with self._connect() as connection:
             connection.execute("PRAGMA journal_mode = WAL")
             connection.executescript(_SCHEMA)
-            self._migrate_nullable_target_run_id(connection)
+            self._migrate_nullable_document_provenance(connection)
             self._migrate_generated_documents(connection)
+            self._backfill_document_version_provenance(connection)
 
     @staticmethod
-    def _migrate_nullable_target_run_id(connection: sqlite3.Connection) -> None:
+    def _migrate_nullable_document_provenance(connection: sqlite3.Connection) -> None:
         columns = {
             str(row["name"]): row
             for row in connection.execute("PRAGMA table_info(document_versions)").fetchall()
         }
+        source_column = columns.get("source_id")
         target_column = columns.get("target_run_id")
-        if target_column is None or int(target_column["notnull"]) == 0:
+        if source_column is None or target_column is None:
+            return
+        if int(source_column["notnull"]) == 0 and int(target_column["notnull"]) == 0:
             return
 
         connection.commit()
@@ -200,11 +232,11 @@ class SqliteDocumentRepository(DocumentRepository):
             connection.executescript(
                 """
                 BEGIN IMMEDIATE;
-                CREATE TABLE document_versions_nullable_target (
+                CREATE TABLE document_versions_nullable_provenance (
                     id TEXT PRIMARY KEY,
                     document_id TEXT NOT NULL,
                     project_id TEXT NOT NULL,
-                    source_id TEXT NOT NULL,
+                    source_id TEXT,
                     target_run_id TEXT,
                     baseline_run_id TEXT,
                     document_type TEXT NOT NULL,
@@ -234,7 +266,7 @@ class SqliteDocumentRepository(DocumentRepository):
                     FOREIGN KEY(target_run_id) REFERENCES catalog_sync_runs(id),
                     FOREIGN KEY(baseline_run_id) REFERENCES catalog_sync_runs(id)
                 );
-                INSERT INTO document_versions_nullable_target (
+                INSERT INTO document_versions_nullable_provenance (
                     id, document_id, project_id, source_id, target_run_id,
                     baseline_run_id, document_type, document_format,
                     version_major, version_minor, status, title, file_name,
@@ -251,7 +283,7 @@ class SqliteDocumentRepository(DocumentRepository):
                     created_at, updated_at, submitted_at, approved_at, superseded_at
                 FROM document_versions;
                 DROP TABLE document_versions;
-                ALTER TABLE document_versions_nullable_target RENAME TO document_versions;
+                ALTER TABLE document_versions_nullable_provenance RENAME TO document_versions;
                 CREATE INDEX idx_document_versions_project_created
                 ON document_versions(project_id, created_at DESC, id DESC);
                 CREATE INDEX idx_document_versions_document_number
@@ -328,6 +360,16 @@ class SqliteDocumentRepository(DocumentRepository):
                 """,
                 self._version_record(version),
             )
+            for ordinal, provenance in enumerate(version.provenance):
+                connection.execute(
+                    """
+                    INSERT INTO document_version_provenance (
+                        version_id, ordinal, provenance_kind,
+                        provenance_reference, evidence_kind, checksum
+                    ) VALUES (?, ?, ?, ?, ?, ?)
+                    """,
+                    self._provenance_record(version.id, ordinal, provenance),
+                )
             connection.execute(
                 """
                 INSERT INTO document_workflow_events (
@@ -593,6 +635,40 @@ class SqliteDocumentRepository(DocumentRepository):
                 )
 
     @staticmethod
+    def _backfill_document_version_provenance(
+        connection: sqlite3.Connection,
+    ) -> None:
+        connection.execute(
+            """
+            INSERT OR IGNORE INTO document_version_provenance (
+                version_id, ordinal, provenance_kind,
+                provenance_reference, evidence_kind, checksum
+            )
+            SELECT
+                id, 0, 'SOURCE_REGISTRY', 'source:' || source_id, NULL, NULL
+            FROM document_versions
+            WHERE source_id IS NOT NULL
+            """
+        )
+        connection.execute(
+            """
+            INSERT OR IGNORE INTO document_version_provenance (
+                version_id, ordinal, provenance_kind,
+                provenance_reference, evidence_kind, checksum
+            )
+            SELECT
+                id,
+                CASE WHEN source_id IS NULL THEN 0 ELSE 1 END,
+                'CATALOG_SYNCHRONIZATION',
+                'synchronization:' || target_run_id,
+                NULL,
+                NULL
+            FROM document_versions
+            WHERE target_run_id IS NOT NULL
+            """
+        )
+
+    @staticmethod
     def _table_exists(connection: sqlite3.Connection, table_name: str) -> bool:
         row = connection.execute(
             "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?",
@@ -644,6 +720,21 @@ class SqliteDocumentRepository(DocumentRepository):
         )
 
     @staticmethod
+    def _provenance_record(
+        version_id: DocumentVersionId,
+        ordinal: int,
+        provenance: DocumentProvenanceReference,
+    ) -> tuple[object, ...]:
+        return (
+            str(version_id),
+            ordinal,
+            provenance.kind.value,
+            provenance.reference,
+            provenance.evidence_kind,
+            provenance.checksum,
+        )
+
+    @staticmethod
     def _event_record(event: DocumentWorkflowEvent) -> tuple[object, ...]:
         return (
             str(event.id),
@@ -677,15 +768,15 @@ class SqliteDocumentRepository(DocumentRepository):
             updated_at=datetime.fromisoformat(str(row["updated_at"])),
         )
 
-    @staticmethod
-    def _version_from_row(row: sqlite3.Row) -> DocumentVersion:
+    def _version_from_row(self, row: sqlite3.Row) -> DocumentVersion:
+        source_id = row["source_id"]
         target_run_id = row["target_run_id"]
         baseline_run_id = row["baseline_run_id"]
         return DocumentVersion(
             id=DocumentVersionId.from_string(str(row["id"])),
             document_id=DocumentId.from_string(str(row["document_id"])),
             project_id=str(row["project_id"]),
-            source_id=str(row["source_id"]),
+            source_id=(str(source_id) if source_id is not None else None),
             target_run_id=(str(target_run_id) if target_run_id is not None else None),
             baseline_run_id=(str(baseline_run_id) if baseline_run_id is not None else None),
             document_type=DocumentType(str(row["document_type"])),
@@ -709,6 +800,35 @@ class SqliteDocumentRepository(DocumentRepository):
             submitted_at=_datetime_from_row(row["submitted_at"]),
             approved_at=_datetime_from_row(row["approved_at"]),
             superseded_at=_datetime_from_row(row["superseded_at"]),
+            provenance=self._list_provenance(str(row["id"])),
+        )
+
+    def _list_provenance(
+        self,
+        version_id: str,
+    ) -> tuple[DocumentProvenanceReference, ...]:
+        with self._connect() as connection:
+            rows = connection.execute(
+                """
+                SELECT * FROM document_version_provenance
+                WHERE version_id = ?
+                ORDER BY ordinal ASC
+                """,
+                (version_id,),
+            ).fetchall()
+        return tuple(self._provenance_from_row(row) for row in rows)
+
+    @staticmethod
+    def _provenance_from_row(
+        row: sqlite3.Row,
+    ) -> DocumentProvenanceReference:
+        evidence_kind = row["evidence_kind"]
+        checksum = row["checksum"]
+        return DocumentProvenanceReference(
+            kind=DocumentProvenanceKind(str(row["provenance_kind"])),
+            reference=str(row["provenance_reference"]),
+            evidence_kind=(str(evidence_kind) if evidence_kind is not None else None),
+            checksum=str(checksum) if checksum is not None else None,
         )
 
     @staticmethod

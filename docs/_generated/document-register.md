@@ -46,6 +46,7 @@ This register inventories Markdown documentation. Formal approval must be record
 | Unassigned | ADR-024: Preserve HLD Any-Evidence Generation Eligibility | Decisions | Accepted | `docs/decisions/ADR-024-preserve-hld-any-evidence-generation-eligibility.md` (Not specified) |
 | Unassigned | ADR-025: Expand Governed Evidence Capability Before More Generators | Decisions | Accepted | `docs/decisions/ADR-025-expand-governed-evidence-capability.md` (Not specified) |
 | Unassigned | ADR-026: Materialize Semantic Evidence Before Generation | Decisions | Accepted | `docs/decisions/ADR-026-materialize-semantic-evidence-before-generation.md` (Not specified) |
+| Unassigned | ADR-027: Generalize Document Version Provenance | Decisions | Accepted | `docs/decisions/ADR-027-generalize-document-version-provenance.md` (Not specified) |
 | Unassigned | Coding Standards | Engineering | Not specified | `docs/engineering/coding-standards.md` (Not specified) |
 | Unassigned | Definition of Done | Engineering | Not specified | `docs/engineering/definition-of-done.md` (Not specified) |
 | TDP-GOV-002 | Document Control | Governance | Controlled draft | `docs/governance/document-control.md` (Internal project documentation) |
@@ -91,6 +92,7 @@ This register inventories Markdown documentation. Formal approval must be record
 | Unassigned | MVP 1 Shared Form CSS Ownership | Requirements | Not specified | `docs/requirements/mvp-1-frontend-shared-form-ownership.md` (Not specified) |
 | Unassigned | MVP 1 Application Shell and Operational Overview CSS Ownership | Requirements | Not specified | `docs/requirements/mvp-1-frontend-shell-overview-ownership.md` (Not specified) |
 | Unassigned | MVP 1 Table and Page Primitive CSS Ownership | Requirements | Not specified | `docs/requirements/mvp-1-frontend-table-page-ownership.md` (Not specified) |
+| Unassigned | MVP 1 — Governed Document Version Provenance | Requirements | Not specified | `docs/requirements/mvp-1-governed-document-version-provenance.md` (Not specified) |
 | Unassigned | MVP 1 — Governed Evidence Materialization | Requirements | Not specified | `docs/requirements/mvp-1-governed-evidence-materialization.md` (Not specified) |
 | Unassigned | MVP 1 — HLD Hybrid Enterprise Generation Profile | Requirements | Not specified | `docs/requirements/mvp-1-hld-hybrid-enterprise-generation-profile.md` (Not specified) |
 | Unassigned | MVP 1 — OpenAPI Source Management | Requirements | Not specified | `docs/requirements/mvp-1-openapi-source-management.md` (Not specified) |

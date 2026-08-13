@@ -13,12 +13,20 @@ export type GeneratedDocumentType =
   | "LLD"
   | "AS_BUILT";
 
+export interface DocumentProvenanceReference {
+  kind: "SOURCE_REGISTRY" | "CATALOG_SYNCHRONIZATION" | "EVIDENCE_ARTIFACT";
+  reference: string;
+  evidence_kind: string | null;
+  checksum: string | null;
+}
+
 export interface GeneratedDocumentSummary {
   id: string;
   document_id: string;
   project_id: string;
-  source_id: string;
+  source_id: string | null;
   target_run_id: string | null;
+  provenance?: DocumentProvenanceReference[];
   baseline_run_id: string | null;
   document_type: GeneratedDocumentType;
   document_format: "MARKDOWN";

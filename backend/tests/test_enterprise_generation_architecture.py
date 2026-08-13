@@ -88,7 +88,7 @@ def test_hld_evidence_selection_remains_generic_and_does_not_recreate_readiness_
     assert "HLD_TECHNICAL_EVIDENCE_REQUIRED" not in adapter
 
 
-def test_source_only_document_provenance_is_nullable_end_to_end() -> None:
+def test_document_provenance_is_generalized_end_to_end() -> None:
     repository_root = _BACKEND.parent
     model = (_DOCUMENTS / "domain" / "model.py").read_text(encoding="utf-8")
     dto = (_DOCUMENTS / "application" / "dto.py").read_text(encoding="utf-8")
@@ -99,14 +99,18 @@ def test_source_only_document_provenance_is_nullable_end_to_end() -> None:
     frontend_types = (
         repository_root / "frontend" / "src" / "modules" / "documents" / "types.ts"
     ).read_text(encoding="utf-8")
-    workspace = (
-        repository_root / "frontend" / "src" / "modules" / "documents" / "DocumentsWorkspace.tsx"
-    ).read_text(encoding="utf-8")
 
+    assert "source_id: str | None" in model
     assert "target_run_id: str | None" in model
-    assert "target_run_id: str | None" in dto
-    assert "target_run_id: str | None" in router
+    assert "DocumentProvenanceReference" in model
+    assert "EVIDENCE_ARTIFACT" in model
+    assert "source_id: str | None" in dto
+    assert "provenance: tuple[DocumentProvenanceDto, ...]" in dto
+    assert "source_id: str | None" in router
+    assert "provenance: list[DocumentProvenanceResponse]" in router
+    assert "source_id TEXT," in repository
     assert "target_run_id TEXT," in repository
-    assert "_migrate_nullable_target_run_id" in repository
-    assert "target_run_id: string | null" in frontend_types
-    assert "Source evidence" in workspace
+    assert "document_version_provenance" in repository
+    assert "_migrate_nullable_document_provenance" in repository
+    assert "source_id: string | null" in frontend_types
+    assert "DocumentProvenanceReference" in frontend_types

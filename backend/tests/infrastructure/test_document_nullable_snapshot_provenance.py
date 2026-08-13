@@ -106,7 +106,7 @@ def _create_legacy_database(database_path: Path) -> tuple[str, str]:
     return version_id, event_id
 
 
-def test_repository_migrates_target_snapshot_to_nullable_without_losing_history(
+def test_repository_migrates_document_provenance_without_losing_history(
     tmp_path: Path,
 ) -> None:
     database_path = tmp_path / "legacy-documents.sqlite3"
@@ -116,7 +116,12 @@ def test_repository_migrates_target_snapshot_to_nullable_without_losing_history(
 
     version = asyncio.run(repository.get_version(DocumentVersionId.from_string(version_id)))
     assert version is not None
+    assert version.source_id == "source-1"
     assert version.target_run_id == "run-1"
+    assert [(item.kind.value, item.reference) for item in version.provenance] == [
+        ("SOURCE_REGISTRY", "source:source-1"),
+        ("CATALOG_SYNCHRONIZATION", "synchronization:run-1"),
+    ]
 
     events = asyncio.run(repository.list_workflow_events(version.id))
     assert [str(event.id) for event in events] == [event_id]
@@ -127,7 +132,25 @@ def test_repository_migrates_target_snapshot_to_nullable_without_losing_history(
             str(row["name"]): row
             for row in connection.execute("PRAGMA table_info(document_versions)").fetchall()
         }
+        assert int(columns["source_id"]["notnull"]) == 0
         assert int(columns["target_run_id"]["notnull"]) == 0
+
+        provenance_rows = connection.execute(
+            """
+            SELECT provenance_kind, provenance_reference
+            FROM document_version_provenance
+            WHERE version_id = ?
+            ORDER BY ordinal ASC
+            """,
+            (version_id,),
+        ).fetchall()
+        assert [
+            (str(row["provenance_kind"]), str(row["provenance_reference"]))
+            for row in provenance_rows
+        ] == [
+            ("SOURCE_REGISTRY", "source:source-1"),
+            ("CATALOG_SYNCHRONIZATION", "synchronization:run-1"),
+        ]
 
         workflow_foreign_keys = connection.execute(
             "PRAGMA foreign_key_list(document_workflow_events)"

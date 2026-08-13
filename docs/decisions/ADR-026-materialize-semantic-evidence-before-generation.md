@@ -45,3 +45,8 @@ platform's deterministic evidence doctrine.
 - the new table is additive and does not rewrite existing Evidence Artifact or Claim history;
 - document provenance generalization remains an explicit follow-up rather than being hidden inside
   Installation Guide generation.
+
+## Follow-up
+
+ADR-027 resolves the deferred Document Version provenance constraint by introducing append-only,
+multi-reference provenance and nullable Source identity while preserving existing history.

@@ -56,6 +56,52 @@ class WorkflowAction(StrEnum):
     SUPERSEDED = "SUPERSEDED"
 
 
+class DocumentProvenanceKind(StrEnum):
+    SOURCE_REGISTRY = "SOURCE_REGISTRY"
+    CATALOG_SYNCHRONIZATION = "CATALOG_SYNCHRONIZATION"
+    EVIDENCE_ARTIFACT = "EVIDENCE_ARTIFACT"
+
+
+@dataclass(frozen=True, slots=True)
+class DocumentProvenanceReference:
+    kind: DocumentProvenanceKind
+    reference: str
+    evidence_kind: str | None = None
+    checksum: str | None = None
+
+    @classmethod
+    def source_registry(cls, source_id: str) -> "DocumentProvenanceReference":
+        return cls(
+            kind=DocumentProvenanceKind.SOURCE_REGISTRY,
+            reference=f"source:{source_id}",
+        )
+
+    @classmethod
+    def catalog_synchronization(
+        cls,
+        synchronization_id: str,
+    ) -> "DocumentProvenanceReference":
+        return cls(
+            kind=DocumentProvenanceKind.CATALOG_SYNCHRONIZATION,
+            reference=f"synchronization:{synchronization_id}",
+        )
+
+    @classmethod
+    def evidence_artifact(
+        cls,
+        *,
+        evidence_id: str,
+        evidence_kind: str,
+        checksum: str,
+    ) -> "DocumentProvenanceReference":
+        return cls(
+            kind=DocumentProvenanceKind.EVIDENCE_ARTIFACT,
+            reference=f"evidence:{evidence_id}",
+            evidence_kind=evidence_kind,
+            checksum=checksum,
+        )
+
+
 @dataclass(frozen=True, slots=True)
 class DocumentId:
     value: UUID
@@ -206,7 +252,7 @@ class DocumentVersion:
     id: DocumentVersionId
     document_id: DocumentId
     project_id: str
-    source_id: str
+    source_id: str | None
     target_run_id: str | None
     baseline_run_id: str | None
     document_type: DocumentType
@@ -227,6 +273,7 @@ class DocumentVersion:
     submitted_at: datetime | None
     approved_at: datetime | None
     superseded_at: datetime | None
+    provenance: tuple[DocumentProvenanceReference, ...] = ()
 
     @classmethod
     def create(
@@ -234,7 +281,7 @@ class DocumentVersion:
         *,
         document_id: DocumentId,
         project_id: str,
-        source_id: str,
+        source_id: str | None,
         target_run_id: str | None,
         baseline_run_id: str | None,
         version_number: DocumentVersionNumber,
@@ -247,6 +294,7 @@ class DocumentVersion:
         revision_reason: str,
         created_by: str,
         document_type: DocumentType = DocumentType.TECHNICAL_SOURCE_OVERVIEW,
+        provenance: tuple[DocumentProvenanceReference, ...] = (),
         now: datetime | None = None,
     ) -> "DocumentVersion":
         timestamp = now or datetime.now(UTC)
@@ -275,6 +323,10 @@ class DocumentVersion:
             submitted_at=None,
             approved_at=None,
             superseded_at=None,
+            provenance=_merge_provenance(
+                _legacy_provenance(source_id, target_run_id),
+                provenance,
+            ),
         )
 
     def generated_event(self) -> "DocumentWorkflowEvent":
@@ -439,6 +491,31 @@ def _comment(value: str, *, required: bool = False) -> str:
             "Document workflow comments must not exceed 1000 characters."
         )
     return normalized
+
+
+def _legacy_provenance(
+    source_id: str | None,
+    target_run_id: str | None,
+) -> tuple[DocumentProvenanceReference, ...]:
+    items: list[DocumentProvenanceReference] = []
+    if source_id is not None:
+        items.append(DocumentProvenanceReference.source_registry(source_id))
+    if target_run_id is not None:
+        items.append(DocumentProvenanceReference.catalog_synchronization(target_run_id))
+    return tuple(items)
+
+
+def _merge_provenance(
+    legacy: tuple[DocumentProvenanceReference, ...],
+    explicit: tuple[DocumentProvenanceReference, ...],
+) -> tuple[DocumentProvenanceReference, ...]:
+    unique: dict[
+        tuple[DocumentProvenanceKind, str],
+        DocumentProvenanceReference,
+    ] = {}
+    for item in (*legacy, *explicit):
+        unique.setdefault((item.kind, item.reference), item)
+    return tuple(unique.values())
 
 
 def _revision_reason(value: str) -> str:
