@@ -88,9 +88,9 @@ function documentationContext(): ProjectDocumentationContext {
               rule_code: "ASBUILT_OBSERVED_CLAIM_REQUIRED",
               document_type: "AS_BUILT",
               severity: "BLOCKER",
-              message: "As-Built factual statements require an observed governed claim.",
+              message: "Add at least one confirmed fact about what is actually implemented.",
               missing_input: "observed-as-built-claim",
-              remediation: "Add an observed As-Built claim backed by persisted evidence.",
+              remediation: "Add a confirmed As-Built fact linked to supporting evidence.",
               supporting_references: [],
             },
           ],
@@ -164,7 +164,15 @@ describe("ProjectDocumentationOverview", () => {
 
     expect(screen.getByRole("heading", { name: "Project documentation" })).toBeInTheDocument();
     expect(screen.getByText("Required coverage")).toBeInTheDocument();
+    expect(screen.getByText("Document", { selector: ".documentation-readiness-columns span" }))
+      .toBeInTheDocument();
+    expect(screen.getByText("Readiness", { selector: ".documentation-readiness-columns span" }))
+      .toBeInTheDocument();
+    expect(screen.getByText("Next step", { selector: ".documentation-readiness-columns span" }))
+      .toBeInTheDocument();
     expect(screen.getAllByText("Not created")).toHaveLength(2);
+    expect(screen.getByText("Uses evidence and project context")).toBeInTheDocument();
+    expect(screen.getByText("Built from supporting evidence")).toBeInTheDocument();
     expect(screen.getByText("Ready")).toBeInTheDocument();
     expect(screen.getAllByText("Blocked").length).toBeGreaterThan(0);
 
@@ -172,7 +180,30 @@ describe("ProjectDocumentationOverview", () => {
     expect(
       screen.getByText("The solution boundary is represented by the normalized API catalog."),
     ).toBeInTheDocument();
-    expect(screen.getAllByText(/1 directly referenced evidence artifact/)).toHaveLength(2);
+    expect(screen.getAllByText(/1 supporting evidence item linked/)).toHaveLength(2);
+  });
+
+  it("presents readiness guidance in plain operational language", () => {
+    render(
+      <ProjectDocumentationOverview
+        projectStatus="ACTIVE"
+        context={documentationContext()}
+        loadState="ready"
+        error=""
+        onNavigateStage={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getAllByText("Readiness details")[1]!);
+
+    expect(screen.getByText("What needs attention")).toBeInTheDocument();
+    expect(
+      screen.getByText("Add at least one confirmed fact about what is actually implemented."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Add a confirmed As-Built fact linked to supporting evidence."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/governed claim/i)).not.toBeInTheDocument();
   });
 
   it("shows remediation without inventing a navigation target", () => {
@@ -189,7 +220,7 @@ describe("ProjectDocumentationOverview", () => {
 
     fireEvent.click(screen.getAllByText("Readiness details")[1]!);
     expect(
-      screen.getByText("Add an observed As-Built claim backed by persisted evidence."),
+      screen.getByText("Add a confirmed As-Built fact linked to supporting evidence."),
     ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /As-Built/ })).not.toBeInTheDocument();
     expect(navigateStage).not.toHaveBeenCalled();

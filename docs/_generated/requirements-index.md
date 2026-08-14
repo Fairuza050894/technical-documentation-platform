@@ -35,6 +35,7 @@ This index reports the requirement documents currently stored in the repository.
 | mvp-1-openapi-source-management.md | MVP 1 — OpenAPI Source Management | 0 | 10 | No |
 | mvp-1-product-ui-foundation.md | MVP 1 Requirement: Product UI Foundation and Operational Overview | 0 | 11 | Yes |
 | mvp-1-project-centric-workbench.md | MVP 1 Requirement: Project-Centric Workbench | 0 | 15 | Yes |
+| mvp-1-project-documentation-registry-visual-polish.md | MVP 1 — Project Documentation Registry Visual Polish | 0 | 4 | No |
 | mvp-1-project-documentation-workbench-integration.md | MVP 1 — Project Documentation Workbench Integration | 0 | 0 | Yes |
 | mvp-1-project-management.md | MVP 1 — Project Management Requirements | 5 | 0 | Yes |
 | mvp-1-referenced-semantic-evidence-capability.md | MVP 1 — Referenced Semantic Evidence Capability | 0 | 10 | Yes |

@@ -229,3 +229,22 @@ def test_semantic_evidence_requires_materialization_for_readiness() -> None:
     assert journey_map.state is ReadinessState.READY
     assert installation.state is ReadinessState.READY
     assert uat.state is ReadinessState.READY
+
+
+def test_readiness_policy_exposes_plain_operator_guidance() -> None:
+    guidance = " ".join(
+        f"{rule.message} {rule.remediation}"
+        for profile in READINESS_PROFILES
+        for rule in profile.rules
+    ).lower()
+
+    for internal_term in (
+        "checksum-verified",
+        "materialize",
+        "typed user_journey",
+        "governed claim",
+        "deterministically inferred",
+        "normalized implementation-level",
+        "observed as-built claim",
+    ):
+        assert internal_term not in guidance

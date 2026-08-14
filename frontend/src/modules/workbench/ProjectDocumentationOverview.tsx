@@ -99,18 +99,26 @@ export function ProjectDocumentationOverview({
           <span>The backend did not return a governed document checklist for this project.</span>
         </div>
       ) : (
-        <ol className="documentation-readiness-list">
-          {context.readiness.items.map((item) => (
-            <DocumentationReadinessItem
-              key={item.document_type}
-              item={item}
-              checklistItem={checklistByType.get(item.document_type) ?? null}
-              evidenceById={evidenceById}
-              claims={context.claims}
-              onNavigateStage={onNavigateStage}
-            />
-          ))}
-        </ol>
+        <div className="documentation-readiness-registry">
+          <div className="documentation-readiness-columns" aria-hidden="true">
+            <span>Document</span>
+            <span>Status</span>
+            <span>Readiness</span>
+            <span>Next step</span>
+          </div>
+          <ol className="documentation-readiness-list">
+            {context.readiness.items.map((item) => (
+              <DocumentationReadinessItem
+                key={item.document_type}
+                item={item}
+                checklistItem={checklistByType.get(item.document_type) ?? null}
+                evidenceById={evidenceById}
+                claims={context.claims}
+                onNavigateStage={onNavigateStage}
+              />
+            ))}
+          </ol>
+        </div>
       )}
     </section>
   );
@@ -242,7 +250,7 @@ function FindingList({ findings }: { findings: ReadinessFinding[] }) {
 
   return (
     <div>
-      <h3>Missing information</h3>
+      <h3>What needs attention</h3>
       <ul className="documentation-finding-list">
         {findings.map((finding) => (
           <li key={finding.rule_code}>
@@ -253,7 +261,6 @@ function FindingList({ findings }: { findings: ReadinessFinding[] }) {
               <strong>{finding.message}</strong>
             </div>
             <p>{finding.remediation}</p>
-            <small>Rule {finding.rule_code}</small>
           </li>
         ))}
       </ul>
@@ -270,9 +277,9 @@ function TraceabilitySummary({
 }) {
   return (
     <div className="documentation-traceability">
-      <h3>Traceability</h3>
+      <h3>Supporting information</h3>
       {claims.length === 0 ? (
-        <p>No governed claims are mapped to this document type yet.</p>
+        <p>No supporting notes have been linked to this document yet.</p>
       ) : (
         <ul>
           {claims.map((claim) => (
@@ -286,10 +293,11 @@ function TraceabilitySummary({
         </ul>
       )}
       <small>
-        {evidence.length} directly referenced evidence artifact{evidence.length === 1 ? "" : "s"}
-        {evidence.length > 0
-          ? ` · ${evidence.map((item) => formatEvidenceKind(item.kind)).join(", ")}`
-          : ""}
+        {evidence.length === 0
+          ? "No supporting evidence linked yet."
+          : `${evidence.length} supporting evidence item${evidence.length === 1 ? "" : "s"} linked · ${evidence
+              .map((item) => formatEvidenceKind(item.kind))
+              .join(", ")}`}
       </small>
     </div>
   );
@@ -331,10 +339,10 @@ function readinessSummary(item: DocumentReadiness): string {
 
 function formatAutomationProfile(value: string): string {
   const labels: Record<string, string> = {
-    EVIDENCE_DRIVEN: "Evidence-led",
-    HYBRID: "Evidence + governed context",
-    GOVERNED_AUTHORING: "Guided authoring",
-    GOVERNED_BUNDLE: "Governed bundle",
+    EVIDENCE_DRIVEN: "Built from supporting evidence",
+    HYBRID: "Uses evidence and project context",
+    GOVERNED_AUTHORING: "Prepared with guided input",
+    GOVERNED_BUNDLE: "Prepared from approved documents",
   };
   return labels[value] ?? value.replaceAll("_", " ").toLowerCase();
 }

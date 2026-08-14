@@ -98,6 +98,7 @@ This register inventories Markdown documentation. Formal approval must be record
 | Unassigned | MVP 1 — OpenAPI Source Management | Requirements | Not specified | `docs/requirements/mvp-1-openapi-source-management.md` (Not specified) |
 | Unassigned | MVP 1 Requirement: Product UI Foundation and Operational Overview | Requirements | Not specified | `docs/requirements/mvp-1-product-ui-foundation.md` (Not specified) |
 | Unassigned | MVP 1 Requirement: Project-Centric Workbench | Requirements | Not specified | `docs/requirements/mvp-1-project-centric-workbench.md` (Not specified) |
+| Unassigned | MVP 1 — Project Documentation Registry Visual Polish | Requirements | Not specified | `docs/requirements/mvp-1-project-documentation-registry-visual-polish.md` (Not specified) |
 | Unassigned | MVP 1 — Project Documentation Workbench Integration | Requirements | Not specified | `docs/requirements/mvp-1-project-documentation-workbench-integration.md` (Not specified) |
 | Unassigned | MVP 1 — Project Management Requirements | Requirements | Not specified | `docs/requirements/mvp-1-project-management.md` (Not specified) |
 | Unassigned | MVP 1 — Referenced Semantic Evidence Capability | Requirements | Not specified | `docs/requirements/mvp-1-referenced-semantic-evidence-capability.md` (Not specified) |

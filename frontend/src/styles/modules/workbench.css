@@ -380,28 +380,71 @@ button.workspace-context:focus-visible {
   font-size: 11px;
 }
 
+.documentation-readiness-registry {
+  --documentation-readiness-columns: minmax(250px, 1.25fr) minmax(185px, 0.82fr)
+    minmax(300px, 1.35fr) minmax(150px, 0.72fr);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+  background: var(--color-surface);
+}
+
+.documentation-readiness-columns {
+  display: grid;
+  grid-template-columns: var(--documentation-readiness-columns);
+  gap: 24px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--color-border-subtle);
+  color: var(--color-text-muted);
+  background: var(--color-surface-subtle);
+  font-size: 8.5px;
+  font-weight: 720;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.documentation-readiness-columns span:last-child {
+  text-align: right;
+}
+
 .documentation-readiness-list {
   display: grid;
   margin: 0;
   padding: 0;
-  overflow: hidden;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-medium);
   list-style: none;
 }
 
 .documentation-readiness-item {
   display: grid;
-  grid-template-columns: minmax(190px, 1.1fr) minmax(200px, 1fr) minmax(220px, 1.4fr) auto;
-  align-items: center;
-  gap: 12px 16px;
-  padding: 13px 15px;
+  grid-template-areas:
+    "identity state summary actions"
+    "details details details details";
+  grid-template-columns: var(--documentation-readiness-columns);
+  align-items: start;
+  gap: 8px 24px;
+  padding: 14px 16px 12px;
   border-bottom: 1px solid var(--color-border-subtle);
   background: var(--color-surface);
 }
 
 .documentation-readiness-item:last-child {
   border-bottom: 0;
+}
+
+.documentation-readiness-item__identity {
+  grid-area: identity;
+}
+
+.documentation-readiness-item__state {
+  grid-area: state;
+}
+
+.documentation-readiness-item__summary {
+  grid-area: summary;
+}
+
+.documentation-readiness-item__actions {
+  grid-area: actions;
 }
 
 .documentation-readiness-item__identity,
@@ -427,19 +470,36 @@ button.workspace-context:focus-visible {
   gap: 6px;
 }
 
+.documentation-readiness-item__title {
+  min-height: 24px;
+}
+
 .documentation-readiness-item__title strong {
   min-width: 0;
   overflow: hidden;
-  font-size: 11.5px;
+  color: var(--color-text-primary);
+  font-size: 12px;
+  line-height: 1.35;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .documentation-requirement {
+  flex: 0 0 auto;
   color: var(--color-text-muted);
-  font-size: 8.5px;
+  font-size: 8px;
   font-weight: 720;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+.documentation-readiness-item__state {
+  min-height: 24px;
+  padding-top: 1px;
+}
+
+.documentation-readiness-item__summary {
+  padding-top: 1px;
 }
 
 .documentation-readiness-item__summary > strong {
@@ -450,17 +510,24 @@ button.workspace-context:focus-visible {
 
 .documentation-readiness-item__actions {
   display: flex;
+  min-width: 0;
+  align-self: start;
   justify-content: flex-end;
 }
 
 .documentation-readiness-item__actions .button {
-  min-height: 30px;
+  width: 100%;
+  max-width: 170px;
+  min-height: 28px;
+  justify-content: flex-end;
   padding-inline: 8px;
   font-size: 10px;
+  white-space: nowrap;
 }
 
 .documentation-readiness-details {
-  grid-column: 1 / -1;
+  grid-area: details;
+  min-width: 0;
   padding-top: 1px;
 }
 
@@ -469,6 +536,7 @@ button.workspace-context:focus-visible {
   color: var(--color-accent);
   font-size: 10px;
   font-weight: 700;
+  line-height: 1.4;
   cursor: pointer;
 }
 
@@ -731,12 +799,20 @@ button.workspace-context:focus-visible {
 }
 
 @media (max-width: 1180px) {
+  .documentation-readiness-columns {
+    display: none;
+  }
+
   .documentation-readiness-item {
-    grid-template-columns: minmax(190px, 1fr) minmax(190px, 1fr);
+    grid-template-areas:
+      "identity state"
+      "summary actions"
+      "details details";
+    grid-template-columns: minmax(240px, 1.15fr) minmax(220px, 0.85fr);
   }
 
   .documentation-readiness-item__actions {
-    justify-content: flex-start;
+    justify-content: flex-end;
   }
 }
 
@@ -759,9 +835,19 @@ button.workspace-context:focus-visible {
 
 @media (max-width: 760px) {
   .documentation-governance-summary,
-  .documentation-readiness-item,
   .documentation-readiness-details__body {
     grid-template-columns: 1fr;
+  }
+
+  .documentation-readiness-item {
+    grid-template-areas:
+      "identity"
+      "state"
+      "summary"
+      "actions"
+      "details";
+    grid-template-columns: 1fr;
+    gap: 9px;
   }
 
   .documentation-governance-metric {
@@ -773,8 +859,14 @@ button.workspace-context:focus-visible {
     border-bottom: 0;
   }
 
+  .documentation-readiness-item__actions {
+    justify-content: stretch;
+  }
+
   .documentation-readiness-item__actions .button {
+    max-width: none;
     width: 100%;
+    justify-content: space-between;
   }
 
   .next-action-panel {

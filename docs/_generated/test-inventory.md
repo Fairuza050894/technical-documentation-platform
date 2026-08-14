@@ -22,7 +22,7 @@
 | backend/tests/domain/test_feature.py | 2 |
 | backend/tests/domain/test_identity.py | 2 |
 | backend/tests/domain/test_project.py | 4 |
-| backend/tests/domain/test_readiness_policy.py | 6 |
+| backend/tests/domain/test_readiness_policy.py | 7 |
 | backend/tests/domain/test_source.py | 3 |
 | backend/tests/domain/test_workspace.py | 2 |
 | backend/tests/infrastructure/test_document_nullable_snapshot_provenance.py | 1 |
@@ -58,6 +58,7 @@
 | backend/tests/test_feature_architecture.py | 2 |
 | backend/tests/test_frontend_architecture.py | 9 |
 | backend/tests/test_frontend_b4_responsive_contract.py | 3 |
+| backend/tests/test_frontend_documentation_visual_contract.py | 2 |
 | backend/tests/test_frontend_documentation_workbench_architecture.py | 3 |
 | backend/tests/test_frontend_documents_changes_architecture.py | 5 |
 | backend/tests/test_frontend_feedback_status_architecture.py | 3 |
@@ -69,7 +70,7 @@
 | backend/tests/test_repository_documentation.py | 1 |
 | backend/tests/test_workspace_architecture.py | 2 |
 
-Backend total: **198** tests.
+Backend total: **201** tests.
 
 ## Frontend
 
@@ -85,12 +86,12 @@ Backend total: **198** tests.
 | frontend/src/modules/overview/OperationalOverview.test.tsx | 2 |
 | frontend/src/modules/projects/ProjectWorkspace.test.tsx | 4 |
 | frontend/src/modules/sources/SourceWorkspace.test.tsx | 2 |
-| frontend/src/modules/workbench/ProjectDocumentationOverview.test.tsx | 3 |
+| frontend/src/modules/workbench/ProjectDocumentationOverview.test.tsx | 4 |
 | frontend/src/modules/workbench/ProjectWorkbench.test.tsx | 6 |
 | frontend/src/modules/workspaces/WorkspaceRegistry.test.tsx | 2 |
 | frontend/src/modules/workspaces/WorkspaceSwitcher.test.tsx | 5 |
 | frontend/src/shared/api/config.test.ts | 3 |
 
-Frontend total: **55** tests.
+Frontend total: **56** tests.
 
 Counts are structural and do not replace execution evidence from `make verify`.
