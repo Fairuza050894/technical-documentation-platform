@@ -3,7 +3,7 @@ from typing import Annotated, Literal, cast
 from fastapi import APIRouter, Depends, Query, Request, status
 from pydantic import BaseModel, Field
 
-from tdp.modules.projects.application.commands import CreateProjectCommand
+from tdp.modules.projects.application.commands import CreateProjectCommand, UpdateProjectCommand
 from tdp.modules.projects.application.dto import ProjectDto
 from tdp.modules.projects.application.service import ProjectApplicationService
 
@@ -31,6 +31,11 @@ class CreateProjectRequest(BaseModel):
             workspace_id=workspace_id or self.workspace_id,
             ownership_type=self.ownership_type,
         )
+
+
+class UpdateProjectRequest(BaseModel):
+    name: str | None = Field(default=None, min_length=3, max_length=80)
+    description: str | None = Field(default=None, max_length=500)
 
 
 class ProjectResponse(BaseModel):
@@ -98,6 +103,23 @@ async def get_project(
     service: ProjectServiceDependency,
 ) -> ProjectResponse:
     return ProjectResponse.from_dto(await service.get(project_id))
+
+
+@router.patch("/{project_id}", response_model=ProjectResponse)
+async def update_project(
+    project_id: str,
+    payload: UpdateProjectRequest,
+    service: ProjectServiceDependency,
+) -> ProjectResponse:
+    return ProjectResponse.from_dto(
+        await service.update(
+            project_id,
+            UpdateProjectCommand(
+                name=payload.name,
+                description=payload.description,
+            ),
+        )
+    )
 
 
 @router.post("/{project_id}/archive", response_model=ProjectResponse)

@@ -1,8 +1,11 @@
 from tdp.modules.documents.application.enterprise_generation_ports import (
     EnterpriseGenerationContext,
     GenerationClaimFact,
+    GenerationDeploymentRuntimeFact,
     GenerationOperationFact,
     GenerationSchemaFact,
+    GenerationUatResultFact,
+    GenerationUserJourneyFact,
 )
 from tdp.modules.documents.domain.model import DocumentType
 
@@ -13,6 +16,14 @@ class DeterministicEnterpriseMarkdownRenderer:
             return self._render_hld(context)
         if context.profile.document_type is DocumentType.AS_BUILT:
             return self._render_as_built(context)
+        if context.profile.document_type is DocumentType.USER_GUIDE:
+            return self._render_user_guide(context)
+        if context.profile.document_type is DocumentType.INSTALLATION_GUIDE:
+            return self._render_installation_guide(context)
+        if context.profile.document_type is DocumentType.UAT_EVIDENCE:
+            return self._render_uat_evidence(context)
+        if context.profile.document_type is DocumentType.JOURNEY_MAP:
+            return self._render_journey_map(context)
         if context.profile.document_type is not DocumentType.LLD:
             raise ValueError(
                 f"Unsupported enterprise renderer profile: {context.profile.document_type.value}"
@@ -617,6 +628,364 @@ class DeterministicEnterpriseMarkdownRenderer:
             ]
         )
         return "\n".join(lines).rstrip() + "\n"
+
+    def _render_user_guide(self, context: EnterpriseGenerationContext) -> str:
+        journey = self._require_user_journey(context)
+        lines = [
+            f"# User Guide: {self._text(context.project_name)}",
+            "",
+            (
+                "> Deterministically generated from materialized governed USER_JOURNEY evidence. "
+                "No UI label, screen, or action is invented."
+            ),
+            "",
+            *self._semantic_document_control(context),
+            "## Journey overview",
+            "",
+            f"- Journey: **{self._text(journey.journey_name)}**",
+            f"- Actors: {self._text(self._plain_list(journey.actors))}",
+            "",
+            "## Preconditions",
+            "",
+            *self._bullet_lines(journey.preconditions),
+            "## Step-by-step guidance",
+            "",
+            "| Step | Actor | Action | Expected outcome | Evidence |",
+            "| --- | --- | --- | --- | --- |",
+        ]
+        for step in sorted(journey.steps, key=lambda item: item.sequence):
+            lines.append(
+                f"| {step.sequence} | {self._cell(step.actor)} | "
+                f"{self._cell(step.action)} | {self._cell(step.expected_outcome)} | "
+                f"`{self._code(step.source_reference)}` |"
+            )
+        lines.extend(
+            [
+                "",
+                "## Expected outcomes",
+                "",
+                *self._bullet_lines(journey.outcomes),
+                *self._semantic_readiness_lines(context),
+                *self._semantic_traceability_lines(context),
+                "## Generation policy",
+                "",
+                (
+                    "- User-facing facts come only from the selected materialized USER_JOURNEY "
+                    "evidence."
+                ),
+                " ".join(
+                    (
+                        "- The renderer does not invent screens, controls,",
+                        "navigation labels, or procedures.",
+                    )
+                ),
+                "- Identical governed inputs produce identical Markdown and checksum.",
+                "- AI does not determine factual truth or rendered user actions.",
+                "",
+            ]
+        )
+        return "\n".join(lines).rstrip() + "\n"
+
+    def _render_journey_map(self, context: EnterpriseGenerationContext) -> str:
+        journey = self._require_user_journey(context)
+        lines = [
+            f"# Journey Map: {self._text(context.project_name)}",
+            "",
+            (
+                "> Deterministically generated from materialized governed USER_JOURNEY evidence. "
+                "No persona, emotion, channel, or stage is invented."
+            ),
+            "",
+            *self._semantic_document_control(context),
+            "## Journey definition",
+            "",
+            f"- Journey: **{self._text(journey.journey_name)}**",
+            f"- Actors: {self._text(self._plain_list(journey.actors))}",
+            "",
+            "## Preconditions",
+            "",
+            *self._bullet_lines(journey.preconditions),
+            "## Journey sequence",
+            "",
+            "| Step | Actor | Activity | Expected outcome | Evidence |",
+            "| --- | --- | --- | --- | --- |",
+        ]
+        for step in sorted(journey.steps, key=lambda item: item.sequence):
+            lines.append(
+                f"| {step.sequence} | {self._cell(step.actor)} | "
+                f"{self._cell(step.action)} | {self._cell(step.expected_outcome)} | "
+                f"`{self._code(step.source_reference)}` |"
+            )
+        lines.extend(
+            [
+                "",
+                "## Recorded outcomes",
+                "",
+                *self._bullet_lines(journey.outcomes),
+                *self._semantic_readiness_lines(context),
+                *self._semantic_traceability_lines(context),
+                "## Generation policy",
+                "",
+                (
+                    "- Journey stages are represented only as the ordered steps supplied by "
+                    "materialized USER_JOURNEY evidence."
+                ),
+                "- Personas, emotions, channels, pain points, and opportunities are not inferred.",
+                "- Identical governed inputs produce identical Markdown and checksum.",
+                "- AI does not determine journey facts.",
+                "",
+            ]
+        )
+        return "\n".join(lines).rstrip() + "\n"
+
+    def _render_installation_guide(
+        self,
+        context: EnterpriseGenerationContext,
+    ) -> str:
+        deployment = self._require_deployment_runtime(context)
+        lines = [
+            f"# Installation Guide: {self._text(context.project_name)}",
+            "",
+            (
+                "> Deterministically generated from materialized governed DEPLOYMENT_RUNTIME "
+                "evidence. Configuration values and secrets are never rendered."
+            ),
+            "",
+            *self._semantic_document_control(context),
+            "## Target environment",
+            "",
+            f"**{self._text(deployment.environment)}**",
+            "",
+            "## Runtime components",
+            "",
+            "| Component | Version | Evidence |",
+            "| --- | --- | --- |",
+        ]
+        for component in deployment.runtime_components:
+            lines.append(
+                f"| {self._cell(component.name)} | {self._cell(component.version)} | "
+                f"`{self._code(component.source_reference)}` |"
+            )
+        lines.extend(
+            [
+                "",
+                "## Prerequisites",
+                "",
+                *self._bullet_lines(deployment.prerequisites),
+                "## Configuration keys",
+                "",
+                (
+                    "Only configuration **names** are included. Values, credentials, tokens, "
+                    "and secrets are outside this document contract."
+                ),
+                "",
+                *self._code_bullet_lines(deployment.configuration_keys),
+                "## Deployment procedure",
+                "",
+                "| Step | Instruction | Evidence |",
+                "| --- | --- | --- |",
+            ]
+        )
+        for step in sorted(deployment.deployment_steps, key=lambda item: item.sequence):
+            lines.append(
+                f"| {step.sequence} | {self._cell(step.instruction)} | "
+                f"`{self._code(step.source_reference)}` |"
+            )
+        lines.extend(
+            [
+                "",
+                "## Verification checks",
+                "",
+                "| Check | Expected result | Evidence |",
+                "| --- | --- | --- |",
+            ]
+        )
+        for check in deployment.verification_checks:
+            lines.append(
+                f"| {self._cell(check.name)} | {self._cell(check.expected_result)} | "
+                f"`{self._code(check.source_reference)}` |"
+            )
+        lines.extend(
+            [
+                "",
+                "## Rollback references",
+                "",
+                *self._code_bullet_lines(deployment.rollback_references),
+                *self._semantic_readiness_lines(context),
+                *self._semantic_traceability_lines(context),
+                "## Generation policy",
+                "",
+                (
+                    "- Installation facts come only from the selected materialized "
+                    "DEPLOYMENT_RUNTIME evidence."
+                ),
+                "- Configuration values and secret-bearing material are never rendered.",
+                "- No local file or external HTTP content is resolved during generation.",
+                "- Identical governed inputs produce identical Markdown and checksum.",
+                "- AI does not determine deployment facts.",
+                "",
+            ]
+        )
+        return "\n".join(lines).rstrip() + "\n"
+
+    def _render_uat_evidence(self, context: EnterpriseGenerationContext) -> str:
+        uat = self._require_uat_result(context)
+        passed = sum(item.status == "PASSED" for item in uat.scenarios)
+        failed = sum(item.status == "FAILED" for item in uat.scenarios)
+        blocked = sum(item.status == "BLOCKED" for item in uat.scenarios)
+        lines = [
+            f"# UAT Evidence: {self._text(context.project_name)}",
+            "",
+            (
+                "> Deterministically generated from materialized governed UAT_RESULT evidence. "
+                "Scenario status and results are rendered exactly from governed input."
+            ),
+            "",
+            *self._semantic_document_control(context),
+            "## UAT run summary",
+            "",
+            f"- Run reference: `{self._code(uat.run_reference)}`",
+            f"- Executed at: {self._text(uat.executed_at)}",
+            f"- Total scenarios: **{len(uat.scenarios)}**",
+            f"- Passed: **{passed}**",
+            f"- Failed: **{failed}**",
+            f"- Blocked: **{blocked}**",
+            "",
+            "## Scenario evidence",
+            "",
+            "| Scenario | Title | Status | Expected | Actual | Evidence |",
+            "| --- | --- | --- | --- | --- | --- |",
+        ]
+        for scenario in sorted(uat.scenarios, key=lambda item: item.scenario_id):
+            references = ", ".join(f"`{self._code(item)}`" for item in scenario.evidence_references)
+            lines.append(
+                f"| `{self._code(scenario.scenario_id)}` | {self._cell(scenario.title)} | "
+                f"**{self._cell(scenario.status)}** | "
+                f"{self._cell(scenario.expected_result)} | "
+                f"{self._cell(scenario.actual_result)} | {references} |"
+            )
+        lines.extend(
+            [
+                "",
+                *self._semantic_readiness_lines(context),
+                *self._semantic_traceability_lines(context),
+                "## Generation policy",
+                "",
+                "- Scenario totals are derived only from the typed materialized scenario statuses.",
+                "- Expected and actual results are not rewritten or inferred.",
+                "- Identical governed inputs produce identical Markdown and checksum.",
+                "- AI does not determine test status or acceptance results.",
+                "",
+            ]
+        )
+        return "\n".join(lines).rstrip() + "\n"
+
+    def _semantic_document_control(
+        self,
+        context: EnterpriseGenerationContext,
+    ) -> list[str]:
+        primary = self._primary_evidence(context)
+        return [
+            "## Document control",
+            "",
+            "| Field | Value |",
+            "| --- | --- |",
+            (
+                f"| Project | {self._cell(context.project_key)} — "
+                f"{self._cell(context.project_name)} |"
+            ),
+            f"| Workspace ID | `{self._code(context.workspace_id)}` |",
+            f"| Document type | `{context.profile.document_type.value}` |",
+            f"| Generation profile | `{context.profile.profile_key}` |",
+            f"| Readiness policy | `{self._code(context.readiness.policy_version)}` |",
+            f"| Readiness state | `{self._code(context.readiness.state)}` |",
+            f"| Primary evidence | `{self._code(primary.id)}` |",
+            f"| Evidence kind | `{self._code(primary.kind)}` |",
+            f"| Evidence checksum | `{self._code(primary.checksum)}` |",
+            "",
+        ]
+
+    def _semantic_readiness_lines(
+        self,
+        context: EnterpriseGenerationContext,
+    ) -> list[str]:
+        lines = ["## Readiness findings", ""]
+        if not context.readiness.findings:
+            return [
+                *lines,
+                "No blocker or warning remains under the current readiness policy.",
+                "",
+            ]
+        for finding in context.readiness.findings:
+            lines.extend(
+                [
+                    f"### {self._text(finding.rule_code)}",
+                    "",
+                    f"- Severity: **{self._text(finding.severity)}**",
+                    f"- Finding: {self._text(finding.message)}",
+                    f"- Remediation: {self._text(finding.remediation)}",
+                    "",
+                ]
+            )
+        return lines
+
+    def _semantic_traceability_lines(
+        self,
+        context: EnterpriseGenerationContext,
+    ) -> list[str]:
+        lines = [
+            "## Evidence traceability",
+            "",
+            "| Evidence ID | Kind | Checksum | Source reference |",
+            "| --- | --- | --- | --- |",
+        ]
+        for evidence in sorted(context.evidence, key=lambda item: (item.kind, item.id)):
+            lines.append(
+                f"| `{self._code(evidence.id)}` | {self._cell(evidence.kind)} | "
+                f"`{self._code(evidence.checksum)}` | "
+                f"`{self._code(evidence.source_reference)}` |"
+            )
+        lines.append("")
+        return lines
+
+    @staticmethod
+    def _require_user_journey(
+        context: EnterpriseGenerationContext,
+    ) -> GenerationUserJourneyFact:
+        if context.user_journey is None:
+            raise ValueError("USER_JOURNEY materialization is required by this renderer.")
+        return context.user_journey
+
+    @staticmethod
+    def _require_deployment_runtime(
+        context: EnterpriseGenerationContext,
+    ) -> GenerationDeploymentRuntimeFact:
+        if context.deployment_runtime is None:
+            raise ValueError("DEPLOYMENT_RUNTIME materialization is required by this renderer.")
+        return context.deployment_runtime
+
+    @staticmethod
+    def _require_uat_result(
+        context: EnterpriseGenerationContext,
+    ) -> GenerationUatResultFact:
+        if context.uat_result is None:
+            raise ValueError("UAT_RESULT materialization is required by this renderer.")
+        return context.uat_result
+
+    @staticmethod
+    def _primary_evidence(context: EnterpriseGenerationContext):
+        for evidence in context.evidence:
+            if evidence.id == context.primary_evidence_id:
+                return evidence
+        raise ValueError("Primary generation evidence is missing from the rendering context.")
+
+    @classmethod
+    def _bullet_lines(cls, values: tuple[str, ...]) -> list[str]:
+        return [*(f"- {cls._text(item)}" for item in values), ""]
+
+    @classmethod
+    def _code_bullet_lines(cls, values: tuple[str, ...]) -> list[str]:
+        return [*(f"- `{cls._code(item)}`" for item in values), ""]
 
     def _operation_section(self, operation: GenerationOperationFact) -> list[str]:
         lines = [

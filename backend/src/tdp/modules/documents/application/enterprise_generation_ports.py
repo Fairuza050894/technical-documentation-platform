@@ -53,6 +53,73 @@ class GenerationSchemaFact:
 
 
 @dataclass(frozen=True, slots=True)
+class GenerationJourneyStepFact:
+    sequence: int
+    actor: str
+    action: str
+    expected_outcome: str
+    source_reference: str
+
+
+@dataclass(frozen=True, slots=True)
+class GenerationUserJourneyFact:
+    journey_name: str
+    actors: tuple[str, ...]
+    preconditions: tuple[str, ...]
+    steps: tuple[GenerationJourneyStepFact, ...]
+    outcomes: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class GenerationRuntimeComponentFact:
+    name: str
+    version: str
+    source_reference: str
+
+
+@dataclass(frozen=True, slots=True)
+class GenerationDeploymentStepFact:
+    sequence: int
+    instruction: str
+    source_reference: str
+
+
+@dataclass(frozen=True, slots=True)
+class GenerationVerificationCheckFact:
+    name: str
+    expected_result: str
+    source_reference: str
+
+
+@dataclass(frozen=True, slots=True)
+class GenerationDeploymentRuntimeFact:
+    environment: str
+    runtime_components: tuple[GenerationRuntimeComponentFact, ...]
+    prerequisites: tuple[str, ...]
+    configuration_keys: tuple[str, ...]
+    deployment_steps: tuple[GenerationDeploymentStepFact, ...]
+    verification_checks: tuple[GenerationVerificationCheckFact, ...]
+    rollback_references: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class GenerationUatScenarioFact:
+    scenario_id: str
+    title: str
+    status: str
+    expected_result: str
+    actual_result: str
+    evidence_references: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class GenerationUatResultFact:
+    run_reference: str
+    executed_at: str
+    scenarios: tuple[GenerationUatScenarioFact, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class EnterpriseGenerationContext:
     profile: EnterpriseDocumentGenerationProfile
     readiness: GenerationReadinessSnapshot
@@ -76,6 +143,9 @@ class EnterpriseGenerationContext:
     claims: tuple[GenerationClaimFact, ...]
     operations: tuple[GenerationOperationFact, ...]
     schemas: tuple[GenerationSchemaFact, ...]
+    user_journey: GenerationUserJourneyFact | None = None
+    deployment_runtime: GenerationDeploymentRuntimeFact | None = None
+    uat_result: GenerationUatResultFact | None = None
 
 
 class EnterpriseGenerationInputProvider(Protocol):

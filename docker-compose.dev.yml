@@ -1,0 +1,24 @@
+services:
+  backend:
+    build:
+      target: runtime
+    command:
+      - uvicorn
+      - tdp.main:app
+      - --reload
+      - --host
+      - "0.0.0.0"
+      - --port
+      - "8000"
+    environment:
+      TDP_ENVIRONMENT: development
+      TDP_AUTH_MODE: local
+    volumes:
+      - ./backend/src:/app/src
+      - ./.runtime:/data
+    ports:
+      - "8000:8000"
+
+  frontend:
+    ports:
+      - "4173:80"

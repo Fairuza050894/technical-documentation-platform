@@ -64,10 +64,50 @@ _HLD_PROFILE = EnterpriseDocumentGenerationProfile(
     rendered_claim_classifications=("OBSERVED", "INFERRED"),
 )
 
+_USER_GUIDE_PROFILE = EnterpriseDocumentGenerationProfile(
+    profile_key="enterprise-user-guide-v1",
+    document_type=DocumentType.USER_GUIDE,
+    display_name="User Guide",
+    file_slug="user-guide",
+    accepted_evidence_kinds=("USER_JOURNEY",),
+    rendered_claim_classifications=(),
+)
+
+_INSTALLATION_GUIDE_PROFILE = EnterpriseDocumentGenerationProfile(
+    profile_key="enterprise-installation-guide-v1",
+    document_type=DocumentType.INSTALLATION_GUIDE,
+    display_name="Installation Guide",
+    file_slug="installation-guide",
+    accepted_evidence_kinds=("DEPLOYMENT_RUNTIME",),
+    rendered_claim_classifications=(),
+)
+
+_UAT_EVIDENCE_PROFILE = EnterpriseDocumentGenerationProfile(
+    profile_key="enterprise-uat-evidence-v1",
+    document_type=DocumentType.UAT_EVIDENCE,
+    display_name="UAT Evidence",
+    file_slug="uat-evidence",
+    accepted_evidence_kinds=("UAT_RESULT",),
+    rendered_claim_classifications=(),
+)
+
+_JOURNEY_MAP_PROFILE = EnterpriseDocumentGenerationProfile(
+    profile_key="enterprise-journey-map-v1",
+    document_type=DocumentType.JOURNEY_MAP,
+    display_name="Journey Map",
+    file_slug="journey-map",
+    accepted_evidence_kinds=("USER_JOURNEY",),
+    rendered_claim_classifications=(),
+)
+
 ENTERPRISE_GENERATION_PROFILES: tuple[EnterpriseDocumentGenerationProfile, ...] = (
     _LLD_PROFILE,
     _AS_BUILT_PROFILE,
     _HLD_PROFILE,
+    _USER_GUIDE_PROFILE,
+    _INSTALLATION_GUIDE_PROFILE,
+    _UAT_EVIDENCE_PROFILE,
+    _JOURNEY_MAP_PROFILE,
 )
 
 _PROFILE_BY_TYPE = {profile.document_type: profile for profile in ENTERPRISE_GENERATION_PROFILES}

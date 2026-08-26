@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 
 from tdp.modules.catalog.domain.model import (
@@ -11,9 +12,17 @@ from tdp.modules.catalog.domain.repository import CatalogRepository
 from tdp.modules.documents.application.enterprise_generation_ports import (
     EnterpriseGenerationContext,
     GenerationClaimFact,
+    GenerationDeploymentRuntimeFact,
+    GenerationDeploymentStepFact,
     GenerationEvidenceFact,
+    GenerationJourneyStepFact,
     GenerationOperationFact,
+    GenerationRuntimeComponentFact,
     GenerationSchemaFact,
+    GenerationUatResultFact,
+    GenerationUatScenarioFact,
+    GenerationUserJourneyFact,
+    GenerationVerificationCheckFact,
 )
 from tdp.modules.documents.domain.errors import (
     DocumentProjectArchivedError,
@@ -24,6 +33,12 @@ from tdp.modules.documents.domain.generation import (
     EnterpriseDocumentGenerationProfile,
     GenerationReadinessFinding,
     GenerationReadinessSnapshot,
+)
+from tdp.modules.evidence.domain.errors import InvalidEvidenceManifestError
+from tdp.modules.evidence.domain.materialization import (
+    SEMANTIC_EVIDENCE_MANIFEST_SCHEMA_VERSION,
+    EvidenceMaterialization,
+    canonicalize_semantic_evidence_manifest,
 )
 from tdp.modules.evidence.domain.model import Claim, EvidenceArtifact, EvidenceKind
 from tdp.modules.evidence.domain.repository import EvidenceRepository
@@ -89,6 +104,14 @@ class RepositoryBackedEnterpriseGenerationInputProvider:
         readiness = await self.readiness(project_id, profile)
         artifacts = await self._evidence_repository.list_artifacts_by_project(project_id)
         accepted_evidence_kinds = set(profile.accepted_evidence_kinds)
+        if accepted_evidence_kinds & _SEMANTIC_EVIDENCE_KIND_VALUES:
+            return await self._collect_semantic_context(
+                project,
+                readiness,
+                artifacts,
+                profile,
+            )
+
         primary_candidates = [
             artifact for artifact in artifacts if artifact.kind.value in accepted_evidence_kinds
         ]
@@ -183,6 +206,82 @@ class RepositoryBackedEnterpriseGenerationInputProvider:
             schemas=tuple(_schema_fact(item) for item in schemas),
         )
 
+    async def _collect_semantic_context(
+        self,
+        project: Project,
+        readiness: GenerationReadinessSnapshot,
+        artifacts: list[EvidenceArtifact],
+        profile: EnterpriseDocumentGenerationProfile,
+    ) -> EnterpriseGenerationContext:
+        project_id = str(project.id)
+        materializations = await self._evidence_repository.list_materializations_by_project(
+            project_id
+        )
+        materialization_by_evidence = {str(item.evidence_id): item for item in materializations}
+        accepted_evidence_kinds = set(profile.accepted_evidence_kinds)
+        candidates = [
+            artifact
+            for artifact in artifacts
+            if artifact.kind.value in accepted_evidence_kinds
+            and _matching_materialization(
+                artifact,
+                materialization_by_evidence.get(str(artifact.id)),
+                project_id,
+            )
+        ]
+        if not candidates:
+            raise InvalidDocumentGenerationError(
+                f"{profile.display_name} requires materialized governed semantic evidence."
+            )
+
+        primary = max(candidates, key=_artifact_sort_key)
+        materialization = materialization_by_evidence[str(primary.id)]
+        payload = _semantic_payload(primary, materialization)
+
+        user_journey: GenerationUserJourneyFact | None = None
+        deployment_runtime: GenerationDeploymentRuntimeFact | None = None
+        uat_result: GenerationUatResultFact | None = None
+        if primary.kind is EvidenceKind.USER_JOURNEY:
+            user_journey = _user_journey_fact(payload)
+        elif primary.kind is EvidenceKind.DEPLOYMENT_RUNTIME:
+            deployment_runtime = _deployment_runtime_fact(payload)
+        elif primary.kind is EvidenceKind.UAT_RESULT:
+            uat_result = _uat_result_fact(payload)
+        else:
+            raise InvalidDocumentGenerationError(
+                f"Unsupported semantic evidence kind: {primary.kind.value}."
+            )
+
+        return EnterpriseGenerationContext(
+            profile=profile,
+            readiness=readiness,
+            project_id=project_id,
+            project_key=str(project.key),
+            project_name=str(project.name),
+            project_description=str(project.description),
+            workspace_id=project.workspace_id,
+            source_id=None,
+            source_name="Not applicable — semantic evidence",
+            api_title="",
+            api_version="",
+            openapi_version="",
+            target_run_id=None,
+            source_checksum=str(primary.checksum),
+            snapshot_completed_at=None,
+            primary_evidence_id=str(primary.id),
+            primary_evidence_kind=primary.kind.value,
+            available_snapshot_count=sum(
+                artifact.kind is EvidenceKind.CATALOG_SNAPSHOT for artifact in artifacts
+            ),
+            evidence=(_evidence_fact(primary),),
+            claims=(),
+            operations=(),
+            schemas=(),
+            user_journey=user_journey,
+            deployment_runtime=deployment_runtime,
+            uat_result=uat_result,
+        )
+
     async def _require_writable_project(self, project_id: str) -> Project:
         project = await self._project_repository.get(ProjectId.from_string(project_id))
         if project is None:
@@ -202,6 +301,179 @@ class RepositoryBackedEnterpriseGenerationInputProvider:
                 "Enterprise document generation is not allowed for an archived workspace."
             )
         return project
+
+
+_SEMANTIC_EVIDENCE_KIND_VALUES = {
+    EvidenceKind.USER_JOURNEY.value,
+    EvidenceKind.DEPLOYMENT_RUNTIME.value,
+    EvidenceKind.UAT_RESULT.value,
+}
+
+
+def _matching_materialization(
+    artifact: EvidenceArtifact,
+    materialization: EvidenceMaterialization | None,
+    project_id: str,
+) -> bool:
+    return (
+        materialization is not None
+        and materialization.project_id == project_id
+        and materialization.kind is artifact.kind
+        and str(materialization.checksum) == str(artifact.checksum)
+    )
+
+
+def _semantic_payload(
+    artifact: EvidenceArtifact,
+    materialization: EvidenceMaterialization,
+) -> dict[str, object]:
+    try:
+        decoded = json.loads(materialization.canonical_manifest)
+        if not isinstance(decoded, dict) or not all(isinstance(key, str) for key in decoded):
+            raise InvalidDocumentGenerationError(
+                "Materialized semantic evidence must contain a canonical object."
+            )
+        canonical = canonicalize_semantic_evidence_manifest(
+            artifact.kind,
+            decoded,
+        )
+    except (json.JSONDecodeError, InvalidEvidenceManifestError) as exc:
+        raise InvalidDocumentGenerationError(
+            "Materialized semantic evidence could not be validated for generation."
+        ) from exc
+
+    if (
+        canonical.schema_version != SEMANTIC_EVIDENCE_MANIFEST_SCHEMA_VERSION
+        or canonical.canonical_json != materialization.canonical_manifest
+        or str(canonical.checksum) != str(artifact.checksum)
+    ):
+        raise InvalidDocumentGenerationError(
+            "Materialized semantic evidence no longer matches its immutable Evidence Artifact."
+        )
+
+    payload = decoded.get("payload")
+    if not isinstance(payload, dict) or not all(isinstance(key, str) for key in payload):
+        raise InvalidDocumentGenerationError(
+            "Materialized semantic evidence payload must be an object."
+        )
+    return payload
+
+
+def _user_journey_fact(payload: dict[str, object]) -> GenerationUserJourneyFact:
+    return GenerationUserJourneyFact(
+        journey_name=_string(payload, "journey_name"),
+        actors=_string_tuple(payload, "actors"),
+        preconditions=_string_tuple(payload, "preconditions"),
+        steps=tuple(
+            GenerationJourneyStepFact(
+                sequence=_integer(item, "sequence"),
+                actor=_string(item, "actor"),
+                action=_string(item, "action"),
+                expected_outcome=_string(item, "expected_outcome"),
+                source_reference=_string(item, "source_reference"),
+            )
+            for item in _object_list(payload, "steps")
+        ),
+        outcomes=_string_tuple(payload, "outcomes"),
+    )
+
+
+def _deployment_runtime_fact(
+    payload: dict[str, object],
+) -> GenerationDeploymentRuntimeFact:
+    return GenerationDeploymentRuntimeFact(
+        environment=_string(payload, "environment"),
+        runtime_components=tuple(
+            GenerationRuntimeComponentFact(
+                name=_string(item, "name"),
+                version=_string(item, "version"),
+                source_reference=_string(item, "source_reference"),
+            )
+            for item in _object_list(payload, "runtime_components")
+        ),
+        prerequisites=_string_tuple(payload, "prerequisites"),
+        configuration_keys=_string_tuple(payload, "configuration_keys"),
+        deployment_steps=tuple(
+            GenerationDeploymentStepFact(
+                sequence=_integer(item, "sequence"),
+                instruction=_string(item, "instruction"),
+                source_reference=_string(item, "source_reference"),
+            )
+            for item in _object_list(payload, "deployment_steps")
+        ),
+        verification_checks=tuple(
+            GenerationVerificationCheckFact(
+                name=_string(item, "name"),
+                expected_result=_string(item, "expected_result"),
+                source_reference=_string(item, "source_reference"),
+            )
+            for item in _object_list(payload, "verification_checks")
+        ),
+        rollback_references=_string_tuple(payload, "rollback_references"),
+    )
+
+
+def _uat_result_fact(payload: dict[str, object]) -> GenerationUatResultFact:
+    return GenerationUatResultFact(
+        run_reference=_string(payload, "run_reference"),
+        executed_at=_string(payload, "executed_at"),
+        scenarios=tuple(
+            GenerationUatScenarioFact(
+                scenario_id=_string(item, "scenario_id"),
+                title=_string(item, "title"),
+                status=_string(item, "status"),
+                expected_result=_string(item, "expected_result"),
+                actual_result=_string(item, "actual_result"),
+                evidence_references=_string_tuple(item, "evidence_references"),
+            )
+            for item in _object_list(payload, "scenarios")
+        ),
+    )
+
+
+def _object_list(
+    payload: dict[str, object],
+    key: str,
+) -> tuple[dict[str, object], ...]:
+    value = payload.get(key)
+    if not isinstance(value, list):
+        raise InvalidDocumentGenerationError(f"Materialized semantic field {key} must be a list.")
+    items: list[dict[str, object]] = []
+    for item in value:
+        if not isinstance(item, dict) or not all(isinstance(name, str) for name in item):
+            raise InvalidDocumentGenerationError(
+                f"Materialized semantic field {key} must contain objects."
+            )
+        items.append(item)
+    return tuple(items)
+
+
+def _string_tuple(
+    payload: dict[str, object],
+    key: str,
+) -> tuple[str, ...]:
+    value = payload.get(key)
+    if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
+        raise InvalidDocumentGenerationError(
+            f"Materialized semantic field {key} must contain text values."
+        )
+    return tuple(value)
+
+
+def _string(payload: dict[str, object], key: str) -> str:
+    value = payload.get(key)
+    if not isinstance(value, str):
+        raise InvalidDocumentGenerationError(f"Materialized semantic field {key} must be text.")
+    return value
+
+
+def _integer(payload: dict[str, object], key: str) -> int:
+    value = payload.get(key)
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise InvalidDocumentGenerationError(
+            f"Materialized semantic field {key} must be an integer."
+        )
+    return value
 
 
 def _artifact_sort_key(

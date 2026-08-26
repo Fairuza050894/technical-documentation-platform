@@ -228,7 +228,7 @@ async def feature_error_handler(request: Request, exc: Exception) -> JSONRespons
             "error": {
                 "code": exc.code,
                 "message": str(exc),
-                "request_id": request_id,
+                "requestId": request_id,           
             }
         },
     )

@@ -1,6 +1,7 @@
-from tdp.modules.workspaces.application.commands import CreateWorkspaceCommand
+from tdp.modules.workspaces.application.commands import CreateWorkspaceCommand, UpdateWorkspaceCommand
 from tdp.modules.workspaces.application.dto import WorkspaceDto
 from tdp.modules.workspaces.domain.errors import (
+    WorkspaceArchivedError,
     WorkspaceKeyAlreadyExistsError,
     WorkspaceNotFoundError,
 )
@@ -39,6 +40,24 @@ class WorkspaceApplicationService:
         workspace = await self._repository.get(WorkspaceId.from_string(workspace_id))
         if workspace is None:
             raise WorkspaceNotFoundError(f"Workspace {workspace_id} was not found.")
+        return WorkspaceDto.from_domain(workspace)
+
+    async def update(self, workspace_id: str, command: UpdateWorkspaceCommand) -> WorkspaceDto:
+        workspace = await self._repository.get(WorkspaceId.from_string(workspace_id))
+        if workspace is None:
+            raise WorkspaceNotFoundError(f"Workspace {workspace_id} was not found.")
+        if workspace.status.value == "ARCHIVED":
+            raise WorkspaceArchivedError(f"Workspace {workspace_id} is archived and read-only.")
+
+        if command.name is not None:
+            workspace.name = WorkspaceName(command.name)
+        if command.description is not None:
+            workspace.description = WorkspaceDescription(command.description)
+
+        from datetime import UTC, datetime
+        workspace.updated_at = datetime.now(UTC)
+
+        await self._repository.update(workspace)
         return WorkspaceDto.from_domain(workspace)
 
     async def archive(self, workspace_id: str) -> WorkspaceDto:

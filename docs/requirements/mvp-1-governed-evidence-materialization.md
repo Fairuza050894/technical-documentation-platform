@@ -96,3 +96,9 @@ Source ID or silently requiring unrelated technical evidence.
 ADR-027 and the governed Document Version provenance requirement remove the mandatory Source identity
 assumption. Future semantic generators can persist `EVIDENCE_ARTIFACT` provenance references without
 copying materialized manifests or fabricating Source/Catalog identifiers.
+
+## Generation follow-up
+
+ADR-028 consumes materialized `USER_JOURNEY`, `DEPLOYMENT_RUNTIME`, and `UAT_RESULT` through a
+Documents infrastructure adapter. Registration alone remains insufficient; readiness v3 and the
+materialization checksum contract remain unchanged.

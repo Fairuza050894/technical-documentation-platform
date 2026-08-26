@@ -1,0 +1,29 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    environment:
+      TDP_ENVIRONMENT: production
+      TDP_DATABASE_PATH: /data/tdp.sqlite3
+      TDP_ARTIFACT_ROOT_PATH: /data/artifacts
+      TDP_ALLOWED_ORIGINS: "http://localhost"
+    volumes:
+      - tdp-data:/data
+    expose:
+      - "8000"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  tdp-data:

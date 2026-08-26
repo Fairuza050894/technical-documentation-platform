@@ -94,14 +94,30 @@ from tdp.presentation.http.errors import (
     validation_error_handler,
     workspace_error_handler,
 )
+from tdp.audit.logger import StructuredAuditLogger
+from tdp.audit.middleware import AuditMiddleware
+from tdp.audit.store import AuditStore
+from tdp.presentation.http.middleware.rate_limiting import RateLimitMiddleware
 from tdp.presentation.http.middleware.request_id import RequestIdMiddleware
 from tdp.presentation.http.middleware.security_headers import SecurityHeadersMiddleware
+from tdp.presentation.http.middleware.csrf import CsrfProtectionMiddleware
+from tdp.presentation.http.middleware.jwt_auth import JwtAuthMiddleware
 from tdp.presentation.http.routers.health import router as health_router
 from tdp.presentation.http.routers.identity import router as identity_router
+from tdp.presentation.http.routers.audit_logs import router as audit_logs_router
+from tdp.presentation.http.routers.auth import router as auth_router
+from tdp.identity.oidc import OidcDiscovery
+from tdp.identity.jwt_service import JwtService
+from tdp.identity.session_store import TokenBlacklist
+from tdp.authorization.errors import PermissionDeniedError, permission_denied_handler
+from tdp.authorization.policy import AuthorizationPolicy
+from tdp.modules.workspaces.infrastructure.membership_repository import SqliteMembershipRepository
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     runtime_settings = settings or get_settings()
+
+    # ═══ Identity Provider ═══
     identity_provider = LocalIdentityProvider(
         RequestPrincipal(
             subject_id=runtime_settings.local_identity_subject,
@@ -111,6 +127,26 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             assurance=IdentityAssurance.DEVELOPMENT,
         )
     )
+
+    # ═══ OIDC + JWT (only when auth_mode == "oidc") ═══
+    oidc_discovery: OidcDiscovery | None = None
+    jwt_service: JwtService | None = None
+
+    if runtime_settings.auth_mode == "oidc":
+        oidc_discovery = OidcDiscovery(
+            issuer=runtime_settings.oidc_issuer,
+            client_id=runtime_settings.oidc_client_id,
+            client_secret=runtime_settings.oidc_client_secret,
+        )
+        jwt_service = JwtService(
+            oidc_discovery=oidc_discovery,
+            audience=runtime_settings.oidc_audience or None,
+        )
+
+    # ═══ Token blacklist ═══
+    token_blacklist = TokenBlacklist(runtime_settings.database_path)
+
+    # ═══ Repositories ═══
     workspace_repository = SqliteWorkspaceRepository(runtime_settings.database_path)
     project_repository = SqliteProjectRepository(runtime_settings.database_path)
     source_repository = SqliteSourceRepository(runtime_settings.database_path)
@@ -124,6 +160,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     artifact_store = LocalArtifactStore(runtime_settings.artifact_root_path)
 
+    # ═══ Application ═══
     application = FastAPI(
         title=runtime_settings.app_name,
         version=runtime_settings.app_version,
@@ -133,6 +170,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     application.state.settings = runtime_settings
     application.state.identity_provider = identity_provider
+    application.state.jwt_service = jwt_service
+    application.state.token_blacklist = token_blacklist
     application.state.workspace_service = WorkspaceApplicationService(workspace_repository)
     application.state.feature_service = FeatureApplicationService(
         feature_repository,
@@ -201,15 +240,84 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         DeterministicTechnicalSourceOverviewRenderer(),
         workspace_repository,
     )
-    application.add_middleware(SecurityHeadersMiddleware)
+
+    # --- Authorization (WS 1.2) ---
+    membership_repository = SqliteMembershipRepository(runtime_settings.database_path)
+    authorization_policy = AuthorizationPolicy(
+        membership_lookup=membership_repository,
+        default_admin_subjects=runtime_settings.default_admin_subjects,
+    )
+    application.state.membership_repository = membership_repository
+    application.state.authorization_policy = authorization_policy
+
+    # --- Audit ---
+    audit_store = AuditStore(runtime_settings.database_path)
+    application.state.audit_store = audit_store
+
+    audit_logger = StructuredAuditLogger(
+        enabled=runtime_settings.audit_enabled,
+        store=audit_store,
+    )
+    application.state.audit_logger = audit_logger
+
+    # ═══ Middleware (last added = runs first on request) ═══
+
+    # Security headers + HSTS + CSP (outermost)
+    application.add_middleware(
+        SecurityHeadersMiddleware,
+        environment=runtime_settings.environment,
+        hsts_max_age=runtime_settings.hsts_max_age,
+        hsts_include_subdomains=runtime_settings.hsts_include_subdomains,
+        hsts_preload=runtime_settings.hsts_preload,
+    )
+
+    # Audit logging
+    application.add_middleware(AuditMiddleware, audit_logger=audit_logger)
+
+    # CSRF protection
+    application.add_middleware(
+        CsrfProtectionMiddleware,
+        enabled=runtime_settings.csrf_enabled,
+        cookie_secure=runtime_settings.csrf_cookie_secure,
+        cookie_samesite=runtime_settings.csrf_cookie_samesite,
+    )
+
+    # JWT authentication (OIDC mode only)
+    if runtime_settings.auth_mode == "oidc" and jwt_service is not None:
+        application.add_middleware(
+            JwtAuthMiddleware,
+            jwt_service=jwt_service,
+            token_blacklist=token_blacklist,
+            auth_mode=runtime_settings.auth_mode,
+        )
+
+    # Rate limiting
+    if runtime_settings.rate_limit_enabled:
+        application.add_middleware(
+            RateLimitMiddleware,
+            requests_per_minute=runtime_settings.rate_limit_requests_per_minute,
+        )
+
+    # Request ID
     application.add_middleware(RequestIdMiddleware)
+
+    # CORS (innermost)
+    cors_allow_credentials = runtime_settings.csrf_enabled or runtime_settings.auth_mode == "oidc"
+    cors_allow_headers = ["Content-Type", "X-Request-ID"]
+    if runtime_settings.csrf_enabled:
+        cors_allow_headers.append("X-CSrf-Token")
+    if runtime_settings.auth_mode == "oidc":
+        cors_allow_headers.append("Authorization")
+
     application.add_middleware(
         CORSMiddleware,
         allow_origins=list(runtime_settings.allowed_origins),
-        allow_credentials=False,
-        allow_methods=["GET", "POST", "OPTIONS"],
-        allow_headers=["Content-Type", "X-Request-ID"],
+        allow_credentials=cors_allow_credentials,
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        allow_headers=cors_allow_headers,
     )
+
+    # ═══ Exception handlers ═══
     application.add_exception_handler(CatalogError, catalog_error_handler)
     application.add_exception_handler(ChangeDetectionError, change_detection_error_handler)
     application.add_exception_handler(DocumentError, document_error_handler)
@@ -224,8 +332,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.add_exception_handler(SourceError, source_error_handler)
     application.add_exception_handler(WorkspaceError, workspace_error_handler)
     application.add_exception_handler(RequestValidationError, validation_error_handler)
+    application.add_exception_handler(PermissionDeniedError, permission_denied_handler)
+
+    # ═══ Routers ═══
     application.include_router(health_router, prefix=runtime_settings.api_prefix)
     application.include_router(identity_router, prefix=runtime_settings.api_prefix)
+    application.include_router(auth_router, prefix=runtime_settings.api_prefix)
     application.include_router(workspaces_router, prefix=runtime_settings.api_prefix)
     application.include_router(projects_router, prefix=runtime_settings.api_prefix)
     application.include_router(readiness_router, prefix=runtime_settings.api_prefix)
@@ -236,6 +348,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.include_router(changes_router, prefix=runtime_settings.api_prefix)
     application.include_router(evidence_router, prefix=runtime_settings.api_prefix)
     application.include_router(documents_router, prefix=runtime_settings.api_prefix)
+    application.include_router(audit_logs_router, prefix=runtime_settings.api_prefix)
+
     return application
 
 

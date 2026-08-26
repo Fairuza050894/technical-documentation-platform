@@ -14,6 +14,8 @@ export type AppRoute =
   | { name: "projects"; workspaceId: string | null }
   | { name: "workspaces" }
   | { name: "system" }
+  | { name: "audit" }
+  | { name: "login" }
   | {
       name: "project";
       workspaceId: string | null;
@@ -44,6 +46,12 @@ export function parseRoute(pathname: string): AppRoute {
   }
   if (normalized === "/system") {
     return { name: "system" };
+  }
+  if (normalized === "/audit") {
+    return { name: "audit" };
+  }
+  if (normalized === "/login") {
+    return { name: "login" };
   }
 
   const workspaceProjectMatch = normalized.match(workspaceProjectPattern);
@@ -113,6 +121,10 @@ export function routePath(route: AppRoute): string {
       return "/workspaces";
     case "system":
       return "/system";
+    case "audit":
+      return "/audit";
+    case "login":
+      return "/login";
     case "project":
       return route.workspaceId === null
         ? projectStagePath(route.projectId, route.stage, route.featureId)
@@ -166,6 +178,8 @@ export function routeWorkspaceId(route: AppRoute): string | null {
       return route.workspaceId;
     case "workspaces":
     case "system":
+    case "audit":
+    case "login":
     case "not-found":
       return null;
   }

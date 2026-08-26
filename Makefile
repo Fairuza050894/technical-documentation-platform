@@ -124,3 +124,16 @@ audit-docs:
 
 audit-frontend:
 	bash scripts/audit_frontend_composition.sh
+
+docker:
+	docker compose build
+	docker compose up -d
+
+docker-dev:
+	docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+
+docker-stop:
+	docker compose down
+
+docker-logs:
+	docker compose logs -f --tail=50

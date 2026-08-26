@@ -7,6 +7,12 @@ from tdp.identity.provider import IdentityProvider
 
 
 def get_request_principal(request: Request) -> RequestPrincipal:
+    # Check if JWT middleware already set the principal (OIDC mode)
+    principal = getattr(request.state, "principal", None)
+    if principal is not None:
+        return principal
+
+    # Fall back to identity provider (local mode)
     provider = cast(IdentityProvider, request.app.state.identity_provider)
     return provider.current_principal()
 

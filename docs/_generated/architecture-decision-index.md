@@ -32,3 +32,4 @@ Architecture decisions are human-governed. This index is generated from `docs/de
 | ADR-025 | ADR-025: Expand Governed Evidence Capability Before More Generators | Accepted | 2026-08-12 |
 | ADR-026 | ADR-026: Materialize Semantic Evidence Before Generation | Accepted | 2026-08-12 |
 | ADR-027 | ADR-027: Generalize Document Version Provenance | Accepted | 2026-08-13 |
+| ADR-028 | ADR-028: Generate Semantic Documents from Materialized Evidence | Accepted | 2026-08-14 |

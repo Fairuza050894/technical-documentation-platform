@@ -1,5 +1,6 @@
 import type { Workspace } from "../../modules/workspaces/types";
 import { WorkspaceSwitcher } from "../../modules/workspaces/WorkspaceSwitcher";
+import { useRole } from "../../shared/roles/useRole";
 import { Icon } from "../../shared/ui/Icon";
 import type { GlobalNavigation, NavigationGroup } from "../navigation";
 import type { AppRoute } from "../router";
@@ -32,6 +33,8 @@ export function AppSidebar({
   onManageWorkspaces,
   onNavigate,
 }: AppSidebarProps) {
+  const { capabilities } = useRole();
+
   return (
     <aside className="sidebar" aria-label="Primary navigation">
       <div className="product-mark" aria-label="Technical Documentation Platform">
@@ -54,36 +57,47 @@ export function AppSidebar({
       />
 
       <nav className="primary-navigation">
-        {navigationGroups.map((group) => (
-          <section
-            className="navigation-group"
-            aria-labelledby={`nav-${group.label.replaceAll(" ", "-")}`}
-            key={group.label}
-          >
-            <h2 id={`nav-${group.label.replaceAll(" ", "-")}`}>{group.label}</h2>
-            <ul className="navigation-list">
-              {group.items.map((item) => (
-                <li key={item.id}>
-                  <button
-                    type="button"
-                    className={
-                      item.id === activeGlobalNavigation
-                        ? "navigation-item is-active"
-                        : "navigation-item"
-                    }
-                    aria-current={item.id === activeGlobalNavigation ? "page" : undefined}
-                    onClick={() => onNavigate(item.route)}
-                  >
-                    <span className="navigation-item__icon" aria-hidden="true">
-                      <Icon name={item.icon} size={17} />
-                    </span>
-                    <span className="navigation-item__label">{item.label}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))}
+        {navigationGroups.map((group) => {
+          // Filter items based on role
+          const visibleItems = group.items.filter((item) => {
+            if (item.adminOnly && !capabilities.canViewAuditLogs) return false;
+            return true;
+          });
+
+          // Hide entire group if no visible items
+          if (visibleItems.length === 0) return null;
+
+          return (
+            <section
+              className="navigation-group"
+              aria-labelledby={`nav-${group.label.replaceAll(" ", "-")}`}
+              key={group.label}
+            >
+              <h2 id={`nav-${group.label.replaceAll(" ", "-")}`}>{group.label}</h2>
+              <ul className="navigation-list">
+                {visibleItems.map((item) => (
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      className={
+                        item.id === activeGlobalNavigation
+                          ? "navigation-item is-active"
+                          : "navigation-item"
+                      }
+                      aria-current={item.id === activeGlobalNavigation ? "page" : undefined}
+                      onClick={() => onNavigate(item.route)}
+                    >
+                      <span className="navigation-item__icon" aria-hidden="true">
+                        <Icon name={item.icon} size={17} />
+                      </span>
+                      <span className="navigation-item__label">{item.label}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          );
+        })}
       </nav>
 
       <div className="sidebar-service" aria-label={`Backend API ${serviceLabel}`}>

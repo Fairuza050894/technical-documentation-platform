@@ -43,3 +43,8 @@ Making a semantic generator fabricate a Source ID would corrupt provenance.
 - existing lifecycle/history remains intact;
 - Evidence remains the owner of evidence content and materialization;
 - Installation Guide generation can now be implemented as a separate, focused next slice.
+
+## Generation completion
+
+ADR-028 uses the generalized provenance relation for four semantic document profiles. No fabricated
+Source Registry or Catalog synchronization identity is introduced.

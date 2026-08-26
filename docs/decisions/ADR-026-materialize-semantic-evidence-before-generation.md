@@ -50,3 +50,8 @@ platform's deterministic evidence doctrine.
 
 ADR-027 resolves the deferred Document Version provenance constraint by introducing append-only,
 multi-reference provenance and nullable Source identity while preserving existing history.
+
+## Generation completion
+
+ADR-028 implements the deferred semantic generation boundary after ADR-027 made source-free Document
+Version provenance available. Materialization and readiness semantics from this ADR remain unchanged.

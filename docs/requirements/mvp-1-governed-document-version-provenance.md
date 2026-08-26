@@ -65,3 +65,9 @@ no visual redesign in this slice.
 - API and frontend type contracts expose generalized provenance;
 - existing generators remain deterministic and backward compatible;
 - focused tests and the full repository quality gate pass.
+
+## Semantic generation follow-up
+
+ADR-028 uses the source-free provenance model for User Guide, Installation Guide, UAT Evidence, and
+Journey Map. Each generated version persists only the selected Evidence Artifact identity, kind, and
+checksum in Documents provenance.

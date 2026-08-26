@@ -1,8 +1,9 @@
-from tdp.modules.projects.application.commands import CreateProjectCommand
+from tdp.modules.projects.application.commands import CreateProjectCommand, UpdateProjectCommand
 from tdp.modules.projects.application.dto import ProjectDto
 from tdp.modules.projects.domain.errors import (
     InvalidOwnershipTypeError,
     InvalidWorkspaceTypeError,
+    ProjectAlreadyArchivedError,
     ProjectKeyAlreadyExistsError,
     ProjectNotFoundError,
 )
@@ -13,6 +14,7 @@ from tdp.modules.projects.domain.model import (
     ProjectId,
     ProjectKey,
     ProjectName,
+    ProjectStatus,
     WorkspaceType,
 )
 from tdp.modules.projects.domain.repository import ProjectRepository
@@ -105,6 +107,24 @@ class ProjectApplicationService:
         project = await self._repository.get(ProjectId.from_string(project_id))
         if project is None:
             raise ProjectNotFoundError(f"Project {project_id} was not found.")
+        return ProjectDto.from_domain(project)
+
+    async def update(self, project_id: str, command: UpdateProjectCommand) -> ProjectDto:
+        project = await self._repository.get(ProjectId.from_string(project_id))
+        if project is None:
+            raise ProjectNotFoundError(f"Project {project_id} was not found.")
+        if project.status is ProjectStatus.ARCHIVED:
+            raise ProjectAlreadyArchivedError(f"Project {project_id} is archived and read-only.")
+
+        if command.name is not None:
+            project.name = ProjectName(command.name)
+        if command.description is not None:
+            project.description = ProjectDescription(command.description)
+
+        from datetime import UTC, datetime
+        project.updated_at = datetime.now(UTC)
+
+        await self._repository.update(project)
         return ProjectDto.from_domain(project)
 
     async def archive(self, project_id: str) -> ProjectDto:

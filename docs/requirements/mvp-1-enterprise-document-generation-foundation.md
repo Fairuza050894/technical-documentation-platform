@@ -157,3 +157,10 @@ The generic enterprise generation service persists its selected governed Evidenc
 references into the immutable Document Version provenance relation. This does not change generated
 Markdown or readiness eligibility; it only preserves truthful structured provenance for later
 semantic profiles.
+
+## Semantic generation pack
+
+ADR-028 extends the same generic enterprise generation service with User Guide, Installation Guide,
+UAT Evidence, and Journey Map profiles. These profiles consume typed materialized semantic Evidence,
+allow `source_id`/`target_run_id` to remain null, and preserve Evidence Artifact provenance without
+changing the existing HLD, LLD, or As-Built generation contracts.

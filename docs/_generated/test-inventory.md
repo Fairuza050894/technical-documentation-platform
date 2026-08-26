@@ -23,6 +23,7 @@
 | backend/tests/domain/test_identity.py | 2 |
 | backend/tests/domain/test_project.py | 4 |
 | backend/tests/domain/test_readiness_policy.py | 7 |
+| backend/tests/domain/test_semantic_generation_profiles.py | 1 |
 | backend/tests/domain/test_source.py | 3 |
 | backend/tests/domain/test_workspace.py | 2 |
 | backend/tests/infrastructure/test_document_nullable_snapshot_provenance.py | 1 |
@@ -47,12 +48,16 @@
 | backend/tests/presentation/test_features_api.py | 3 |
 | backend/tests/presentation/test_identity_api.py | 1 |
 | backend/tests/presentation/test_projects_api.py | 3 |
+| backend/tests/presentation/test_rate_limiting.py | 5 |
 | backend/tests/presentation/test_readiness_api.py | 6 |
 | backend/tests/presentation/test_security_headers.py | 1 |
+| backend/tests/presentation/test_semantic_generation_pack_api.py | 3 |
 | backend/tests/presentation/test_sources_api.py | 3 |
 | backend/tests/presentation/test_workspaces_api.py | 4 |
 | backend/tests/test_architecture.py | 9 |
+| backend/tests/test_audit.py | 7 |
 | backend/tests/test_config.py | 3 |
+| backend/tests/test_config_phase1.py | 4 |
 | backend/tests/test_enterprise_generation_architecture.py | 7 |
 | backend/tests/test_evidence_architecture.py | 3 |
 | backend/tests/test_feature_architecture.py | 2 |
@@ -70,7 +75,7 @@
 | backend/tests/test_repository_documentation.py | 1 |
 | backend/tests/test_workspace_architecture.py | 2 |
 
-Backend total: **201** tests.
+Backend total: **221** tests.
 
 ## Frontend
 
@@ -81,7 +86,7 @@ Backend total: **201** tests.
 | frontend/src/app/router.test.ts | 7 |
 | frontend/src/modules/catalog/ApiCatalogWorkspace.test.tsx | 2 |
 | frontend/src/modules/changes/ChangesWorkspace.test.tsx | 1 |
-| frontend/src/modules/documents/DocumentsWorkspace.test.tsx | 3 |
+| frontend/src/modules/documents/DocumentsWorkspace.test.tsx | 4 |
 | frontend/src/modules/features/FeatureWorkspace.test.tsx | 3 |
 | frontend/src/modules/overview/OperationalOverview.test.tsx | 2 |
 | frontend/src/modules/projects/ProjectWorkspace.test.tsx | 4 |
@@ -92,6 +97,6 @@ Backend total: **201** tests.
 | frontend/src/modules/workspaces/WorkspaceSwitcher.test.tsx | 5 |
 | frontend/src/shared/api/config.test.ts | 3 |
 
-Frontend total: **56** tests.
+Frontend total: **57** tests.
 
 Counts are structural and do not replace execution evidence from `make verify`.

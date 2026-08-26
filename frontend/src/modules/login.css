@@ -1,0 +1,105 @@
+/* ═══ Login Page ═══ */
+
+.login-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--color-surface, #f8f7f4);
+}
+
+.login-card {
+  width: 100%;
+  max-width: 380px;
+  padding: 2.5rem 2rem;
+  background: var(--color-background, #fff);
+  border: 1px solid var(--color-border, #e5e2db);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.login-card__header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.login-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 1rem;
+  background: var(--color-surface, #f8f7f4);
+  border-radius: 10px;
+  color: var(--color-foreground, #1a1a1a);
+}
+
+.login-card__header h1 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 0 0 0.35rem;
+  color: var(--color-foreground, #1a1a1a);
+}
+
+.login-card__header p {
+  font-size: 0.85rem;
+  color: var(--color-muted, #7a7570);
+  margin: 0;
+}
+
+.login-card__error {
+  padding: 0.65rem 0.85rem;
+  margin-bottom: 1rem;
+  font-size: 0.82rem;
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+}
+
+.login-card__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.login-card__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.7rem 1rem;
+  font-size: 0.88rem;
+  font-weight: 500;
+  border: 1px solid var(--color-border, #e5e2db);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.login-card__button--primary {
+  background: var(--color-foreground, #1a1a1a);
+  color: var(--color-background, #fff);
+  border-color: var(--color-foreground, #1a1a1a);
+}
+
+.login-card__button--primary:hover {
+  opacity: 0.9;
+}
+
+.login-card__button--primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.login-card__footer {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.login-card__footer small {
+  font-size: 0.75rem;
+  color: var(--color-muted, #7a7570);
+}
