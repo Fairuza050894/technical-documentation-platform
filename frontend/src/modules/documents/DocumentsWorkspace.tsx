@@ -27,6 +27,7 @@ import type {
   GeneratedDocumentSummary,
   WorkflowEvent,
 } from "./types";
+import { ConfirmDialog } from "../../shared/ui/ConfirmDialog";
 
 interface SnapshotOption {
   run: SynchronizationRun;
@@ -63,6 +64,8 @@ export function DocumentsWorkspace({
   const [comparisonTargetId, setComparisonTargetId] = useState("");
   const [comparison, setComparison] = useState<DocumentVersionComparison | null>(null);
   const [changeFilter, setChangeFilter] = useState<ChangeFilter>("ALL");
+  const [versionFilter, setVersionFilter] = useState("");
+  const [activeTab, setActiveTab] = useState<"generate" | "versions" | "compare">("generate");
   const [message, setMessage] = useState("Select a completed synchronization snapshot.");
   const [isBusy, setIsBusy] = useState(false);
 
@@ -175,6 +178,17 @@ export function DocumentsWorkspace({
     selectedSeriesVersions.find((version) => version.status === "APPROVED")?.id ?? null;
   const selectedReplacement =
     selectedVersion === null ? null : findReplacementVersion(selectedVersion, versions);
+
+  const filteredVersions = useMemo(() => {
+    if (!versionFilter.trim()) return versions;
+    const query = versionFilter.trim().toLowerCase();
+    return versions.filter((version) =>
+      version.title.toLowerCase().includes(query) ||
+      version.version.toLowerCase().includes(query) ||
+      version.status.toLowerCase().includes(query) ||
+      version.created_by.toLowerCase().includes(query)
+    );
+  }, [versions, versionFilter]);
 
   const comparisonVersions = useMemo(() => {
     const documentId =
@@ -319,7 +333,7 @@ export function DocumentsWorkspace({
   }
 
   return (
-    <>
+    <div className="document-workspace-tabs" data-active-tab={activeTab}>
       {!embedded && (
         <header className="topbar">
           <div>
@@ -330,8 +344,22 @@ export function DocumentsWorkspace({
         </header>
       )}
 
+      <nav className="document-tab-nav" aria-label="Document workspace sections">
+        {(["generate", "versions", "compare"] as const).map((tab) => (
+          <button
+            key={tab}
+            type="button"
+            className={activeTab === tab ? "document-tab document-tab--active" : "document-tab"}
+            onClick={() => setActiveTab(tab)}
+            aria-current={activeTab === tab ? "page" : undefined}
+          >
+            {tab === "generate" ? "Generate" : tab === "versions" ? "Versions" : "Compare"}
+          </button>
+        ))}
+      </nav>
+
       <section
-        className="content-section document-section"
+        className="content-section document-section document-section--generate"
         aria-labelledby="document-generator-title"
       >
         <div className="section-heading">
@@ -439,6 +467,21 @@ export function DocumentsWorkspace({
           <span className="record-count">{formatCount(versions.length, "version")}</span>
         </div>
 
+        {versions.length > 0 && (
+          <div className="list-filter">
+            <input
+              type="search"
+              placeholder="Filter versions by title, status, or author…"
+              value={versionFilter}
+              onChange={(event) => setVersionFilter(event.target.value)}
+              aria-label="Filter document versions"
+            />
+            {versionFilter && (
+              <span className="record-count">{filteredVersions.length} of {versions.length}</span>
+            )}
+          </div>
+        )}
+
         {versions.length === 0 ? (
           <div className="empty-state">
             <h3>No document versions</h3>
@@ -458,7 +501,7 @@ export function DocumentsWorkspace({
                 </tr>
               </thead>
               <tbody>
-                {versions.map((version) => {
+                {filteredVersions.map((version) => {
                   const replacement = findReplacementVersion(version, versions);
                   const isLatestVersion =
                     version.id === currentVersionId && version.status !== "SUPERSEDED";
@@ -518,6 +561,12 @@ export function DocumentsWorkspace({
                 })}
               </tbody>
             </table>
+            {filteredVersions.length === 0 && versionFilter && (
+              <div className="empty-state empty-state--compact">
+                <h3>No matching versions</h3>
+                <p>Try a different search term.</p>
+              </div>
+            )}
           </div>
         )}
       </section>
@@ -762,7 +811,7 @@ export function DocumentsWorkspace({
           </div>
         )}
       </section>
-    </>
+    </div>
   );
 }
 
@@ -889,13 +938,48 @@ function WorkflowActions({
   disabled: boolean;
   onAction: (action: WorkflowAction) => void;
 }) {
+  const [pendingAction, setPendingAction] = useState<WorkflowAction | null>(null);
+
+  function handleAction(action: WorkflowAction) {
+    if (action === "approve" || action === "supersede") {
+      setPendingAction(action);
+    } else {
+      onAction(action);
+    }
+  }
+
+  function confirmPending() {
+    if (pendingAction) {
+      onAction(pendingAction);
+      setPendingAction(null);
+    }
+  }
+
+  const confirmConfig: Record<
+    string,
+    { title: string; message: string; confirmLabel: string; variant: "primary" | "danger" }
+  > = {
+    approve: {
+      title: "Approve document version",
+      message: `Approving version ${version.version} will mark it as the official approved document. This action cannot be undone.`,
+      confirmLabel: "Approve version",
+      variant: "primary",
+    },
+    supersede: {
+      title: "Replace document version",
+      message: `Marking version ${version.version} as replaced will make it read-only. Generate a new version to create an updated document.`,
+      confirmLabel: "Mark as replaced",
+      variant: "danger",
+    },
+  };
+
   if (version.status === "DRAFT") {
     return (
       <button
         className="button button--primary"
         type="button"
         disabled={disabled}
-        onClick={() => onAction("submit-review")}
+        onClick={() => handleAction("submit-review")}
       >
         Submit for review
       </button>
@@ -903,36 +987,60 @@ function WorkflowActions({
   }
   if (version.status === "IN_REVIEW") {
     return (
-      <div className="workflow-action-row">
-        <button
-          className="button button--primary"
-          type="button"
-          disabled={disabled}
-          onClick={() => onAction("approve")}
-        >
-          Approve version
-        </button>
-        <button
-          className="button button--secondary"
-          type="button"
-          disabled={disabled || comment.trim().length === 0}
-          onClick={() => onAction("request-changes")}
-        >
-          Request changes
-        </button>
-      </div>
+      <>
+        <div className="workflow-action-row">
+          <button
+            className="button button--primary"
+            type="button"
+            disabled={disabled}
+            onClick={() => handleAction("approve")}
+          >
+            Approve version
+          </button>
+          <button
+            className="button button--secondary"
+            type="button"
+            disabled={disabled || comment.trim().length === 0}
+            onClick={() => handleAction("request-changes")}
+          >
+            Request changes
+          </button>
+        </div>
+        {pendingAction && (
+          <ConfirmDialog
+            title={confirmConfig[pendingAction].title}
+            message={confirmConfig[pendingAction].message}
+            confirmLabel={confirmConfig[pendingAction].confirmLabel}
+            variant={confirmConfig[pendingAction].variant}
+            onConfirm={confirmPending}
+            onCancel={() => setPendingAction(null)}
+          />
+        )}
+      </>
     );
   }
   if (version.status === "APPROVED") {
     return (
-      <button
-        className="button button--secondary"
-        type="button"
-        disabled={disabled}
-        onClick={() => onAction("supersede")}
-      >
-        Mark as replaced
-      </button>
+      <>
+        <button
+          className="button button--secondary"
+          type="button"
+          disabled={disabled}
+          onClick={() => handleAction("supersede")}
+        >
+          Mark as replaced
+        </button>
+        {pendingAction && (
+          <ConfirmDialog
+            title={confirmConfig[pendingAction].title}
+            message={confirmConfig[pendingAction].message}
+            confirmLabel={confirmConfig[pendingAction].confirmLabel}
+            variant={confirmConfig[pendingAction].variant}
+            onConfirm={confirmPending}
+            onCancel={() => setPendingAction(null)}
+          />
+        )}
+      </>
     );
   }
   return (
@@ -943,6 +1051,7 @@ function WorkflowActions({
     </p>
   );
 }
+
 
 function StatusBadge({
   status,

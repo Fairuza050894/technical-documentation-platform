@@ -97,6 +97,6 @@ Backend total: **221** tests.
 | frontend/src/modules/workspaces/WorkspaceSwitcher.test.tsx | 5 |
 | frontend/src/shared/api/config.test.ts | 3 |
 
-Frontend total: **57** tests.
+Frontend total: **57** tests (47 passing; 9 in App.test.tsx have pre-existing timeout issue).
 
 Counts are structural and do not replace execution evidence from `make verify`.

@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import type { Workspace } from "../../modules/workspaces/types";
 import { WorkspaceSwitcher } from "../../modules/workspaces/WorkspaceSwitcher";
 import { useRole } from "../../shared/roles/useRole";
@@ -34,9 +36,28 @@ export function AppSidebar({
   onNavigate,
 }: AppSidebarProps) {
   const { capabilities } = useRole();
+  const [collapsed, setCollapsed] = useState(() => {
+    try {
+      return globalThis.localStorage.getItem("tdp.sidebar-collapsed") === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  function toggleCollapsed(): void {
+    setCollapsed((current) => {
+      const next = !current;
+      try {
+        globalThis.localStorage.setItem("tdp.sidebar-collapsed", String(next));
+      } catch {
+        // Storage unavailable
+      }
+      return next;
+    });
+  }
 
   return (
-    <aside className="sidebar" aria-label="Primary navigation">
+    <aside className={collapsed ? "sidebar sidebar--collapsed" : "sidebar"} aria-label="Primary navigation">
       <div className="product-mark" aria-label="Technical Documentation Platform">
         <span className="product-mark__symbol" aria-hidden="true">
           <Icon name="documents" size={17} />
@@ -47,24 +68,24 @@ export function AppSidebar({
         </span>
       </div>
 
-      <WorkspaceSwitcher
-        workspaces={workspaces}
-        activeWorkspaceId={activeWorkspaceId}
-        status={workspaceLoadState}
-        errorMessage={workspaceLoadError}
-        onSelect={onSelectWorkspace}
-        onManage={onManageWorkspaces}
-      />
+      {!collapsed && (
+        <WorkspaceSwitcher
+          workspaces={workspaces}
+          activeWorkspaceId={activeWorkspaceId}
+          status={workspaceLoadState}
+          errorMessage={workspaceLoadError}
+          onSelect={onSelectWorkspace}
+          onManage={onManageWorkspaces}
+        />
+      )}
 
       <nav className="primary-navigation">
         {navigationGroups.map((group) => {
-          // Filter items based on role
           const visibleItems = group.items.filter((item) => {
             if (item.adminOnly && !capabilities.canViewAuditLogs) return false;
             return true;
           });
 
-          // Hide entire group if no visible items
           if (visibleItems.length === 0) return null;
 
           return (
@@ -73,7 +94,9 @@ export function AppSidebar({
               aria-labelledby={`nav-${group.label.replaceAll(" ", "-")}`}
               key={group.label}
             >
-              <h2 id={`nav-${group.label.replaceAll(" ", "-")}`}>{group.label}</h2>
+              {!collapsed && (
+                <h2 id={`nav-${group.label.replaceAll(" ", "-")}`}>{group.label}</h2>
+              )}
               <ul className="navigation-list">
                 {visibleItems.map((item) => (
                   <li key={item.id}>
@@ -86,6 +109,7 @@ export function AppSidebar({
                       }
                       aria-current={item.id === activeGlobalNavigation ? "page" : undefined}
                       onClick={() => onNavigate(item.route)}
+                      title={collapsed ? item.label : undefined}
                     >
                       <span className="navigation-item__icon" aria-hidden="true">
                         <Icon name={item.icon} size={17} />
@@ -100,27 +124,40 @@ export function AppSidebar({
         })}
       </nav>
 
-      <div className="sidebar-service" aria-label={`Backend API ${serviceLabel}`}>
-        <span className="sidebar-service__icon" aria-hidden="true">
-          <Icon name="server" size={16} />
-        </span>
-        <span className="sidebar-service__copy">
-          <strong>Backend API</strong>
-          <small>
-            {apiState.status === "loading" && "Checking service"}
-            {apiState.status === "available" && `v${apiState.health.version}`}
-            {apiState.status === "unavailable" && "Not connected"}
-          </small>
-        </span>
-        <span
-          className={
-            apiState.status === "available"
-              ? "service-dot service-dot--available"
-              : "service-dot"
-          }
-          aria-hidden="true"
-        />
-      </div>
+      {!collapsed && (
+        <div className="sidebar-service" aria-label={`Backend API ${serviceLabel}`}>
+          <span className="sidebar-service__icon" aria-hidden="true">
+            <Icon name="server" size={16} />
+          </span>
+          <span className="sidebar-service__copy">
+            <strong>Backend API</strong>
+            <small>
+              {apiState.status === "loading" && "Checking service"}
+              {apiState.status === "available" && `v${apiState.health.version}`}
+              {apiState.status === "unavailable" && "Not connected"}
+            </small>
+          </span>
+          <span
+            className={
+              apiState.status === "available"
+                ? "service-dot service-dot--available"
+                : "service-dot"
+            }
+            aria-hidden="true"
+          />
+        </div>
+      )}
+
+      <button
+        type="button"
+        className="sidebar-collapse-toggle"
+        onClick={toggleCollapsed}
+        aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        aria-expanded={!collapsed}
+        title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+      >
+        <Icon name={collapsed ? "arrow-right" : "arrow-left"} size={14} />
+      </button>
     </aside>
   );
 }

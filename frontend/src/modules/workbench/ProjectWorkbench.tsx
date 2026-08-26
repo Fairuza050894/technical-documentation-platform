@@ -301,16 +301,6 @@ export function ProjectWorkbench({
               </button>
             </li>
           ))}
-          <li className="project-stage-planned" aria-label="Review stage planned">
-            <span>7</span>
-            <strong>Review</strong>
-            <small>Planned</small>
-          </li>
-          <li className="project-stage-planned" aria-label="Release stage planned">
-            <span>8</span>
-            <strong>Release</strong>
-            <small>Planned</small>
-          </li>
         </ol>
       </nav>
 

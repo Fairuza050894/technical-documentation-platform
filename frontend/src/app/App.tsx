@@ -4,6 +4,7 @@ import type { OverviewNavigationTarget } from "../modules/overview/OperationalOv
 import type { Project } from "../modules/projects/types";
 import { listWorkspaces } from "../modules/workspaces/api";
 import type { Workspace } from "../modules/workspaces/types";
+import { ErrorBoundary } from "../shared/ui/ErrorBoundary";
 import { AppShell } from "./components/AppShell";
 import { RouteContent } from "./components/RouteContent";
 import { useHealthStatus } from "./hooks/useHealthStatus";
@@ -252,6 +253,7 @@ export function App() {
   );
 
   return (
+    <ErrorBoundary>
     <AppShell
       workspaces={workspaces}
       activeWorkspaceId={activeWorkspaceId}
@@ -284,5 +286,6 @@ export function App() {
         onProjectResolved={handleProjectResolved}
       />
     </AppShell>
+    </ErrorBoundary>
   );
 }

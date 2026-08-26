@@ -1,47 +1,60 @@
 # Changelog
 
-All notable changes to the Technical Documentation Platform are recorded here.
+All notable changes to this project are documented in this file.
 
-The project will follow semantic versioning when formal release tags begin. Until then, entries are grouped under **Unreleased** and linked to repository commits.
+## [Unreleased]
 
-## Unreleased
+### Phase 2: Core Product Quality — Week 2 (2026-08-27)
 
-### Added
+#### Added
+- **Document workspace tab navigation** — Refactored DocumentsWorkspace from single scrollable page to three tabs: Generate, Versions, Compare
+- **Print stylesheet** — `@media print` rules in `application-shell.css` that hide navigation, forms, sidebar, and controls for clean printed output
+- **Sidebar collapse toggle** — Collapsible sidebar with icon-only mode, persisted to `localStorage` via `tdp.sidebar-collapsed` key, smooth 0.2s CSS transition
+- **ARIA main landmark label** — `<main>` element in AppShell labeled as "Main content" for screen reader navigation
+- **ARIA loading state roles** — Added `role="status"` to loading indicators in SourceWorkspace, ApiCatalogWorkspace, and FeatureWorkspace
 
-- explicit frontend application-shell, route-content, navigation, and runtime boundaries;
-- ordered CSS responsibility layers with architecture fitness checks;
-- Frontend Composition audit and ADR-017;
+#### Changed
+- `AppSidebar.tsx` — Navigation items always render (icons visible when collapsed, labels hidden)
+- `application-shell.css` — Sidebar uses `flex-direction: column` with `margin-top: auto` on collapse toggle
 
-- living repository documentation governance;
-- canonical product, architecture, quality, compliance, operations, release, and user-guide documents;
-- deterministic repository documentation generator and freshness check;
-- generated repository, ADR, requirement, API, route, test, and document indexes;
-- GitHub CODEOWNERS, pull-request template, and issue templates;
-- external audit management response;
-- reviewer reconciliation for enterprise document types and automation boundaries.
+### Phase 2: Core Product Quality — Week 1 (2026-08-27)
 
-### Changed
+#### Added
+- **React Error Boundary** — Root-level `ErrorBoundary` class component in `main.tsx` that catches rendering crashes and shows recovery UI with reload button
+- **ConfirmDialog component** — Reusable `<ConfirmDialog>` using native `<dialog>` element with `showModal()`, backdrop styling, and configurable variant (primary/danger)
+- **Workflow confirmation dialogs** — Approve and supersede document version actions now require explicit confirmation via ConfirmDialog before execution
+- **Skip-to-content link** — Accessible skip link in AppShell, visually hidden until focused, jumps to `#main-content`
+- **List filtering — Sources** — Text search input in SourceWorkspace filtering by name, file name, and API title
+- **List filtering — Documents** — Text search input in DocumentsWorkspace version history filtering by title, status, and author
+- **List filtering — Catalog** — Text search inputs in ApiCatalogWorkspace for both operations (method, path, summary) and schemas (name, type)
+- **List filtering — Features** — Text search input in FeatureWorkspace filtering by name, key, kind, owner, and description
+- **Danger button CSS class** — `.button--danger` style for destructive action buttons with red background
+- **List filter CSS class** — `.list-filter` layout for search input + count indicator
 
-- `App.tsx` reduced to a stateful composition root while preserving routes and behavior;
-- `globals.css` converted to an ordered import manifest without intentional visual changes;
+#### Changed
+- `ProjectWorkbench.tsx` — Removed planned stages 7 (Review) and 8 (Release) from stage navigation
+- `DocumentsWorkspace.tsx` — WorkflowActions component now uses `useState` for pending action and renders ConfirmDialog for approve/supersede
 
-- root README converted from chronological slice log to a concise product and documentation portal;
-- `make verify` now includes repository documentation freshness;
-- product roadmap and audit dispositions now distinguish completed, partially addressed, open,
-  deferred, and dependency-blocked work.
+#### Fixed
+- `features/presentation/http/router.py` — Feature error handler response key changed from `request_id` to `requestId` for consistency with centralized error handlers
 
-## Historical foundation
+### Phase 1: Backend Foundation (completed prior)
 
-The repository history before formal release tagging includes:
+#### Architecture
+- Modular monolith with hexagonal architecture (ports and adapters) per bounded context
+- 10 bounded contexts: Workspace, Project, Source, Catalog, Changes, Feature, Evidence, Document, Readiness, Audit
+- All service, router, error handler, and wiring complete in `main.py`
 
-- engineering foundation;
-- project and workspace management;
-- OpenAPI source management;
-- API catalog synchronization;
-- deterministic change detection;
-- Technical Source Overview generation;
-- document lifecycle and version comparison;
-- operational product UI;
-- project-centric workbench;
-- Feature or Module Registry;
-- Engineering Safety Baseline.
+#### Security
+- OIDC and JWT authentication with token blacklist
+- CSRF protection middleware
+- Rate limiting middleware
+- Security headers (HSTS, CSP, X-Frame-Options)
+- Structured audit logging with request ID correlation
+- RBAC authorization policy with workspace membership
+
+#### Infrastructure
+- SQLite persistence for all repositories
+- Local filesystem artifact storage
+- Deterministic OpenAPI parsing and catalog synchronization
+- Immutable document versioning with content-addressable checksums

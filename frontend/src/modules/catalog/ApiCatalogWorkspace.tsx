@@ -36,6 +36,29 @@ export function ApiCatalogWorkspace({
   const [loadError, setLoadError] = useState("");
   const [syncState, setSyncState] = useState<"idle" | "running">("idle");
   const [syncError, setSyncError] = useState("");
+  const [operationFilter, setOperationFilter] = useState("");
+  const [schemaFilter, setSchemaFilter] = useState("");
+
+  const filteredOperations = useMemo(() => {
+    if (!operationFilter.trim()) return catalog.operations;
+    const query = operationFilter.trim().toLowerCase();
+    return catalog.operations.filter((op) =>
+      op.method.toLowerCase().includes(query) ||
+      op.path.toLowerCase().includes(query) ||
+      (op.summary || "").toLowerCase().includes(query) ||
+      (op.operation_id || "").toLowerCase().includes(query)
+    );
+  }, [catalog.operations, operationFilter]);
+
+  const filteredSchemas = useMemo(() => {
+    if (!schemaFilter.trim()) return catalog.schemas;
+    const query = schemaFilter.trim().toLowerCase();
+    return catalog.schemas.filter((schema) =>
+      schema.name.toLowerCase().includes(query) ||
+      (schema.schema_type || "").toLowerCase().includes(query) ||
+      (schema.description || "").toLowerCase().includes(query)
+    );
+  }, [catalog.schemas, schemaFilter]);
 
   const selectedSource = sources.find((source) => source.id === selectedSourceId);
   const sourceNameById = useMemo(
@@ -242,7 +265,7 @@ export function ApiCatalogWorkspace({
 
         {syncError && <p className="form-error" role="alert">{syncError}</p>}
         {loadState === "error" && <div className="notice notice--error" role="alert">{loadError}</div>}
-        {loadState === "loading" && <p className="loading-state">Loading API catalog…</p>}
+        {loadState === "loading" && <p className="loading-state" role="status">Loading API catalog…</p>}
       </section>
 
       {loadState === "ready" && projects.length === 0 && (
@@ -286,6 +309,20 @@ export function ApiCatalogWorkspace({
               </div>
               <span className="record-count">{catalog.operation_total} operations</span>
             </div>
+            {catalog.operations.length > 0 && (
+              <div className="list-filter">
+                <input
+                  type="search"
+                  placeholder="Filter operations by method, path, or summary…"
+                  value={operationFilter}
+                  onChange={(event) => setOperationFilter(event.target.value)}
+                  aria-label="Filter operations"
+                />
+                {operationFilter && (
+                  <span className="record-count">{filteredOperations.length} of {catalog.operations.length}</span>
+                )}
+              </div>
+            )}
             <div className="catalog-layout">
               <div className="table-frame">
                 <table>
@@ -299,7 +336,7 @@ export function ApiCatalogWorkspace({
                     </tr>
                   </thead>
                   <tbody>
-                    {catalog.operations.map((operation) => (
+                    {filteredOperations.map((operation) => (
                       <tr
                         key={operationKey(operation)}
                         className={
@@ -330,6 +367,12 @@ export function ApiCatalogWorkspace({
                     ))}
                   </tbody>
                 </table>
+                {filteredOperations.length === 0 && operationFilter && (
+                  <div className="empty-state empty-state--compact">
+                    <h3>No matching operations</h3>
+                    <p>Try a different search term.</p>
+                  </div>
+                )}
               </div>
               {selectedOperation && <OperationEvidence operation={selectedOperation} />}
             </div>
@@ -343,6 +386,21 @@ export function ApiCatalogWorkspace({
               </div>
               <span className="record-count">{catalog.schema_total} schemas</span>
             </div>
+            {catalog.schemas.length > 0 && (
+              <div className="list-filter">
+                <input
+                  type="search"
+                  placeholder="Filter schemas by name or type…"
+                  value={schemaFilter}
+                  onChange={(event) => setSchemaFilter(event.target.value)}
+                  aria-label="Filter schemas"
+                />
+                {schemaFilter && (
+                  <span className="record-count">{filteredSchemas.length} of {catalog.schemas.length}</span>
+                )}
+              </div>
+            )}
+
             {catalog.schemas.length === 0 ? (
               <div className="empty-state"><p>No component schemas were declared.</p></div>
             ) : (
@@ -357,7 +415,7 @@ export function ApiCatalogWorkspace({
                     </tr>
                   </thead>
                   <tbody>
-                    {catalog.schemas.map((schema) => (
+                    {filteredSchemas.map((schema) => (
                       <tr key={`${schema.source_id}:${schema.name}`}>
                         <td><strong>{schema.name}</strong></td>
                         <td>{schema.schema_type || "Not declared"}</td>
@@ -367,6 +425,12 @@ export function ApiCatalogWorkspace({
                     ))}
                   </tbody>
                 </table>
+                {filteredSchemas.length === 0 && schemaFilter && (
+                  <div className="empty-state empty-state--compact">
+                    <h3>No matching schemas</h3>
+                    <p>Try a different search term.</p>
+                  </div>
+                )}
               </div>
             )}
           </section>

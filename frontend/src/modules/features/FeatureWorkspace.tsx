@@ -51,6 +51,7 @@ export function FeatureWorkspace({
   const [documentationMap, setDocumentationMap] = useState<DocumentationMap | null>(null);
   const [mapState, setMapState] = useState<"idle" | "loading" | "ready" | "error">("idle");
   const [mapError, setMapError] = useState("");
+  const [featureFilter, setFeatureFilter] = useState("");
 
   const load = useCallback(
     async (signal?: AbortSignal): Promise<void> => {
@@ -116,6 +117,18 @@ export function FeatureWorkspace({
       });
     return () => controller.abort();
   }, [project.id, selectedFeature, selectedFeatureId, workspaceId]);
+
+  const filteredFeatures = useMemo(() => {
+    if (!featureFilter.trim()) return features;
+    const query = featureFilter.trim().toLowerCase();
+    return features.filter((feature) =>
+      feature.name.toLowerCase().includes(query) ||
+      feature.key.toLowerCase().includes(query) ||
+      feature.kind.toLowerCase().includes(query) ||
+      (feature.owner || "").toLowerCase().includes(query) ||
+      (feature.description || "").toLowerCase().includes(query)
+    );
+  }, [features, featureFilter]);
 
   const activeFeatures = features.filter((feature) => feature.status === "ACTIVE");
   const modules = activeFeatures.filter((feature) => feature.kind === "MODULE");
@@ -204,7 +217,7 @@ export function FeatureWorkspace({
             <span className="record-count">{features.length} {features.length === 1 ? "item" : "items"}</span>
           </div>
 
-          {loadState === "loading" && <p className="loading-state">Loading features and modules…</p>}
+          {loadState === "loading" && <p className="loading-state" role="status">Loading features and modules…</p>}
           {loadState === "ready" && features.length === 0 && (
             <div className="empty-state feature-empty-state">
               <span aria-hidden="true"><Icon name="projects" size={22} /></span>
@@ -214,6 +227,19 @@ export function FeatureWorkspace({
           )}
 
           {features.length > 0 && (
+            <>
+            <div className="list-filter">
+              <input
+                type="search"
+                placeholder="Filter capabilities by name, key, owner…"
+                value={featureFilter}
+                onChange={(event) => setFeatureFilter(event.target.value)}
+                aria-label="Filter features"
+              />
+              {featureFilter && (
+                <span className="record-count">{filteredFeatures.length} of {features.length}</span>
+              )}
+            </div>
             <div className="table-frame">
               <table>
                 <thead>
@@ -226,7 +252,7 @@ export function FeatureWorkspace({
                   </tr>
                 </thead>
                 <tbody>
-                  {features.map((feature) => (
+                  {filteredFeatures.map((feature) => (
                     <tr key={feature.id} className={feature.id === selectedFeatureId ? "is-selected" : undefined}>
                       <td>
                         <strong>{feature.name}</strong>
@@ -264,7 +290,14 @@ export function FeatureWorkspace({
                   ))}
                 </tbody>
               </table>
+              {filteredFeatures.length === 0 && featureFilter && (
+                <div className="empty-state empty-state--compact">
+                  <h3>No matching capabilities</h3>
+                  <p>Try a different search term.</p>
+                </div>
+              )}
             </div>
+            </>
           )}
         </section>
 
@@ -365,7 +398,7 @@ function FeatureDocumentationMapPanel({
             <button type="button" className="button button--quiet" onClick={onClose}>Close</button>
           </div>
 
-          {mapState === "loading" && <p className="loading-state">Loading documentation map…</p>}
+          {mapState === "loading" && <p className="loading-state" role="status">Loading documentation map…</p>}
           {mapState === "error" && <p className="form-error" role="alert">{mapError}</p>}
           {mapState === "ready" && documentationMap !== null && (
             <>

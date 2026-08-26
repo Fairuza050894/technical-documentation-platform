@@ -22,6 +22,7 @@
 }
 
 .sidebar {
+  transition: width 0.2s ease, min-width 0.2s ease;
   position: sticky;
   z-index: 20;
   top: 0;
@@ -280,6 +281,7 @@
 }
 
 .application-frame {
+  transition: margin-left 0.2s ease;
   min-width: 0;
 }
 
@@ -490,4 +492,205 @@
   .main-content {
     padding: 22px 18px 36px;
   }
+}
+
+/* ── Skip to Content ────────────────────────────────────────── */
+
+.skip-to-content {
+  position: absolute;
+  top: -100px;
+  left: 8px;
+  z-index: 1000;
+  padding: 8px 16px;
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-medium);
+  color: var(--color-accent);
+  background: var(--color-surface);
+  font-size: 12px;
+  font-weight: 650;
+  text-decoration: none;
+  transition: top 0.15s ease;
+}
+
+.skip-to-content:focus {
+  top: 8px;
+  outline: 0;
+  box-shadow: var(--focus-ring);
+}
+
+/* ── Document Tab Navigation ────────────────────────────────── */
+
+.document-tab-nav {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.document-tab {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-bottom: 0;
+  border-radius: var(--radius-medium) var(--radius-medium) 0 0;
+  color: var(--color-text-secondary);
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.document-tab:hover {
+  color: var(--color-text-primary);
+  background: var(--color-surface-subtle);
+}
+
+.document-tab--active {
+  color: var(--color-accent);
+  background: var(--color-surface);
+  border-color: var(--color-border-subtle);
+  border-bottom-color: var(--color-surface);
+  margin-bottom: -1px;
+}
+
+/* Tab visibility */
+[data-active-tab="generate"] .document-section--history,
+[data-active-tab="generate"] .document-section--detail,
+[data-active-tab="generate"] .document-section--comparison {
+  display: none;
+}
+
+[data-active-tab="versions"] .document-section--generate,
+[data-active-tab="versions"] .document-section--comparison {
+  display: none;
+}
+
+[data-active-tab="compare"] .document-section--generate,
+[data-active-tab="compare"] .document-section--history,
+[data-active-tab="compare"] .document-section--detail {
+  display: none;
+}
+
+/* ── Print Styles ───────────────────────────────────────────── */
+
+@media print {
+  .app-sidebar,
+  .utility-bar,
+  .document-tab-nav,
+  .form-panel,
+  .form-actions,
+  .button,
+  .inline-actions,
+  .list-filter,
+  .skip-to-content,
+  .next-action-panel,
+  .project-stage-navigation {
+    display: none !important;
+  }
+
+  .app-shell {
+    display: block !important;
+  }
+
+  .application-frame {
+    margin-left: 0 !important;
+  }
+
+  .main-content {
+    padding: 0 !important;
+  }
+
+  .workspace-canvas {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+
+  .content-section {
+    border: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    page-break-inside: avoid;
+  }
+
+  .table-frame {
+    overflow: visible !important;
+    border: 1px solid #ccc !important;
+  }
+
+  .document-preview {
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+  }
+
+  .status-badge,
+  .status-indicator {
+    border: 1px solid #999 !important;
+    color: #333 !important;
+    background: #f5f5f5 !important;
+  }
+}
+
+/* ── Sidebar Collapse ───────────────────────────────────────── */
+
+.sidebar-collapse-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-top: auto;
+  padding: 0;
+  border: 1px solid var(--color-sidebar-border);
+  border-radius: var(--radius-small);
+  color: var(--color-sidebar-muted);
+  background: transparent;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+  align-self: center;
+  flex-shrink: 0;
+}
+
+.sidebar-collapse-toggle:hover {
+  color: var(--color-sidebar-text);
+  background: var(--color-sidebar-active);
+}
+
+.sidebar--collapsed {
+  width: 56px;
+  min-width: 56px;
+}
+
+.sidebar--collapsed .product-mark {
+  justify-content: center;
+  padding: 12px 8px;
+}
+
+.sidebar--collapsed .product-mark__copy {
+  display: none;
+}
+
+.sidebar--collapsed .product-mark__symbol {
+  flex-shrink: 0;
+}
+
+.sidebar--collapsed .workspace-switcher {
+  display: none;
+}
+
+.sidebar--collapsed .navigation-group h2 {
+  display: none;
+}
+
+.sidebar--collapsed .navigation-item {
+  justify-content: center;
+  padding: 8px 0;
+}
+
+.sidebar--collapsed .navigation-item__label {
+  display: none;
+}
+
+.sidebar--collapsed .sidebar-collapse-toggle {
+  margin-top: auto;
 }

@@ -9,6 +9,30 @@
 | Review cadence | At each material change or release |
 | Source of truth | This repository |
 
+## Phase 2 progress: Core Product Quality
+
+| Week | Focus | Status | Date |
+|------|-------|--------|------|
+| Week 1 | Error boundary, confirmation dialogs, skip-to-content, list filtering | ✅ Complete | 2026-08-27 |
+| Week 2 | Document tabs, print styles, sidebar collapse, ARIA consistency | ✅ Complete | 2026-08-27 |
+| Week 3 | Evidence UI, enterprise generation UI, visual diff highlighting | ⏳ Next | — |
+| Week 4 | Global search, dependency indicators in stage navigation | ⏳ Planned | — |
+| Week 5+ | Testing enhancement, CI/CD, compliance and platform documentation | ⏳ Planned | — |
+
+### Week 1 deliverables
+- React Error Boundary at application root (`main.tsx`)
+- Reusable ConfirmDialog component (native `<dialog>`)
+- Workflow confirmation for approve and supersede document actions
+- Planned stages 7 and 8 hidden from ProjectWorkbench
+- Skip-to-content accessibility link in AppShell
+- Text search filters in Sources, Documents, Catalog, and Features workspaces
+
+### Week 2 deliverables
+- DocumentsWorkspace refactored to tabbed navigation (Generate / Versions / Compare)
+- Print stylesheet (`@media print`) for clean document printing
+- Sidebar collapse toggle with icon-only mode and localStorage persistence
+- ARIA landmark labels and loading state roles across all workspaces
+
 ## Roadmap policy
 
 Sequence is based on architectural prerequisites and risk reduction. Dates are not committed in

@@ -52,6 +52,10 @@ export function AppShell({
   onNavigate,
 }: AppShellProps) {
   return (
+    <>
+    <a className="skip-to-content" href="#main-content">
+      Skip to content
+    </a>
     <div className="app-shell">
       <AppSidebar
         workspaces={workspaces}
@@ -78,10 +82,11 @@ export function AppShell({
           serviceLabel={serviceLabel}
         />
 
-        <main className="main-content">
+        <main className="main-content" id="main-content" aria-label="Main content">
           <div className="workspace-canvas">{children}</div>
         </main>
       </div>
     </div>
+    </>
   );
 }

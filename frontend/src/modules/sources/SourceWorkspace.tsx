@@ -24,6 +24,17 @@ export function SourceWorkspace({ project, embedded = false }: SourceWorkspacePr
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pendingArchiveId, setPendingArchiveId] = useState<string | null>(null);
+  const [sourceFilter, setSourceFilter] = useState("");
+
+  const filteredSources = useMemo(() => {
+    if (!sourceFilter.trim()) return sources;
+    const query = sourceFilter.trim().toLowerCase();
+    return sources.filter((source) =>
+      source.name.toLowerCase().includes(query) ||
+      source.original_file_name.toLowerCase().includes(query) ||
+      source.api_title.toLowerCase().includes(query)
+    );
+  }, [sources, sourceFilter]);
 
   const selectedProject = useMemo(
     () => projects.find((project) => project.id === selectedProjectId) ?? null,
@@ -185,7 +196,7 @@ export function SourceWorkspace({ project, embedded = false }: SourceWorkspacePr
           </div>
         )}
 
-        {loadState === "loading" && <p className="loading-state">Loading sources…</p>}
+        {loadState === "loading" && <p className="loading-state" role="status">Loading sources…</p>}
 
         {loadState === "ready" && projects.length === 0 && (
           <div className="empty-state">
@@ -202,6 +213,19 @@ export function SourceWorkspace({ project, embedded = false }: SourceWorkspacePr
         )}
 
         {sources.length > 0 && (
+          <>
+          <div className="list-filter">
+            <input
+              type="search"
+              placeholder="Filter sources by name, file, or API title…"
+              value={sourceFilter}
+              onChange={(event) => setSourceFilter(event.target.value)}
+              aria-label="Filter sources"
+            />
+            {sourceFilter && (
+              <span className="record-count">{filteredSources.length} of {sources.length}</span>
+            )}
+          </div>
           <div className="table-frame">
             <table>
               <thead>
@@ -214,7 +238,7 @@ export function SourceWorkspace({ project, embedded = false }: SourceWorkspacePr
                 </tr>
               </thead>
               <tbody>
-                {sources.map((source) => (
+                {filteredSources.map((source) => (
                   <tr key={source.id}>
                     <td>
                       <strong>{source.name}</strong>
@@ -279,7 +303,14 @@ export function SourceWorkspace({ project, embedded = false }: SourceWorkspacePr
                 ))}
               </tbody>
             </table>
+            {filteredSources.length === 0 && sourceFilter && (
+              <div className="empty-state empty-state--compact">
+                <h3>No matching sources</h3>
+                <p>Try a different search term.</p>
+              </div>
+            )}
           </div>
+          </>
         )}
       </section>
 

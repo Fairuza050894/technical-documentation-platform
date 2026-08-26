@@ -26,6 +26,50 @@
 - CSS comments describe responsibility or constraints, not patch history.
 - Preserve controlled CSS import order unless visual regression review approves a cascade change.
 
+### Component patterns
+
+- One component per file; small helper components may co-locate with their parent.
+- Props interface defined directly above the component function.
+- Use `useCallback` for event handlers passed to child components.
+- Use `useMemo` for derived state and filtered lists.
+- Always pass `AbortController.signal` to async operations in `useEffect`.
+- Cleanup async operations in `useEffect` return function.
+
+### State management
+
+- Local state with `useState`; no global state library.
+- `localStorage` for persistence preferences (workspace selection, sidebar collapse).
+- Filter state co-located with the list it filters.
+
+### Error handling
+
+- Application-level `ErrorBoundary` wraps the entire app in `main.tsx`.
+- Domain-specific `ConfirmDialog` for destructive workflow actions.
+- Error responses use consistent `{ error: { code, message, details, requestId } }` shape.
+- Loading states use `role="status"` for screen reader announcement.
+
+### Accessibility
+
+- Semantic HTML elements preferred over generic `div`.
+- `aria-label` on all landmarks (`<aside>`, `<nav>`, `<main>`, `<header>`).
+- `aria-current="page"` on active navigation items.
+- `role="status"` on loading indicators.
+- `role="alert"` on error messages.
+- Skip-to-content link for keyboard navigation.
+- `prefers-reduced-motion: reduce` disables animations and transitions.
+- Focus ring via `--focus-ring` custom property on all interactive elements.
+
+### CSS organization
+
+- Design tokens in `styles/tokens.css` (colors, spacing, radii, shadows).
+- Global reset and base styles in `styles/foundation.css`.
+- Shared component primitives in `styles/components.css`.
+- Application shell layout in `styles/application-shell.css`.
+- Module-specific styles in `styles/modules/<name>.css`.
+- Print styles in `@media print` block within `application-shell.css`.
+- New CSS classes follow BEM-like convention: `.block__element--modifier`.
+
+
 ## General
 
 - Prefer composition over inheritance.
