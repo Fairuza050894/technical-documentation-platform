@@ -93,3 +93,51 @@ export interface DocumentVersionComparison {
   removed_total: number;
   changes: DocumentSectionChange[];
 }
+
+export interface DocumentTypeDefinition {
+  document_type: string;
+  display_name: string;
+  description: string;
+  automation_profile: string;
+  order: number;
+}
+
+export interface DocumentTypeRegistry {
+  schema_version: string;
+  items: DocumentTypeDefinition[];
+  total: number;
+}
+
+export interface ProjectDocumentationChecklistItem {
+  document_type: string;
+  display_name: string;
+  automation_profile: string;
+  requirement: string;
+  availability: string;
+  latest_document_id: string | null;
+  latest_version_id: string | null;
+  latest_version: string | null;
+  latest_status: string | null;
+}
+
+export interface ProjectDocumentationChecklist {
+  project_id: string;
+  policy_key: string;
+  registry_schema_version: string;
+  items: ProjectDocumentationChecklistItem[];
+  total: number;
+  required_total: number;
+  supplementary_total: number;
+  available_total: number;
+  missing_required_total: number;
+}
+
+export interface ReadinessFinding {
+  rule_code: string;
+  document_type: string;
+  severity: string;
+  message: string;
+  missing_input: string;
+  remediation: string;
+  supporting_references: string[];
+}

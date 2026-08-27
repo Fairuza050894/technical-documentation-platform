@@ -5,6 +5,7 @@ export const projectStages = [
   "catalog",
   "changes",
   "documents",
+  "evidence",
 ] as const;
 
 export type ProjectStage = (typeof projectStages)[number];

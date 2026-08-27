@@ -1,6 +1,11 @@
 import { requestJson } from "../../shared/api/client";
 import { apiUrl } from "../../shared/api/config";
 import type {
+  DocumentTypeRegistry,
+  ProjectDocumentationChecklist,
+} from "./types";
+
+import type {
   DocumentVersionComparison,
   GeneratedDocumentCollection,
   GeneratedDocumentDetail,
@@ -99,6 +104,32 @@ function workflowRequest(
     {
       method: "POST",
       body: JSON.stringify({ comment }),
+    },
+  );
+}
+
+export function listDocumentTypes(): Promise<DocumentTypeRegistry> {
+  return requestJson<DocumentTypeRegistry>("/document-types");
+}
+
+export function getDocumentationChecklist(
+  projectId: string,
+): Promise<ProjectDocumentationChecklist> {
+  return requestJson<ProjectDocumentationChecklist>(
+    `/projects/${projectId}/documentation-checklist`,
+  );
+}
+
+export function generateEnterpriseDocument(
+  projectId: string,
+  documentType: string,
+  revisionReason: string,
+): Promise<GeneratedDocumentDetail> {
+  return requestJson<GeneratedDocumentDetail>(
+    `/projects/${projectId}/documents/${documentType}/generate`,
+    {
+      method: "POST",
+      body: JSON.stringify({ revision_reason: revisionReason }),
     },
   );
 }

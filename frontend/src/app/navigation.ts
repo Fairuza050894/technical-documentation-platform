@@ -30,6 +30,7 @@ const projectStageLabels: Record<ProjectStage, string> = {
   catalog: "API Catalog",
   changes: "Changes",
   documents: "Documents",
+  evidence: "Evidence",
 };
 
 const projectStageIcons: Record<ProjectStage, IconName> = {
@@ -39,6 +40,7 @@ const projectStageIcons: Record<ProjectStage, IconName> = {
   catalog: "catalog",
   changes: "changes",
   documents: "documents",
+  evidence: "documents",
 };
 
 export function buildNavigationGroups(activeWorkspaceId: string | null): readonly NavigationGroup[] {

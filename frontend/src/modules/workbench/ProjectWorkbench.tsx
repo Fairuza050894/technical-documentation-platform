@@ -14,6 +14,7 @@ import { FeatureWorkspace } from "../features/FeatureWorkspace";
 import { listFeatures } from "../features/api";
 import type { Feature } from "../features/types";
 import { DocumentsWorkspace } from "../documents/DocumentsWorkspace";
+import { EvidenceWorkspace } from "../evidence/EvidenceWorkspace";
 import { listGeneratedDocuments } from "../documents/api";
 import type { GeneratedDocumentSummary } from "../documents/types";
 import { getProject } from "../projects/api";
@@ -54,6 +55,7 @@ const stageItems: ReadonlyArray<{
   { id: "catalog", label: "API Catalog", icon: "catalog", description: "Normalized snapshot" },
   { id: "changes", label: "Changes", icon: "changes", description: "Deterministic comparison" },
   { id: "documents", label: "Documents", icon: "documents", description: "Version lifecycle" },
+  { id: "evidence", label: "Evidence", icon: "documents", description: "Provenance and claims" },
 ];
 
 export function ProjectWorkbench({
@@ -331,6 +333,7 @@ export function ProjectWorkbench({
         {stage === "catalog" && <ApiCatalogWorkspace project={project} embedded />}
         {stage === "changes" && <ChangesWorkspace project={project} embedded />}
         {stage === "documents" && <DocumentsWorkspace project={project} embedded />}
+        {stage === "evidence" && <EvidenceWorkspace project={project} embedded />}
       </div>
     </div>
   );

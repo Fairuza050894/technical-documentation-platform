@@ -28,6 +28,7 @@ import type {
   WorkflowEvent,
 } from "./types";
 import { ConfirmDialog } from "../../shared/ui/ConfirmDialog";
+import { EnterpriseGenerationForm } from "./EnterpriseGenerationForm";
 
 interface SnapshotOption {
   run: SynchronizationRun;
@@ -455,6 +456,19 @@ export function DocumentsWorkspace({
         </p>
       </section>
 
+      {projectId && (
+        <section
+          className="content-section document-section document-section--enterprise"
+          aria-labelledby="enterprise-generation-title"
+        >
+          <EnterpriseGenerationForm
+            projectId={projectId}
+            onGenerated={(document) => void refreshVersions(document.id)}
+          />
+        </section>
+      )}
+
+
       <section
         className="content-section document-section document-section--history"
         aria-labelledby="document-history-title"
@@ -772,7 +786,7 @@ export function DocumentsWorkspace({
                   </thead>
                   <tbody>
                     {filteredChanges.map((change) => (
-                      <tr key={`${change.section_key}-${change.kind}`}>
+                      <tr key={`${change.section_key}-${change.kind}`} className={`comparison-row comparison-row--${change.kind.toLowerCase()}`}>
                         <td>
                           <strong>{change.section_title}</strong>
                           <span className="table-secondary-text">{change.section_key}</span>
@@ -1006,7 +1020,7 @@ function WorkflowActions({
             Request changes
           </button>
         </div>
-        {pendingAction && (
+        {pendingAction && confirmConfig[pendingAction] && (
           <ConfirmDialog
             title={confirmConfig[pendingAction].title}
             message={confirmConfig[pendingAction].message}
@@ -1030,7 +1044,7 @@ function WorkflowActions({
         >
           Mark as replaced
         </button>
-        {pendingAction && (
+        {pendingAction && confirmConfig[pendingAction] && (
           <ConfirmDialog
             title={confirmConfig[pendingAction].title}
             message={confirmConfig[pendingAction].message}
