@@ -345,57 +345,81 @@ Content here..." />
           )}
         </div>
 
-        {selectedTemplate && (
-          <div className="template-detail">
-            <div className="template-detail__header">
-              <div>
+      </div>
+
+      {selectedTemplate && (
+        <div
+          className="template-modal-overlay"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              setSelectedTemplate(null);
+              setIsEditing(false);
+            }
+          }}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Preview: ${selectedTemplate.name}`}
+        >
+          <div className="template-modal">
+            <header className="template-modal__header">
+              <div className="template-modal__title">
                 <span className="template-card__key">{selectedTemplate.key}</span>
                 {selectedTemplate.is_builtin && <span className="template-card__badge">Built-in</span>}
+                <h3>{selectedTemplate.name}</h3>
               </div>
-              <h3>{selectedTemplate.name}</h3>
-              <p>{selectedTemplate.description}</p>
-              <div className="template-detail__meta">
-                <span>{CATEGORY_LABELS[selectedTemplate.category]}</span>
-                <span>{selectedTemplate.standard}</span>
-                <span>v{selectedTemplate.version}</span>
-              </div>
-            </div>
-
-            <div className="template-detail__actions">
-              {isEditing ? (
-                <>
-                  <button type="button" className="button button--primary" disabled={isBusy || selectedTemplate.is_builtin} onClick={() => void handleSave()}>
-                    {isBusy ? "Saving..." : "Save changes"}
+              <div className="template-modal__header-actions">
+                {isEditing ? (
+                  <>
+                    <button type="button" className="button button--primary" disabled={isBusy || selectedTemplate.is_builtin} onClick={() => void handleSave()}>
+                      {isBusy ? "Saving..." : "Save"}
+                    </button>
+                    <button type="button" className="button button--secondary" onClick={() => { setIsEditing(false); setEditContent(selectedTemplate.content); }}>
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    className="button button--secondary"
+                    disabled={selectedTemplate.is_builtin}
+                    onClick={() => setIsEditing(true)}
+                  >
+                    {selectedTemplate.is_builtin ? "Read-only" : "Edit"}
                   </button>
-                  <button type="button" className="button button--secondary" onClick={() => { setIsEditing(false); setEditContent(selectedTemplate.content); }}>
-                    Cancel
-                  </button>
-                </>
-              ) : (
+                )}
                 <button
                   type="button"
-                  className="button button--secondary"
-                  disabled={selectedTemplate.is_builtin}
-                  onClick={() => setIsEditing(true)}
+                  className="template-modal__close"
+                  onClick={() => { setSelectedTemplate(null); setIsEditing(false); }}
+                  aria-label="Close preview"
                 >
-                  {selectedTemplate.is_builtin ? "Built-in (read-only)" : "Edit template"}
+                  &times;
                 </button>
-              )}
+              </div>
+            </header>
+
+            <div className="template-modal__meta">
+              <span>{CATEGORY_LABELS[selectedTemplate.category]}</span>
+              <span>{selectedTemplate.standard}</span>
+              <span>v{selectedTemplate.version}</span>
+              <span>{selectedTemplate.description}</span>
             </div>
 
-            {isEditing ? (
-              <textarea
-                className="template-content-editor template-content-editor--full"
-                value={editContent}
-                onChange={(event) => setEditContent(event.target.value)}
-                aria-label="Edit template content"
-              />
-            ) : (
-              <MarkdownPreview content={selectedTemplate.content} />
-            )}
+            <div className="template-modal__body">
+              {isEditing ? (
+                <textarea
+                  className="template-content-editor template-content-editor--modal"
+                  value={editContent}
+                  onChange={(event) => setEditContent(event.target.value)}
+                  aria-label="Edit template content"
+                />
+              ) : (
+                <MarkdownPreview content={selectedTemplate.content} />
+              )}
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <p className="loading-state" role="status">{message}</p>
     </div>
