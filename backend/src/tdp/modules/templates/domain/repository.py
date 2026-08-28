@@ -1,0 +1,23 @@
+from typing import Protocol
+
+from tdp.modules.templates.domain.model import (
+    DocumentTemplate,
+    TemplateCategory,
+    TemplateId,
+)
+
+
+class TemplateRepository(Protocol):
+    async def get(self, template_id: TemplateId) -> DocumentTemplate | None: ...
+
+    async def get_by_key(self, key: str) -> DocumentTemplate | None: ...
+
+    async def list_all(self) -> list[DocumentTemplate]: ...
+
+    async def list_by_category(self, category: TemplateCategory) -> list[DocumentTemplate]: ...
+
+    async def add(self, template: DocumentTemplate) -> None: ...
+
+    async def update(self, template: DocumentTemplate) -> None: ...
+
+    async def delete(self, template_id: TemplateId) -> None: ...

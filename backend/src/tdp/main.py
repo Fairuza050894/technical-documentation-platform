@@ -40,6 +40,12 @@ from tdp.modules.documents.presentation.http.router import (
 )
 from tdp.modules.documents.presentation.http.router import router as documents_router
 from tdp.modules.evidence.application.service import EvidenceApplicationService
+from tdp.modules.templates.application.service import TemplateApplicationService
+from tdp.modules.templates.infrastructure.sqlite_repository import SqliteTemplateRepository
+from tdp.modules.templates.infrastructure.seed import seed_builtin_templates
+from tdp.modules.templates.presentation.http.router import router as templates_router
+from tdp.modules.templates.presentation.http.router import template_error_handler
+from tdp.modules.templates.domain.errors import TemplateError
 from tdp.modules.evidence.domain.errors import EvidenceError
 from tdp.modules.evidence.infrastructure.sqlite_repository import SqliteEvidenceRepository
 from tdp.modules.evidence.presentation.http.router import (
@@ -154,6 +160,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     document_repository = SqliteDocumentRepository(runtime_settings.database_path)
     feature_repository = SqliteFeatureRepository(runtime_settings.database_path)
     evidence_repository = SqliteEvidenceRepository(runtime_settings.database_path)
+    template_repository = SqliteTemplateRepository(runtime_settings.database_path)
     project_access = RepositoryBackedProjectAccess(
         project_repository,
         workspace_repository,
@@ -227,6 +234,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         ),
         DeterministicEnterpriseMarkdownRenderer(),
     )
+    application.state.template_service = TemplateApplicationService(template_repository)
     application.state.document_governance_service = DocumentGovernanceApplicationService(
         document_repository,
         project_repository,

@@ -15,6 +15,7 @@ export type AppRoute =
   | { name: "projects"; workspaceId: string | null }
   | { name: "workspaces" }
   | { name: "system" }
+  | { name: "templates" }
   | { name: "audit" }
   | { name: "login" }
   | {
@@ -47,6 +48,9 @@ export function parseRoute(pathname: string): AppRoute {
   }
   if (normalized === "/system") {
     return { name: "system" };
+  }
+  if (normalized === "/templates") {
+    return { name: "templates" };
   }
   if (normalized === "/audit") {
     return { name: "audit" };
@@ -122,6 +126,8 @@ export function routePath(route: AppRoute): string {
       return "/workspaces";
     case "system":
       return "/system";
+    case "templates":
+      return "/templates";
     case "audit":
       return "/audit";
     case "login":
@@ -179,6 +185,7 @@ export function routeWorkspaceId(route: AppRoute): string | null {
       return route.workspaceId;
     case "workspaces":
     case "system":
+    case "templates":
     case "audit":
     case "login":
     case "not-found":
