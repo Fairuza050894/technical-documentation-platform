@@ -3,13 +3,13 @@
 .evidence-heading-actions {
   display: flex;
   align-items: center;
-  gap: var(--space-3, 0.75rem);
+  gap: var(--space-3);
 }
 
 .evidence-kind {
   display: inline-block;
   padding: 0.15em 0.5em;
-  border-radius: var(--radius-sm, 3px);
+  border-radius: var(--radius-small);
   font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -17,28 +17,28 @@
 }
 
 .evidence-kind--source_artifact {
-  background: color-mix(in srgb, var(--accent, #b8a04e) 15%, transparent);
-  color: var(--accent, #b8a04e);
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
 }
 
 .evidence-kind--catalog_snapshot {
-  background: color-mix(in srgb, #5b9bd5 15%, transparent);
-  color: #5b9bd5;
+  background: var(--color-info-subtle);
+  color: var(--color-info);
 }
 
 .evidence-kind--user_journey {
-  background: color-mix(in srgb, #7bc67e 15%, transparent);
-  color: #7bc67e;
+  background: var(--color-success-subtle);
+  color: var(--color-success);
 }
 
 .evidence-kind--deployment_runtime {
-  background: color-mix(in srgb, #d19a66 15%, transparent);
-  color: #d19a66;
+  background: var(--color-warning-subtle);
+  color: var(--color-warning);
 }
 
 .evidence-kind--uat_result {
-  background: color-mix(in srgb, #c678dd 15%, transparent);
-  color: #c678dd;
+  background: var(--color-danger-subtle);
+  color: var(--color-danger);
 }
 
 .evidence-source-ref {
@@ -52,10 +52,10 @@
   gap: 0.4rem;
   max-height: 200px;
   overflow-y: auto;
-  padding: var(--space-2, 0.5rem);
-  border: 1px solid var(--border-subtle, #2a2a2a);
-  border-radius: var(--radius-sm, 3px);
-  background: var(--bg, #0d0d0d);
+  padding: var(--space-2);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-small);
+  background: var(--color-surface);
 }
 
 .evidence-checkbox {
@@ -67,7 +67,7 @@
 }
 
 .evidence-checkbox input[type="checkbox"] {
-  accent-color: var(--accent, #b8a04e);
+  accent-color: var(--color-accent);
 }
 
 .claim-statement {
@@ -78,22 +78,22 @@
 .claim-classification {
   display: inline-block;
   padding: 0.15em 0.5em;
-  border-radius: var(--radius-sm, 3px);
+  border-radius: var(--radius-small);
   font-size: 0.8rem;
   font-weight: 600;
 }
 
 .claim-classification--observed {
-  background: color-mix(in srgb, #7bc67e 15%, transparent);
-  color: #7bc67e;
+  background: var(--color-success-subtle);
+  color: var(--color-success);
 }
 
 .claim-classification--inferred {
-  background: color-mix(in srgb, #d19a66 15%, transparent);
-  color: #d19a66;
+  background: var(--color-warning-subtle);
+  color: var(--color-warning);
 }
 
 .claim-classification--unverified {
-  background: color-mix(in srgb, #e06c75 15%, transparent);
-  color: #e06c75;
+  background: var(--color-danger-subtle);
+  color: var(--color-danger);
 }

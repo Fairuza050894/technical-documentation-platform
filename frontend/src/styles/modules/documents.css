@@ -6,75 +6,75 @@
 }
 
 .comparison-row--added {
-  border-left-color: #7bc67e;
-  background: color-mix(in srgb, #7bc67e 6%, transparent);
+  border-left-color: var(--color-success);
+  background: var(--color-success-subtle);
 }
 
 .comparison-row--added:hover {
-  background: color-mix(in srgb, #7bc67e 12%, transparent);
+  background: color-mix(in srgb, var(--color-success) 12%, transparent);
 }
 
 .comparison-row--modified {
-  border-left-color: #d19a66;
-  background: color-mix(in srgb, #d19a66 6%, transparent);
+  border-left-color: var(--color-warning);
+  background: var(--color-warning-subtle);
 }
 
 .comparison-row--modified:hover {
-  background: color-mix(in srgb, #d19a66 12%, transparent);
+  background: color-mix(in srgb, var(--color-warning) 12%, transparent);
 }
 
 .comparison-row--removed {
-  border-left-color: #e06c75;
-  background: color-mix(in srgb, #e06c75 6%, transparent);
+  border-left-color: var(--color-danger);
+  background: var(--color-danger-subtle);
 }
 
 .comparison-row--removed:hover {
-  background: color-mix(in srgb, #e06c75 12%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 12%, transparent);
 }
 
 /* Enterprise generation form */
 
 .enterprise-generation-form {
-  padding: var(--space-4, 1rem) 0;
+  padding: var(--space-4) 0;
 }
 
 .enterprise-generation-form + .enterprise-generation-form {
-  border-top: 1px solid var(--border-subtle, #2a2a2a);
+  border-top: 1px solid var(--color-border-subtle);
 }
 
 .documentation-checklist {
-  margin: var(--space-3, 0.75rem) 0;
+  margin: var(--space-3) 0;
 }
 
 .checklist-summary {
   display: flex;
-  gap: var(--space-4, 1rem);
+  gap: var(--space-4);
   font-size: 0.85rem;
-  color: var(--text-muted, #7a7570);
-  margin-bottom: var(--space-3, 0.75rem);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-3);
 }
 
 .checklist-items {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: var(--space-2, 0.5rem);
+  gap: var(--space-2);
 }
 
 .checklist-item {
-  padding: var(--space-3, 0.75rem);
-  border: 1px solid var(--border-subtle, #2a2a2a);
-  border-radius: var(--radius-sm, 3px);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-small);
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease;
 }
 
 .checklist-item:hover {
-  border-color: var(--text-muted, #7a7570);
+  border-color: var(--color-border-strong);
 }
 
 .checklist-item--selected {
-  border-color: var(--accent, #b8a04e);
-  background: color-mix(in srgb, var(--accent, #b8a04e) 8%, transparent);
+  border-color: var(--color-accent);
+  background: var(--color-accent-subtle);
 }
 
 .checklist-item__header {
@@ -87,13 +87,13 @@
 .checklist-item__meta {
   display: block;
   font-size: 0.8rem;
-  color: var(--text-muted, #7a7570);
+  color: var(--color-text-muted);
 }
 
 .checklist-item__version {
   display: block;
   font-size: 0.78rem;
-  color: var(--text-muted, #7a7570);
+  color: var(--color-text-muted);
   margin-top: 0.25rem;
 }
 
@@ -105,22 +105,22 @@
 }
 
 .checklist-availability--available {
-  color: #7bc67e;
+  color: var(--color-success);
 }
 
 .checklist-availability--missing {
-  color: #e06c75;
+  color: var(--color-danger);
 }
 
 .readiness-status {
   display: flex;
   align-items: center;
-  gap: var(--space-2, 0.5rem);
-  padding: var(--space-2, 0.5rem) var(--space-3, 0.75rem);
-  border-radius: var(--radius-sm, 3px);
-  background: var(--surface, #1a1a1a);
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-small);
+  background: var(--color-surface-muted);
   font-size: 0.85rem;
-  margin: var(--space-2, 0.5rem) 0;
+  margin: var(--space-2) 0;
 }
 
 .readiness-state {
@@ -130,23 +130,23 @@
 }
 
 .readiness-state--available {
-  color: #7bc67e;
+  color: var(--color-success);
 }
 
 .readiness-state--missing {
-  color: #e06c75;
+  color: var(--color-danger);
 }
 
 .blocked-findings {
-  margin: var(--space-3, 0.75rem) 0;
-  padding: var(--space-3, 0.75rem);
-  border: 1px solid #e06c75;
-  border-radius: var(--radius-sm, 3px);
-  background: color-mix(in srgb, #e06c75 6%, transparent);
+  margin: var(--space-3) 0;
+  padding: var(--space-3);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-small);
+  background: var(--color-danger-subtle);
 }
 
 .blocked-findings h4 {
-  color: #e06c75;
+  color: var(--color-danger);
   margin: 0 0 0.5rem;
 }
 
@@ -157,8 +157,8 @@
 }
 
 .finding {
-  padding: var(--space-2, 0.5rem) 0;
-  border-bottom: 1px solid var(--border-subtle, #2a2a2a);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-border-subtle);
 }
 
 .finding:last-child {
@@ -175,9 +175,9 @@
 }
 
 .finding__missing {
-  color: #d19a66;
+  color: var(--color-warning);
 }
 
 .finding__remediation {
-  color: var(--text-muted, #7a7570);
+  color: var(--color-text-muted);
 }

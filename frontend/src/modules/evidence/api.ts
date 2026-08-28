@@ -11,8 +11,9 @@ import type {
 
 export function listProjectEvidence(
   projectId: string,
+  signal?: AbortSignal,
 ): Promise<EvidenceCollection> {
-  return requestJson<EvidenceCollection>(`/projects/${projectId}/evidence`);
+  return requestJson<EvidenceCollection>(`/projects/${projectId}/evidence`, { signal });
 }
 
 export function getEvidence(artifactId: string): Promise<EvidenceArtifact> {
@@ -70,8 +71,9 @@ export function getEvidenceMaterialization(
 
 export function listProjectClaims(
   projectId: string,
+  signal?: AbortSignal,
 ): Promise<ClaimCollection> {
-  return requestJson<ClaimCollection>(`/projects/${projectId}/claims`);
+  return requestJson<ClaimCollection>(`/projects/${projectId}/claims`, { signal });
 }
 
 export function getClaim(claimId: string): Promise<Claim> {

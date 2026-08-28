@@ -80,6 +80,7 @@ export function AppShell({
           environment={environment}
           apiState={apiState}
           serviceLabel={serviceLabel}
+          onNavigate={onNavigate}
         />
 
         <main className="main-content" id="main-content" aria-label="Main content">

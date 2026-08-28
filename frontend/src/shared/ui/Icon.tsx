@@ -15,6 +15,7 @@ export type IconName =
   | "projects"
   | "refresh"
   | "review"
+  | "search"
   | "server"
   | "settings"
   | "source"

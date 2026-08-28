@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import type { ProjectStage } from "../../app/router";
+import { StageDependencyBadge, type StageDependencyData } from "../../shared/search/StageDependencyIndicator";
 import { ApiClientError } from "../../shared/api/client";
 import { Icon, type IconName } from "../../shared/ui/Icon";
 import { ProjectDocumentationOverview } from "./ProjectDocumentationOverview";
@@ -185,6 +186,17 @@ export function ProjectWorkbench({
     };
   }, [onProjectResolved, projectId, workspaceId]);
 
+  const dependencyData: StageDependencyData = useMemo(
+    () => ({
+      features: summary.features,
+      sources: summary.sources,
+      runs: summary.runs,
+      documents: summary.documents,
+      readiness: documentationContext?.readiness ?? null,
+    }),
+    [summary, documentationContext],
+  );
+
   const nextAction = useMemo(
     () =>
       project === null
@@ -300,6 +312,7 @@ export function ProjectWorkbench({
                   <strong>{item.label}</strong>
                   <small>{item.description}</small>
                 </span>
+                <StageDependencyBadge stage={item.id} data={dependencyData} />
               </button>
             </li>
           ))}

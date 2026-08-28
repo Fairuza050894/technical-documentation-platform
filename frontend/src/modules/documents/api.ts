@@ -14,8 +14,9 @@ import type {
 
 export function listGeneratedDocuments(
   projectId: string,
+  signal?: AbortSignal,
 ): Promise<GeneratedDocumentCollection> {
-  return requestJson<GeneratedDocumentCollection>(`/projects/${projectId}/documents`);
+  return requestJson<GeneratedDocumentCollection>(`/projects/${projectId}/documents`, { signal });
 }
 
 export function generateTechnicalSourceOverview(

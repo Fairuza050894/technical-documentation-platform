@@ -1,5 +1,6 @@
 import type { Project } from "../../modules/projects/types";
 import type { Workspace } from "../../modules/workspaces/types";
+import { GlobalSearch } from "../../shared/search/GlobalSearch";
 import { Icon } from "../../shared/ui/Icon";
 import type { PageContext } from "../navigation";
 import type { AppRoute } from "../router";
@@ -13,6 +14,7 @@ interface AppUtilityBarProps {
   environment: string;
   apiState: ApiState;
   serviceLabel: string;
+  onNavigate: (route: AppRoute) => void;
 }
 
 export function AppUtilityBar({
@@ -23,6 +25,7 @@ export function AppUtilityBar({
   environment,
   apiState,
   serviceLabel,
+  onNavigate,
 }: AppUtilityBarProps) {
   return (
     <header className="utility-bar">
@@ -43,6 +46,8 @@ export function AppUtilityBar({
       </div>
 
       <div className="utility-status" aria-label="Runtime context">
+        <GlobalSearch route={route} onNavigate={onNavigate} />
+        <span className="utility-status__divider" aria-hidden="true" />
         <span className="utility-status__item">
           <span className="utility-status__label">Scope</span>
           <strong>
