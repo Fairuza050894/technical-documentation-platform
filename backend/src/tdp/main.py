@@ -235,6 +235,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         DeterministicEnterpriseMarkdownRenderer(),
     )
     application.state.template_service = TemplateApplicationService(template_repository)
+
+    @application.on_event("startup")
+    async def _seed_templates() -> None:
+        count = await seed_builtin_templates(template_repository)
+        if count > 0:
+            print(f"Seeded {count} built-in document templates.")
     application.state.document_governance_service = DocumentGovernanceApplicationService(
         document_repository,
         project_repository,

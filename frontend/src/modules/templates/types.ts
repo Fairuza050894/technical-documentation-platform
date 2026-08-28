@@ -24,6 +24,7 @@ export interface TemplateSummary {
   description: string;
   category: TemplateCategory;
   standard: string;
+  document_type: string | null;
   is_builtin: boolean;
   version: number;
   section_count: number;

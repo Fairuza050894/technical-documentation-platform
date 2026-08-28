@@ -8,10 +8,14 @@ import type {
 
 export function listTemplates(
   category?: string,
+  documentType?: string,
   signal?: AbortSignal,
 ): Promise<TemplateCollection> {
-  const params = category ? `?category=${encodeURIComponent(category)}` : "";
-  return requestJson<TemplateCollection>(`/templates${params}`, { signal });
+  const params = new URLSearchParams();
+  if (category) params.set("category", category);
+  if (documentType) params.set("document_type", documentType);
+  const query = params.toString();
+  return requestJson<TemplateCollection>(`/templates${query ? `?${query}` : ""}`, { signal });
 }
 
 export function getTemplate(templateId: string): Promise<TemplateDetail> {

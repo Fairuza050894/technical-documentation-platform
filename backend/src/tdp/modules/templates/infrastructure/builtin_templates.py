@@ -14,6 +14,7 @@ def _register(
     category: TemplateCategory,
     standard: TemplateStandard,
     content: str,
+    document_type: str | None = None,
 ) -> None:
     BUILTIN_TEMPLATES.append(
         DocumentTemplate.create(
@@ -23,6 +24,7 @@ def _register(
             category=category,
             standard=standard,
             content=content,
+            document_type=document_type,
             is_builtin=True,
         )
     )
@@ -139,6 +141,7 @@ _register(
 | Role | Name | Signature | Date |
 |------|------|-----------|------|
 """,
+    document_type="BRD",
 )
 
 _register(
@@ -239,6 +242,7 @@ _register(
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 """,
+    document_type="PRD",
 )
 
 _register(
@@ -306,6 +310,7 @@ _register(
 ### 5.1 Glossary
 ### 5.2 Issues List
 """,
+    document_type="SRS",
 )
 
 # -- Architecture --
@@ -392,6 +397,7 @@ _register(
 | Item | Impact | Mitigation |
 |------|--------|------------|
 """,
+    document_type="HLD",
 )
 
 _register(
@@ -452,6 +458,7 @@ _register(
 | Version | Date | Changes |
 |---------|------|---------|
 """,
+    document_type="LLD",
 )
 
 _register(
@@ -509,6 +516,7 @@ _register(
 
 ## 6. Migration History
 """,
+    document_type="LLD",
 )
 
 # -- Testing --
@@ -562,6 +570,7 @@ _register(
 | Requirement | Test Case(s) | Coverage |
 |------------|-------------|----------|
 """,
+    document_type="UAT_EVIDENCE",
 )
 
 _register(
@@ -616,6 +625,7 @@ _register(
 | Role | Name | Decision | Date |
 |------|------|----------|------|
 """,
+    document_type="UAT_EVIDENCE",
 )
 
 _register(
@@ -668,6 +678,7 @@ _register(
 | Role | Name | Decision | Date |
 |------|------|----------|------|
 """,
+    document_type="AS_BUILT",
 )
 
 # -- Operations --
@@ -736,6 +747,7 @@ _register(
 | Metric | Tool | Threshold |
 |--------|------|-----------|
 """,
+    document_type="INSTALLATION_GUIDE",
 )
 
 _register(
@@ -793,6 +805,7 @@ _register(
 | Parameter | File | Default | Description |
 |-----------|------|---------|-------------|
 """,
+    document_type="INSTALLATION_GUIDE",
 )
 
 _register(
@@ -850,6 +863,7 @@ _register(
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 """,
+    document_type="SOP",
 )
 
 # -- User-Facing --
@@ -914,6 +928,7 @@ _register(
 
 ## 6. Contact and Support
 """,
+    document_type="USER_GUIDE",
 )
 
 _register(
@@ -998,6 +1013,7 @@ _register(
 | Question | Answer |
 |----------|--------|
 """,
+    document_type="DEVELOPER_ONBOARDING_BRIEF",
 )
 
 _register(
@@ -1051,6 +1067,7 @@ _register(
 | # | Issue | Workaround |
 |---|-------|-----------|
 """,
+    document_type="AS_BUILT",
 )
 
 # -- Governance --
@@ -1125,6 +1142,7 @@ _register(
 | Role | Name | Signature | Date |
 |------|------|-----------|------|
 """,
+    document_type="PROJECT_HANDOVER",
 )
 
 _register(
@@ -1168,4 +1186,5 @@ _register(
 | Review Date | Participants | Notes |
 |------------|-------------|-------|
 """,
+    document_type="SOP",
 )

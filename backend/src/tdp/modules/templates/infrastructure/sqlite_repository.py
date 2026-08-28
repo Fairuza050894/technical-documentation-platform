@@ -34,6 +34,7 @@ class SqliteTemplateRepository(TemplateRepository):
                     category TEXT NOT NULL,
                     standard TEXT NOT NULL,
                     content TEXT NOT NULL,
+                    document_type TEXT,
                     is_builtin INTEGER NOT NULL DEFAULT 0,
                     version INTEGER NOT NULL DEFAULT 1,
                     created_at TEXT NOT NULL,
@@ -84,8 +85,8 @@ class SqliteTemplateRepository(TemplateRepository):
             connection.execute(
                 """
                 INSERT INTO document_templates
-                    (id, key, name, description, category, standard, content, is_builtin, version, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    (id, key, name, description, category, standard, content, document_type, is_builtin, version, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 _template_to_row(template),
             )
@@ -102,6 +103,7 @@ class SqliteTemplateRepository(TemplateRepository):
                     template.name,
                     template.description,
                     template.content,
+        template.document_type,
                     template.version,
                     template.updated_at.isoformat(),
                     str(template.id),
@@ -125,6 +127,7 @@ def _row_to_template(row: sqlite3.Row) -> DocumentTemplate:
         category=TemplateCategory(row["category"]),
         standard=TemplateStandard(row["standard"]),
         content=row["content"],
+        document_type=row["document_type"] if "document_type" in row.keys() else None,
         is_builtin=bool(row["is_builtin"]),
         version=row["version"],
         created_at=datetime.fromisoformat(row["created_at"]),
@@ -141,6 +144,7 @@ def _template_to_row(template: DocumentTemplate) -> tuple:
         template.category.value,
         template.standard.value,
         template.content,
+        template.document_type,
         int(template.is_builtin),
         template.version,
         template.created_at.isoformat(),

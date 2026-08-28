@@ -30,7 +30,11 @@ class TemplateApplicationService:
             raise TemplateNotFoundError(f"Template with key '{key}' was not found.")
         return TemplateDto.from_domain(template)
 
-    async def list_templates(self, category: str | None = None) -> list[TemplateSummaryDto]:
+    async def list_templates(
+        self,
+        category: str | None = None,
+        document_type: str | None = None,
+    ) -> list[TemplateSummaryDto]:
         if category is not None:
             try:
                 cat = TemplateCategory(category.strip().upper())
@@ -41,6 +45,14 @@ class TemplateApplicationService:
             templates = await self._repository.list_by_category(cat)
         else:
             templates = await self._repository.list_all()
+
+        if document_type is not None:
+            normalized = document_type.strip().upper()
+            templates = [
+                t for t in templates
+                if t.document_type is not None and t.document_type.upper() == normalized
+            ]
+
         return [TemplateSummaryDto.from_domain(t) for t in templates]
 
     async def create_template(
@@ -133,6 +145,7 @@ class TemplateApplicationService:
             category=source.category,
             standard=source.standard,
             content=source.content,
+            document_type=source.document_type,
         )
         await self._repository.add(copy)
         return TemplateDto.from_domain(copy)

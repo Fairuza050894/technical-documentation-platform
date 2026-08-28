@@ -48,6 +48,7 @@ class TemplateResponse(BaseModel):
     category: str
     standard: str
     content: str
+    document_type: str | None = None
     is_builtin: bool
     version: int
     created_at: str
@@ -63,6 +64,7 @@ class TemplateResponse(BaseModel):
             category=template.category,
             standard=template.standard,
             content=template.content,
+            document_type=template.document_type,
             is_builtin=template.is_builtin,
             version=template.version,
             created_at=template.created_at,
@@ -77,6 +79,7 @@ class TemplateSummaryResponse(BaseModel):
     description: str
     category: str
     standard: str
+    document_type: str | None = None
     is_builtin: bool
     version: int
     section_count: int
@@ -92,6 +95,7 @@ class TemplateSummaryResponse(BaseModel):
             description=template.description,
             category=template.category,
             standard=template.standard,
+            document_type=template.document_type,
             is_builtin=template.is_builtin,
             version=template.version,
             section_count=template.section_count,
@@ -116,8 +120,9 @@ TemplateServiceDependency = Annotated[TemplateApplicationService, Depends(get_te
 async def list_templates(
     service: TemplateServiceDependency,
     category: str | None = None,
+    document_type: str | None = None,
 ) -> TemplateCollectionResponse:
-    templates = await service.list_templates(category)
+    templates = await service.list_templates(category, document_type)
     items = [TemplateSummaryResponse.from_dto(t) for t in templates]
     return TemplateCollectionResponse(items=items, total=len(items))
 

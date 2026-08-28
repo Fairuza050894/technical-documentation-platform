@@ -44,7 +44,7 @@ export function TemplateWorkspace({ embedded = false }: TemplateWorkspaceProps) 
 
   const load = useCallback(async (signal?: AbortSignal) => {
     try {
-      const collection = await listTemplates(undefined, signal);
+      const collection = await listTemplates(undefined, undefined, signal);
       setTemplates(collection);
       setMessage(`${collection.total} templates available`);
     } catch (error: unknown) {
@@ -120,16 +120,21 @@ export function TemplateWorkspace({ embedded = false }: TemplateWorkspaceProps) 
   async function handleDuplicate(templateId: string, name: string): Promise<void> {
     if (isBusy) return;
     setIsBusy(true);
-    setMessage("Duplicating template...");
+    setMessage("Creating custom template...");
     try {
-      const newKey = prompt(`Enter key for copy of "${name}":`);
+      const sourceTemplate = await getTemplate(templateId);
+      const defaultKey = `${sourceTemplate.key}_CUSTOM`;
+      const newKey = prompt(`Enter key for your custom "${name}":`, defaultKey);
       if (!newKey) {
         setIsBusy(false);
         return;
       }
       const copy = await duplicateTemplate(templateId, newKey);
       await load();
-      setMessage(`Duplicated as ${copy.key}`);
+      setSelectedTemplate(copy);
+      setEditContent(copy.content);
+      setIsEditing(true);
+      setMessage(`Custom template ${copy.key} created. You can now edit it.`);
     } catch (error: unknown) {
       setMessage(error instanceof Error ? error.message : "Duplication failed.");
     } finally {
@@ -229,7 +234,7 @@ export function TemplateWorkspace({ embedded = false }: TemplateWorkspaceProps) 
             <div className="list-filter">
               <input
                 type="search"
-                placeholder="Filter templates..."
+                placeholder="Search templates..."
                 value={filter}
                 onChange={(event) => setFilter(event.target.value)}
                 aria-label="Filter templates"
@@ -304,7 +309,7 @@ Content here..." />
               >
                 <div className="template-card__header">
                   <span className="template-card__key">{template.key}</span>
-                  {template.is_builtin && <span className="template-card__badge">Built-in</span>}
+                  {template.is_builtin ? <span className="template-card__badge">Built-in</span> : <span className="template-card__badge template-card__badge--custom">Custom</span>}
                 </div>
                 <strong className="template-card__name">{template.name}</strong>
                 <p className="template-card__description">{template.description || "No description"}</p>
@@ -324,14 +329,25 @@ Content here..." />
                       Delete
                     </button>
                   )}
-                  <button
-                    type="button"
-                    className="button button--secondary"
-                    disabled={isBusy}
-                    onClick={(e) => { e.stopPropagation(); void handleDuplicate(template.id, template.name); }}
-                  >
-                    Duplicate
-                  </button>
+                  {template.is_builtin ? (
+                    <button
+                      type="button"
+                      className="button button--secondary"
+                      disabled={isBusy}
+                      onClick={(e) => { e.stopPropagation(); void handleDuplicate(template.id, template.name); }}
+                    >
+                      Customize
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="button button--secondary"
+                      disabled={isBusy}
+                      onClick={(e) => { e.stopPropagation(); void handleDuplicate(template.id, template.name); }}
+                    >
+                      Duplicate
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -364,7 +380,7 @@ Content here..." />
             <header className="template-modal__header">
               <div className="template-modal__title">
                 <span className="template-card__key">{selectedTemplate.key}</span>
-                {selectedTemplate.is_builtin && <span className="template-card__badge">Built-in</span>}
+                {selectedTemplate.is_builtin ? <span className="template-card__badge">Built-in</span> : <span className="template-card__badge template-card__badge--custom">Custom</span>}
                 <h3>{selectedTemplate.name}</h3>
               </div>
               <div className="template-modal__header-actions">

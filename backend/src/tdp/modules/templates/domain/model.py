@@ -50,6 +50,7 @@ class DocumentTemplate:
     category: TemplateCategory
     standard: TemplateStandard
     content: str
+    document_type: str | None
     is_builtin: bool
     version: int
     created_at: datetime
@@ -65,6 +66,7 @@ class DocumentTemplate:
         category: TemplateCategory,
         standard: TemplateStandard,
         content: str,
+        document_type: str | None = None,
         is_builtin: bool = False,
         now: datetime | None = None,
     ) -> "DocumentTemplate":
@@ -77,6 +79,7 @@ class DocumentTemplate:
             category=category,
             standard=standard,
             content=content,
+            document_type=document_type,
             is_builtin=is_builtin,
             version=1,
             created_at=timestamp,

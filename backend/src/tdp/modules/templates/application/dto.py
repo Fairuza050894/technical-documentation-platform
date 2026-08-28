@@ -12,6 +12,7 @@ class TemplateDto:
     category: str
     standard: str
     content: str
+    document_type: str | None
     is_builtin: bool
     version: int
     created_at: str
@@ -27,6 +28,7 @@ class TemplateDto:
             category=template.category.value,
             standard=template.standard.value,
             content=template.content,
+            document_type=template.document_type,
             is_builtin=template.is_builtin,
             version=template.version,
             created_at=template.created_at.isoformat(),
@@ -42,6 +44,7 @@ class TemplateSummaryDto:
     description: str
     category: str
     standard: str
+    document_type: str | None
     is_builtin: bool
     version: int
     section_count: int
@@ -57,6 +60,7 @@ class TemplateSummaryDto:
             description=template.description,
             category=template.category.value,
             standard=template.standard.value,
+            document_type=template.document_type,
             is_builtin=template.is_builtin,
             version=template.version,
             section_count=template.content.count("\n## "),
