@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Icon } from "../../shared/ui/Icon";
+import { MarkdownPreview } from "../../shared/ui/MarkdownPreview";
 import {
   createTemplate,
   deleteTemplate,
@@ -390,7 +391,7 @@ Content here..." />
                 aria-label="Edit template content"
               />
             ) : (
-              <pre className="template-preview">{selectedTemplate.content}</pre>
+              <MarkdownPreview content={selectedTemplate.content} />
             )}
           </div>
         )}

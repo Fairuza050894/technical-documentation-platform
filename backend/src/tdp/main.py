@@ -334,6 +334,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         enterprise_generation_blocked_handler,
     )
     application.add_exception_handler(EvidenceError, evidence_error_handler)
+    application.add_exception_handler(TemplateError, template_error_handler)
     application.add_exception_handler(FeatureError, feature_error_handler)
     application.add_exception_handler(ProjectError, project_error_handler)
     application.add_exception_handler(ReadinessError, readiness_error_handler)
@@ -356,6 +357,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.include_router(changes_router, prefix=runtime_settings.api_prefix)
     application.include_router(evidence_router, prefix=runtime_settings.api_prefix)
     application.include_router(documents_router, prefix=runtime_settings.api_prefix)
+    application.include_router(templates_router, prefix=runtime_settings.api_prefix)
     application.include_router(audit_logs_router, prefix=runtime_settings.api_prefix)
 
     return application
