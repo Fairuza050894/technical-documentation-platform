@@ -76,7 +76,7 @@ jobs:
 
       # ── Secret scanning (1.4.7) ──
       - name: Scan for leaked secrets (gitleaks)
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: false
