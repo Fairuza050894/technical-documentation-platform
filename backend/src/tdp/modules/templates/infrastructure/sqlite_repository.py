@@ -96,14 +96,14 @@ class SqliteTemplateRepository(TemplateRepository):
             connection.execute(
                 """
                 UPDATE document_templates
-                SET name = ?, description = ?, content = ?, version = ?, updated_at = ?
+                SET name = ?, description = ?, content = ?, document_type = ?, version = ?, updated_at = ?
                 WHERE id = ?
                 """,
                 (
                     template.name,
                     template.description,
                     template.content,
-        template.document_type,
+                    template.document_type,
                     template.version,
                     template.updated_at.isoformat(),
                     str(template.id),

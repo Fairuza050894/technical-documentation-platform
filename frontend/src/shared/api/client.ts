@@ -44,5 +44,13 @@ export async function requestJson<T>(path: string, init?: RequestInit): Promise<
     );
   }
 
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
   return (await response.json()) as T;
 }

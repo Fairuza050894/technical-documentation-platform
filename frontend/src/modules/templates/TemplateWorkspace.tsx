@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Icon } from "../../shared/ui/Icon";
 import { MarkdownPreview } from "../../shared/ui/MarkdownPreview";
@@ -25,7 +25,7 @@ interface TemplateWorkspaceProps {
 }
 
 export function TemplateWorkspace({ embedded = false }: TemplateWorkspaceProps) {
-  const [templates, setTemplates] = useState<TemplateCollection>({ items: [], total: 0 });
+  const [templates, setTemplates] = useState<TemplateSummary[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateDetail | null>(null);
   const [activeCategory, setActiveCategory] = useState<TemplateCategory | "ALL">("ALL");
   const [filter, setFilter] = useState("");
@@ -33,6 +33,10 @@ export function TemplateWorkspace({ embedded = false }: TemplateWorkspaceProps) 
   const [isBusy, setIsBusy] = useState(false);
   const [message, setMessage] = useState("Loading templates...");
   const [editContent, setEditContent] = useState("");
+  const [toast, setToast] = useState<{ message: string; isError: boolean } | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  const editorRef = useRef<HTMLTextAreaElement>(null);
   const [isEditing, setIsEditing] = useState(false);
 
   const [formKey, setFormKey] = useState("");
@@ -45,8 +49,8 @@ export function TemplateWorkspace({ embedded = false }: TemplateWorkspaceProps) 
   const load = useCallback(async (signal?: AbortSignal) => {
     try {
       const collection = await listTemplates(undefined, undefined, signal);
-      setTemplates(collection);
-      setMessage(`${collection.total} templates available`);
+      setTemplates(collection.items);
+      setMessage(`${collection.items.length} templates available`);
     } catch (error: unknown) {
       if (error instanceof DOMException && error.name === "AbortError") return;
       setMessage(error instanceof Error ? error.message : "Templates could not be loaded.");
@@ -59,8 +63,8 @@ export function TemplateWorkspace({ embedded = false }: TemplateWorkspaceProps) 
     return () => controller.abort();
   }, [load]);
 
-  const filteredTemplates = useMemo(() => {
-    let items = templates.items;
+  const filteredTemplates = (() => {
+    let items = templates;
     if (activeCategory !== "ALL") {
       items = items.filter((t) => t.category === activeCategory);
     }
@@ -75,15 +79,15 @@ export function TemplateWorkspace({ embedded = false }: TemplateWorkspaceProps) 
       );
     }
     return items;
-  }, [templates.items, activeCategory, filter]);
+  })();
 
-  const categoryCounts = useMemo(() => {
-    const counts: Record<string, number> = { ALL: templates.items.length };
-    for (const item of templates.items) {
+  const categoryCounts = (() => {
+    const counts: Record<string, number> = { ALL: templates.length };
+    for (const item of templates) {
       counts[item.category] = (counts[item.category] || 0) + 1;
     }
     return counts;
-  }, [templates.items]);
+  })();
 
   async function handleSelectTemplate(templateId: string): Promise<void> {
     setMessage("Loading template...");
@@ -100,8 +104,11 @@ export function TemplateWorkspace({ embedded = false }: TemplateWorkspaceProps) 
 
   async function handleSave(): Promise<void> {
     if (!selectedTemplate || isBusy) return;
+    if (selectedTemplate.is_builtin) {
+      showToast("Cannot edit built-in templates. Please customize first.", true);
+      return;
+    }
     setIsBusy(true);
-    setMessage("Saving template...");
     try {
       const input: UpdateTemplateInput = { content: editContent };
       const updated = await updateTemplate(selectedTemplate.id, input);
@@ -109,9 +116,9 @@ export function TemplateWorkspace({ embedded = false }: TemplateWorkspaceProps) 
       setEditContent(updated.content);
       setIsEditing(false);
       await load();
-      setMessage(`Template saved as v${updated.version}`);
+      showToast(`Template saved as v${updated.version}`);
     } catch (error: unknown) {
-      setMessage(error instanceof Error ? error.message : "Save failed.");
+      showToast(error instanceof Error ? error.message : "Save failed.", true);
     } finally {
       setIsBusy(false);
     }
@@ -134,7 +141,7 @@ export function TemplateWorkspace({ embedded = false }: TemplateWorkspaceProps) 
       setSelectedTemplate(copy);
       setEditContent(copy.content);
       setIsEditing(true);
-      setMessage(`Custom template ${copy.key} created. You can now edit it.`);
+      showToast(`Custom template ${copy.key} created. You can now edit it.`);
     } catch (error: unknown) {
       setMessage(error instanceof Error ? error.message : "Duplication failed.");
     } finally {
@@ -142,19 +149,21 @@ export function TemplateWorkspace({ embedded = false }: TemplateWorkspaceProps) 
     }
   }
 
-  async function handleDelete(templateId: string): Promise<void> {
-    if (isBusy) return;
+  function handleDeleteClick(templateId: string): void {
+    setConfirmDeleteId(templateId);
+  }
+
+  async function executeDelete(templateId: string): Promise<void> {
+    setConfirmDeleteId(null);
     setIsBusy(true);
-    setMessage("Deleting template...");
     try {
       await deleteTemplate(templateId);
-      if (selectedTemplate?.id === templateId) {
-        setSelectedTemplate(null);
-      }
+      setSelectedTemplate(null);
+      setIsEditing(false);
       await load();
-      setMessage("Template deleted");
+      showToast("Template deleted");
     } catch (error: unknown) {
-      setMessage(error instanceof Error ? error.message : "Delete failed.");
+      showToast(error instanceof Error ? error.message : "Delete failed.", true);
     } finally {
       setIsBusy(false);
     }
@@ -177,12 +186,33 @@ export function TemplateWorkspace({ embedded = false }: TemplateWorkspaceProps) 
       await load();
       setShowCreateForm(false);
       resetForm();
-      setMessage(`Template ${created.key} created`);
+      showToast(`Template ${created.key} created`);
     } catch (error: unknown) {
       setMessage(error instanceof Error ? error.message : "Creation failed.");
     } finally {
       setIsBusy(false);
     }
+  }
+
+  function insertMarkdown(before: string, after: string): void {
+    const textarea = editorRef.current;
+    if (!textarea) return;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selected = editContent.substring(start, end);
+    const replacement = before + selected + after;
+    const newContent = editContent.substring(0, start) + replacement + editContent.substring(end);
+    setEditContent(newContent);
+    setTimeout(() => {
+      textarea.focus();
+      const cursorPos = start + before.length + selected.length;
+      textarea.setSelectionRange(cursorPos, cursorPos);
+    }, 0);
+  }
+
+  function showToast(msg: string, isError = false): void {
+    setToast({ message: msg, isError });
+    setTimeout(() => setToast(null), 3000);
   }
 
   function resetForm(): void {
@@ -202,7 +232,7 @@ export function TemplateWorkspace({ embedded = false }: TemplateWorkspaceProps) 
             <p className="eyebrow">Document templates</p>
             <h1>Templates</h1>
           </div>
-          <span className="environment-badge">{templates.total} templates</span>
+          <span className="environment-badge">{templates.length} templates</span>
         </header>
       )}
 
@@ -240,7 +270,7 @@ export function TemplateWorkspace({ embedded = false }: TemplateWorkspaceProps) 
                 aria-label="Filter templates"
               />
               {filter && (
-                <span className="record-count">{filteredTemplates.length} of {templates.items.length}</span>
+                <span className="record-count">{filteredTemplates.length} of {templates.length}</span>
               )}
             </div>
             <button
@@ -324,7 +354,7 @@ Content here..." />
                       type="button"
                       className="button button--quiet"
                       disabled={isBusy}
-                      onClick={(e) => { e.stopPropagation(); void handleDelete(template.id); }}
+                      onClick={(e) => { e.stopPropagation(); handleDeleteClick(template.id); }}
                     >
                       Delete
                     </button>
@@ -438,6 +468,28 @@ Content here..." />
       )}
 
       <p className="loading-state" role="status">{message}</p>
+
+      {confirmDeleteId && (
+        <div className="confirm-dialog-overlay" onClick={() => setConfirmDeleteId(null)}>
+          <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
+            <p className="confirm-dialog__message">Are you sure you want to delete this template?</p>
+            <div className="confirm-dialog__actions">
+              <button type="button" className="button button--quiet" onClick={() => setConfirmDeleteId(null)}>
+                Cancel
+              </button>
+              <button type="button" className="button button--danger" onClick={() => void executeDelete(confirmDeleteId)}>
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {toast && (
+        <div className={`toast-message ${toast.isError ? "toast-message--error" : "toast-message--success"}`} role="alert">
+          {toast.message}
+        </div>
+      )}
     </div>
   );
 }
