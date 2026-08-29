@@ -76,3 +76,25 @@ frontend/src/modules/templates/
 3. Idempotent seed - only inserts if not present
 4. Markdown preview in modal
 5. 204 No Content handled in requestJson
+
+## UI Features
+
+### View Modes
+- **Grid view** - card layout with colored accent bar per category
+- **List view** - compact horizontal rows
+
+### Sidebar
+- Category filters with icons and active state indicator
+- Live count per category
+
+### Pagination
+- 10 templates per page
+- Page reset on filter or category change
+
+### Editor
+- Toolbar with Bold, Italic, H2, H3, Table, List, Code buttons
+- Markdown preview in modal
+
+### Feedback
+- Toast notifications for save/delete/create actions
+- Confirm dialog for delete with Cancel/Delete buttons
