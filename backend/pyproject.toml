@@ -35,8 +35,12 @@ packages = ["src/tdp"]
 
 [tool.pytest.ini_options]
 addopts = "-q --strict-markers --disable-warnings"
+asyncio_mode = "auto"
 pythonpath = ["src"]
 testpaths = ["tests"]
+
+[tool.pytest.asyncio]
+mode = "auto"
 
 [tool.ruff]
 target-version = "py312"
