@@ -1,0 +1,13 @@
+from typing import Protocol
+
+from tdp.modules.scanner.domain.model import ScanId, ScanResult
+
+
+class ScanRepository(Protocol):
+    async def get(self, scan_id: ScanId) -> ScanResult | None: ...
+
+    async def list_all(self) -> list[ScanResult]: ...
+
+    async def save(self, scan: ScanResult) -> None: ...
+
+    async def delete(self, scan_id: ScanId) -> None: ...

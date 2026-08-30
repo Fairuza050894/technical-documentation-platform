@@ -41,6 +41,12 @@ from tdp.modules.documents.presentation.http.router import (
 from tdp.modules.documents.presentation.http.router import router as documents_router
 from tdp.modules.evidence.application.service import EvidenceApplicationService
 from tdp.modules.templates.application.service import TemplateApplicationService
+from tdp.modules.scanner.application.service import ScannerApplicationService
+from tdp.modules.scanner.infrastructure.sqlite_repository import SqliteScanRepository
+from tdp.modules.scanner.infrastructure.document_builder import DocumentStore
+from tdp.modules.scanner.presentation.http.router import router as scanner_router
+from tdp.modules.scanner.presentation.http.router import scanner_error_handler
+from tdp.modules.scanner.domain.errors import ScannerError
 from tdp.modules.templates.infrastructure.sqlite_repository import SqliteTemplateRepository
 from tdp.modules.templates.infrastructure.seed import seed_builtin_templates
 from tdp.modules.templates.presentation.http.router import router as templates_router
@@ -161,6 +167,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     feature_repository = SqliteFeatureRepository(runtime_settings.database_path)
     evidence_repository = SqliteEvidenceRepository(runtime_settings.database_path)
     template_repository = SqliteTemplateRepository(runtime_settings.database_path)
+    scan_repository = SqliteScanRepository(runtime_settings.database_path)
     project_access = RepositoryBackedProjectAccess(
         project_repository,
         workspace_repository,
@@ -235,6 +242,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         DeterministicEnterpriseMarkdownRenderer(),
     )
     application.state.template_service = TemplateApplicationService(template_repository)
+    application.state.scanner_service = ScannerApplicationService(scan_repository)
+    application.state.document_store = DocumentStore(runtime_settings.database_path)
 
     @application.on_event("startup")
     async def _seed_templates() -> None:
@@ -341,6 +350,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     application.add_exception_handler(EvidenceError, evidence_error_handler)
     application.add_exception_handler(TemplateError, template_error_handler)
+    application.add_exception_handler(ScannerError, scanner_error_handler)
     application.add_exception_handler(FeatureError, feature_error_handler)
     application.add_exception_handler(ProjectError, project_error_handler)
     application.add_exception_handler(ReadinessError, readiness_error_handler)
@@ -364,6 +374,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.include_router(evidence_router, prefix=runtime_settings.api_prefix)
     application.include_router(documents_router, prefix=runtime_settings.api_prefix)
     application.include_router(templates_router, prefix=runtime_settings.api_prefix)
+    application.include_router(scanner_router, prefix=runtime_settings.api_prefix)
     application.include_router(audit_logs_router, prefix=runtime_settings.api_prefix)
 
     return application

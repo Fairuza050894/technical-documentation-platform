@@ -3,7 +3,7 @@ import type { Workspace } from "../modules/workspaces/types";
 import type { IconName } from "../shared/ui/Icon";
 import type { AppRoute, ProjectStage } from "./router";
 
-export type GlobalNavigation = "Home" | "Projects" | "Templates" | "System status" | "Audit trail";
+export type GlobalNavigation = "Home" | "Projects" | "Templates" | "Scanner" | "System status" | "Audit trail";
 
 export interface NavigationItem {
   id: GlobalNavigation;
@@ -72,6 +72,12 @@ export function buildNavigationGroups(activeWorkspaceId: string | null): readonl
           route: { name: "templates" },
         },
         {
+          id: "Scanner",
+          label: "Scanner",
+          icon: "search",
+          route: { name: "scanner" },
+        },
+        {
           id: "System status",
           label: "System status",
           icon: "server",
@@ -100,6 +106,8 @@ export function resolveGlobalNavigation(route: AppRoute): GlobalNavigation | nul
       return null;
     case "templates":
       return "Templates";
+    case "scanner":
+      return "Scanner";
     case "system":
       return "System status";
     case "audit":
@@ -128,6 +136,8 @@ export function resolvePageContext(
       return { breadcrumb: ["Platform", "System status"], icon: "server" };
     case "templates":
       return { breadcrumb: ["Platform", "Templates"], icon: "documents" };
+    case "scanner":
+      return { breadcrumb: ["Platform", "Scanner"], icon: "search" };
     case "audit":
       return { breadcrumb: ["Platform", "Audit trail"], icon: "documents" };
     case "login":

@@ -1,5 +1,6 @@
 import { AuditTrailViewer } from "../../modules/audit/AuditTrailViewer";
 import { TemplateWorkspace } from "../../modules/templates/TemplateWorkspace";
+import { ScannerWorkspace } from "../../modules/scanner/ScannerWorkspace";
 import {
   OperationalOverview,
   type OverviewNavigationTarget,
@@ -64,14 +65,14 @@ export function RouteContent({
 
   return (
     <>
-      {workspaceLoadState === "error" && route.name !== "system" && route.name !== "templates" && route.name !== "audit" && route.name !== "login" && (
+      {workspaceLoadState === "error" && route.name !== "system" && route.name !== "templates" && route.name !== "scanner" && route.name !== "audit" && route.name !== "login" && (
         <WorkspaceContextError
           message={workspaceLoadError}
           onManage={manageWorkspaces}
         />
       )}
 
-      {workspaceLoadState === "loading" && route.name !== "system" && route.name !== "templates" && route.name !== "audit" && route.name !== "login" && (
+      {workspaceLoadState === "loading" && route.name !== "system" && route.name !== "templates" && route.name !== "scanner" && route.name !== "audit" && route.name !== "login" && (
         <div className="project-workbench-state" role="status">
           <span className="loading-bar" aria-hidden="true" />
           Loading workspace context…
@@ -153,6 +154,8 @@ export function RouteContent({
       {route.name === "audit" && <AuditTrailViewer />}
 
       {route.name === "templates" && <TemplateWorkspace />}
+
+      {route.name === "scanner" && <ScannerWorkspace />}
 
       {workspaceLoadState === "ready" && route.name === "not-found" && (
         <RouteNotFound
