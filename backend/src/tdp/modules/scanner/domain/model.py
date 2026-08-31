@@ -148,6 +148,34 @@ class ProjectHealth:
     issues: list[str] = field(default_factory=list)
 
 
+
+@dataclass
+class SonarQubeResult:
+    project_key: str = ""
+    bugs: int = 0
+    vulnerabilities: int = 0
+    code_smells: int = 0
+    coverage: float = 0.0
+    duplicated_lines_density: float = 0.0
+    ncloc: int = 0
+    sqale_rating: str = "A"
+    reliability_rating: str = "A"
+    security_rating: str = "A"
+    security_hotspots: int = 0
+    cognitive_complexity: int = 0
+    issues_blocker: int = 0
+    issues_critical: int = 0
+    issues_major: int = 0
+    issues_minor: int = 0
+    issues_info: int = 0
+    total_score: int = 0
+    security_score: int = 0
+    reliability_score: int = 0
+    maintainability_score: int = 0
+    coverage_score: int = 0
+    error: str = ""
+
+
 @dataclass
 class ScanResult:
     id: ScanId
@@ -163,6 +191,7 @@ class ScanResult:
     security_scan: SecurityScan
     health: ProjectHealth
     suggestions: list[DocumentSuggestion]
+    sonarqube: SonarQubeResult
     error_message: str
     started_at: datetime
     completed_at: datetime | None
@@ -185,6 +214,7 @@ class ScanResult:
             security_scan=SecurityScan(tool="none"),
             health=ProjectHealth(),
             suggestions=[],
+            sonarqube=SonarQubeResult(),
             error_message="",
             started_at=now,
             completed_at=None,

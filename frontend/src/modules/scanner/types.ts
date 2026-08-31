@@ -81,6 +81,33 @@ export interface DocumentSuggestion {
   auto_generated: boolean;
 }
 
+
+export interface SonarQubeResult {
+  project_key: string;
+  bugs: number;
+  vulnerabilities: number;
+  code_smells: number;
+  coverage: number;
+  duplicated_lines_density: number;
+  ncloc: number;
+  sqale_rating: string;
+  reliability_rating: string;
+  security_rating: string;
+  security_hotspots: number;
+  cognitive_complexity: number;
+  issues_blocker: number;
+  issues_critical: number;
+  issues_major: number;
+  issues_minor: number;
+  issues_info: number;
+  total_score: number;
+  security_score: number;
+  reliability_score: number;
+  maintainability_score: number;
+  coverage_score: number;
+  error: string;
+}
+
 export interface ScanResult {
   id: string;
   repository_url: string;
@@ -95,6 +122,7 @@ export interface ScanResult {
   security_scan: SecurityScan;
   health: ProjectHealth;
   suggestions: DocumentSuggestion[];
+  sonarqube: SonarQubeResult;
   error_message: string;
   started_at: string;
   completed_at: string | null;

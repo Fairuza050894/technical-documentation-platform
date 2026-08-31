@@ -10,6 +10,8 @@ from tdp.modules.scanner.infrastructure.health_calculator import calculate_healt
 from tdp.modules.scanner.infrastructure.sqlite_repository import SqliteScanRepository
 from tdp.modules.scanner.infrastructure.tech_stack_detector import detect_tech_stack
 from tdp.modules.scanner.infrastructure.test_runner import run_lint, run_security_scan, run_tests
+from tdp.modules.scanner.domain.model import SonarQubeResult
+from tdp.modules.scanner.infrastructure.sonarqube_client import SonarQubeClient, SonarQubeConfig, map_sonarqube_to_health
 
 
 @dataclass(frozen=True, slots=True)
@@ -27,6 +29,7 @@ class ScanDto:
     security_scan: dict
     health: dict
     suggestions: list[dict]
+    sonarqube: dict
     error_message: str
     started_at: str
     completed_at: str | None
@@ -90,6 +93,31 @@ class ScanDto:
                 "documentation": scan.health.documentation.value,
                 "score": scan.health.score,
                 "issues": scan.health.issues,
+            },
+            sonarqube={
+                "project_key": scan.sonarqube.project_key,
+                "bugs": scan.sonarqube.bugs,
+                "vulnerabilities": scan.sonarqube.vulnerabilities,
+                "code_smells": scan.sonarqube.code_smells,
+                "coverage": scan.sonarqube.coverage,
+                "duplicated_lines_density": scan.sonarqube.duplicated_lines_density,
+                "ncloc": scan.sonarqube.ncloc,
+                "sqale_rating": scan.sonarqube.sqale_rating,
+                "reliability_rating": scan.sonarqube.reliability_rating,
+                "security_rating": scan.sonarqube.security_rating,
+                "security_hotspots": scan.sonarqube.security_hotspots,
+                "cognitive_complexity": scan.sonarqube.cognitive_complexity,
+                "issues_blocker": scan.sonarqube.issues_blocker,
+                "issues_critical": scan.sonarqube.issues_critical,
+                "issues_major": scan.sonarqube.issues_major,
+                "issues_minor": scan.sonarqube.issues_minor,
+                "issues_info": scan.sonarqube.issues_info,
+                "total_score": scan.sonarqube.total_score,
+                "security_score": scan.sonarqube.security_score,
+                "reliability_score": scan.sonarqube.reliability_score,
+                "maintainability_score": scan.sonarqube.maintainability_score,
+                "coverage_score": scan.sonarqube.coverage_score,
+                "error": scan.sonarqube.error,
             },
             suggestions=[{
                 "template_key": s.template_key, "document_type": s.document_type,
@@ -162,6 +190,52 @@ class ScannerApplicationService:
             scan.test_suites = run_tests(temp_path)
             scan.lint_results = run_lint(temp_path)
             scan.security_scan = run_security_scan(temp_path)
+
+            # SonarQube analysis (optional)
+            sonarqube_url = ""
+            sonarqube_token = ""
+            sonarqube_project = ""
+            try:
+                import os
+                sonarqube_url = os.environ.get("SONARQUBE_URL", "")
+                sonarqube_token = os.environ.get("SONARQUBE_TOKEN", "")
+                sonarqube_project = os.environ.get("SONARQUBE_PROJECT_KEY", "")
+            except Exception:
+                pass
+
+            if sonarqube_url and sonarqube_token and sonarqube_project:
+                try:
+                    sq_config = SonarQubeConfig(url=sonarqube_url, token=sonarqube_token, project_key=sonarqube_project)
+                    sq_client = SonarQubeClient(sq_config)
+                    sq_metrics = sq_client.fetch_metrics()
+                    sq_health = map_sonarqube_to_health(sq_metrics)
+                    scan.sonarqube = SonarQubeResult(
+                        project_key=sq_metrics.project_key,
+                        bugs=sq_metrics.bugs,
+                        vulnerabilities=sq_metrics.vulnerabilities,
+                        code_smells=sq_metrics.code_smells,
+                        coverage=sq_metrics.coverage,
+                        duplicated_lines_density=sq_metrics.duplicated_lines_density,
+                        ncloc=sq_metrics.ncloc,
+                        sqale_rating=sq_metrics.sqale_rating,
+                        reliability_rating=sq_metrics.reliability_rating,
+                        security_rating=sq_metrics.security_rating,
+                        security_hotspots=sq_metrics.security_hotspots,
+                        cognitive_complexity=sq_metrics.cognitive_complexity,
+                        issues_blocker=sq_metrics.issues_blocker,
+                        issues_critical=sq_metrics.issues_critical,
+                        issues_major=sq_metrics.issues_major,
+                        issues_minor=sq_metrics.issues_minor,
+                        issues_info=sq_metrics.issues_info,
+                        total_score=sq_health.get("total_score", 0),
+                        security_score=sq_health.get("security_score", 0),
+                        reliability_score=sq_health.get("reliability_score", 0),
+                        maintainability_score=sq_health.get("maintainability_score", 0),
+                        coverage_score=sq_health.get("coverage_score", 0),
+                        error=sq_metrics.error,
+                    )
+                except Exception as sq_exc:
+                    scan.sonarqube = SonarQubeResult(error=str(sq_exc))
 
             scan.status = ScanStatus.GENERATING
             await self._repository.save(scan)

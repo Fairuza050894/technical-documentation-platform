@@ -5,7 +5,7 @@ from datetime import datetime
 from tdp.modules.scanner.domain.model import (
     DocumentSuggestion, FileAnalysis, HealthLevel, LintResult,
     ProjectHealth, ProjectStage, ScanId, ScanResult, ScanStatus,
-    SecurityIssue, SecurityScan, TechStack, TestCase, TestSuite,
+    SecurityIssue, SecurityScan, SonarQubeResult, TechStack, TestCase, TestSuite,
 )
 from tdp.modules.scanner.domain.repository import ScanRepository
 
@@ -39,12 +39,18 @@ class SqliteScanRepository(ScanRepository):
                     security_scan_json TEXT NOT NULL DEFAULT '{}',
                     health_json TEXT NOT NULL DEFAULT '{}',
                     suggestions_json TEXT NOT NULL DEFAULT '[]',
+                    sonarqube_json TEXT NOT NULL DEFAULT '{}',
                     error_message TEXT NOT NULL DEFAULT '',
                     started_at TEXT NOT NULL,
                     completed_at TEXT
                 )
                 """
             )
+            # Migration: add sonarqube_json column if missing
+            try:
+                connection.execute("SELECT sonarqube_json FROM scan_results LIMIT 1")
+            except sqlite3.OperationalError:
+                connection.execute("ALTER TABLE scan_results ADD COLUMN sonarqube_json TEXT NOT NULL DEFAULT '{}'")
 
     async def get(self, scan_id: ScanId) -> ScanResult | None:
         with self._connection() as connection:
@@ -73,16 +79,17 @@ class SqliteScanRepository(ScanRepository):
             sc = json.dumps({"tool": scan.security_scan.tool, "total_vulnerabilities": scan.security_scan.total_vulnerabilities, "critical": scan.security_scan.critical, "high": scan.security_scan.high, "medium": scan.security_scan.medium, "low": scan.security_scan.low, "issues": [{"package": i.package, "severity": i.severity, "description": i.description, "fix_version": i.fix_version} for i in scan.security_scan.issues]})
             hl = json.dumps({"overall": scan.health.overall.value, "test_coverage": scan.health.test_coverage.value, "code_quality": scan.health.code_quality.value, "security": scan.health.security.value, "documentation": scan.health.documentation.value, "score": scan.health.score, "issues": scan.health.issues})
             sg = json.dumps([{"template_key": s.template_key, "document_type": s.document_type, "name": s.name, "reason": s.reason, "priority": s.priority, "auto_generated": s.auto_generated, "content": s.content} for s in scan.suggestions])
+            sq = json.dumps({"project_key": scan.sonarqube.project_key, "bugs": scan.sonarqube.bugs, "vulnerabilities": scan.sonarqube.vulnerabilities, "code_smells": scan.sonarqube.code_smells, "coverage": scan.sonarqube.coverage, "duplicated_lines_density": scan.sonarqube.duplicated_lines_density, "ncloc": scan.sonarqube.ncloc, "sqale_rating": scan.sonarqube.sqale_rating, "reliability_rating": scan.sonarqube.reliability_rating, "security_rating": scan.sonarqube.security_rating, "security_hotspots": scan.sonarqube.security_hotspots, "cognitive_complexity": scan.sonarqube.cognitive_complexity, "issues_blocker": scan.sonarqube.issues_blocker, "issues_critical": scan.sonarqube.issues_critical, "issues_major": scan.sonarqube.issues_major, "issues_minor": scan.sonarqube.issues_minor, "issues_info": scan.sonarqube.issues_info, "total_score": scan.sonarqube.total_score, "security_score": scan.sonarqube.security_score, "reliability_score": scan.sonarqube.reliability_score, "maintainability_score": scan.sonarqube.maintainability_score, "coverage_score": scan.sonarqube.coverage_score, "error": scan.sonarqube.error})
 
             if existing:
                 connection.execute(
-                    "UPDATE scan_results SET status=?, stage=?, file_analysis_json=?, tech_stack_json=?, test_suites_json=?, lint_results_json=?, security_scan_json=?, health_json=?, suggestions_json=?, error_message=?, completed_at=? WHERE id=?",
-                    (scan.status.value, scan.stage.value, fa, ts, tst, lt, sc, hl, sg, scan.error_message, scan.completed_at.isoformat() if scan.completed_at else None, str(scan.id))
+                    "UPDATE scan_results SET status=?, stage=?, file_analysis_json=?, tech_stack_json=?, test_suites_json=?, lint_results_json=?, security_scan_json=?, health_json=?, suggestions_json=?, sonarqube_json=?, error_message=?, completed_at=? WHERE id=?",
+                    (scan.status.value, scan.stage.value, fa, ts, tst, lt, sc, hl, sg, sq, scan.error_message, scan.completed_at.isoformat() if scan.completed_at else None, str(scan.id))
                 )
             else:
                 connection.execute(
-                    "INSERT INTO scan_results (id, repository_url, repository_name, branch, status, stage, file_analysis_json, tech_stack_json, test_suites_json, lint_results_json, security_scan_json, health_json, suggestions_json, error_message, started_at, completed_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                    (str(scan.id), scan.repository_url, scan.repository_name, scan.branch, scan.status.value, scan.stage.value, fa, ts, tst, lt, sc, hl, sg, scan.error_message, scan.started_at.isoformat(), scan.completed_at.isoformat() if scan.completed_at else None)
+                    "INSERT INTO scan_results (id, repository_url, repository_name, branch, status, stage, file_analysis_json, tech_stack_json, test_suites_json, lint_results_json, security_scan_json, health_json, suggestions_json, sonarqube_json, error_message, started_at, completed_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                    (str(scan.id), scan.repository_url, scan.repository_name, scan.branch, scan.status.value, scan.stage.value, fa, ts, tst, lt, sc, hl, sg, sq, scan.error_message, scan.started_at.isoformat(), scan.completed_at.isoformat() if scan.completed_at else None)
                 )
 
     async def delete(self, scan_id: ScanId) -> None:
@@ -98,6 +105,7 @@ def _row_to_scan(row: sqlite3.Row) -> ScanResult:
     sc_d = json.loads(row["security_scan_json"])
     hl_d = json.loads(row["health_json"])
     sg_d = json.loads(row["suggestions_json"])
+    sq_d = json.loads(row["sonarqube_json"])
 
     return ScanResult(
         id=ScanId.from_string(row["id"]),
@@ -122,6 +130,7 @@ def _row_to_scan(row: sqlite3.Row) -> ScanResult:
             documentation=HealthLevel(hl_d["documentation"]), score=hl_d["score"], issues=hl_d["issues"],
         ),
         suggestions=[DocumentSuggestion(**s) for s in sg_d],
+        sonarqube=SonarQubeResult(**sq_d),
         error_message=row["error_message"],
         started_at=datetime.fromisoformat(row["started_at"]),
         completed_at=datetime.fromisoformat(row["completed_at"]) if row["completed_at"] else None,

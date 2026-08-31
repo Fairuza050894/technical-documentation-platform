@@ -2250,3 +2250,197 @@
   text-align: center;
   padding: 12px;
 }
+
+/* ── SonarQube Comparison ─────────────────────────── */
+
+.sq-comparison {
+  padding: 20px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.sq-comparison--error {
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+.sq-error {
+  color: #dc2626;
+  font-size: 12px;
+  margin: 8px 0 0;
+}
+
+.sq-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.sq-header h3 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.sq-project {
+  font-size: 11px;
+  font-family: var(--font-mono, monospace);
+  color: #6b7280;
+  background: #f3f4f6;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.sq-scores {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.sq-score-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.sq-score-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sq-score-value {
+  font-size: 36px;
+  font-weight: 800;
+  font-family: var(--font-mono, monospace);
+  line-height: 1;
+}
+
+.sq-score-delta {
+  font-size: 20px;
+  font-weight: 800;
+  font-family: var(--font-mono, monospace);
+}
+
+.sq-ratings {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.sq-rating-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.sq-rating-letter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 800;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.sq-rating-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sq-rating-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.sq-rating-score {
+  font-size: 12px;
+  font-weight: 700;
+  color: #111827;
+  font-family: var(--font-mono, monospace);
+}
+
+.sq-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.sq-metric-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 8px;
+  background: #f9fafb;
+  border-radius: 8px;
+}
+
+.sq-metric-value {
+  font-size: 18px;
+  font-weight: 700;
+  font-family: var(--font-mono, monospace);
+  color: #111827;
+}
+
+.sq-metric-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #9ca3af;
+  text-align: center;
+}
+
+.sq-issues h4 {
+  font-size: 12px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 10px;
+}
+
+.sq-issue-bar {
+  display: flex;
+  height: 28px;
+  border-radius: 6px;
+  overflow: hidden;
+  gap: 2px;
+}
+
+.sq-issue-segment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #ffffff;
+  min-width: 40px;
+}
+
+.sq-issue-segment--blocker { background: #7f1d1d; }
+.sq-issue-segment--critical { background: #dc2626; }
+.sq-issue-segment--major { background: #f59e0b; }
+.sq-issue-segment--minor { background: #3b82f6; }
+.sq-issue-segment--info { background: #9ca3af; }
+
+@media (max-width: 760px) {
+  .sq-ratings { grid-template-columns: repeat(2, 1fr); }
+  .sq-metrics { grid-template-columns: repeat(2, 1fr); }
+}
