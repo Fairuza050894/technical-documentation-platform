@@ -1,4 +1,5 @@
 import subprocess
+import sys
 from pathlib import Path
 
 from tdp.modules.scanner.domain.model import LintResult, SecurityIssue, SecurityScan, TestSuite
@@ -61,8 +62,30 @@ def run_security_scan(repo_path: str) -> SecurityScan:
 
 def _run_pytest(repo_path: str) -> TestSuite | None:
     try:
+        # Install dependencies if possible
+        root = Path(repo_path)
+        if (root / "pyproject.toml").exists():
+            subprocess.run(
+                [sys.executable, "-m", "pip", "install", "-e", ".", "-q"],
+                cwd=repo_path, capture_output=True, text=True, timeout=180,
+            )
+        if (root / "requirements.txt").exists():
+            subprocess.run(
+                [sys.executable, "-m", "pip", "install", "-r", "requirements.txt", "-q"],
+                cwd=repo_path, capture_output=True, text=True, timeout=180,
+            )
+        if (root / "requirements" / "dev.txt").exists():
+            subprocess.run(
+                [sys.executable, "-m", "pip", "install", "-r", "requirements/dev.txt", "-q"],
+                cwd=repo_path, capture_output=True, text=True, timeout=180,
+            )
+        if (root / "requirements" / "test.txt").exists():
+            subprocess.run(
+                [sys.executable, "-m", "pip", "install", "-r", "requirements/test.txt", "-q"],
+                cwd=repo_path, capture_output=True, text=True, timeout=180,
+            )
         result = subprocess.run(
-            ["python3", "-m", "pytest", "--tb=short", "-q", "--no-header"],
+            [sys.executable, "-m", "pytest", "--tb=short", "-q", "--no-header"],
             cwd=repo_path, capture_output=True, text=True, timeout=120,
         )
         suite = TestSuite(name="pytest", framework="pytest")
@@ -91,6 +114,11 @@ def _run_pytest(repo_path: str) -> TestSuite | None:
 def _run_jest(repo_path: str) -> TestSuite | None:
     try:
         import json as _json
+        # Install dependencies first
+        subprocess.run(
+            ["npm", "install", "--ignore-scripts", "--no-audit", "--no-fund"],
+            cwd=repo_path, capture_output=True, text=True, timeout=120,
+        )
         result = subprocess.run(
             ["npx", "jest", "--passWithNoTests", "--json", "--silent"],
             cwd=repo_path, capture_output=True, text=True, timeout=120,
@@ -132,17 +160,17 @@ def _run_go_test(repo_path: str) -> TestSuite | None:
 def _run_flake8(repo_path: str) -> LintResult | None:
     try:
         result = subprocess.run(
-            ["python3", "-m", "flake8", ".", "--count", "--statistics"],
+            [sys.executable, "-m", "flake8", ".", "--count", "--statistics", "--max-line-length=120"],
             cwd=repo_path, capture_output=True, text=True, timeout=60,
         )
         lint = LintResult(tool="flake8")
-        lines = result.stdout.strip().split("\n")
-        if lines and lines[0]:
-            try:
-                lint.total_issues = int(lines[0])
-            except ValueError:
-                pass
-        lint.issues = [l for l in lines if l.strip()][:20]
+        lines = [l for l in result.stdout.strip().split("\n") if l.strip()]
+        # Count actual issue lines (contain filename:line:col pattern)
+        issue_lines = [l for l in lines if ":" in l and not l[0].isdigit()]
+        lint.total_issues = len(issue_lines)
+        lint.errors = len([l for l in issue_lines if ": E" in l or ": F" in l])
+        lint.warnings = len([l for l in issue_lines if ": W" in l or ": C" in l])
+        lint.issues = issue_lines[:20]
         return lint if lint.total_issues > 0 else None
     except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
         return None
@@ -150,6 +178,11 @@ def _run_flake8(repo_path: str) -> LintResult | None:
 
 def _run_eslint(repo_path: str) -> LintResult | None:
     try:
+        # Install dependencies first
+        subprocess.run(
+            ["npm", "install", "--ignore-scripts", "--no-audit", "--no-fund"],
+            cwd=repo_path, capture_output=True, text=True, timeout=120,
+        )
         result = subprocess.run(
             ["npx", "eslint", ".", "--format=compact"],
             cwd=repo_path, capture_output=True, text=True, timeout=60,
@@ -168,18 +201,24 @@ def _run_eslint(repo_path: str) -> LintResult | None:
 def _run_pip_audit(repo_path: str) -> SecurityScan:
     try:
         result = subprocess.run(
-            ["python3", "-m", "pip_audit", "--format=json"],
-            cwd=repo_path, capture_output=True, text=True, timeout=60,
+            [sys.executable, "-m", "pip_audit", "--format=json"],
+            cwd=repo_path, capture_output=True, text=True, timeout=120,
         )
         import json as _json
         scan = SecurityScan(tool="pip-audit")
         try:
             data = _json.loads(result.stdout)
-            for vuln in data:
-                severity = vuln.get("severity", "unknown").lower()
+            vulns = data if isinstance(data, list) else data.get("dependencies", data.get("vulnerabilities", []))
+            if isinstance(vulns, dict):
+                vulns = list(vulns.values())
+            for vuln in vulns:
+                if not isinstance(vuln, dict):
+                    continue
+                severity = str(vuln.get("severity", "unknown")).lower()
+                name = vuln.get("name", vuln.get("package", "unknown")) if isinstance(vuln.get("name"), str) else "unknown"
                 scan.issues.append(SecurityIssue(
-                    package=vuln.get("name", "unknown"), severity=severity,
-                    description=vuln.get("description", ""),
+                    package=name, severity=severity,
+                    description=str(vuln.get("description", "")),
                     fix_version=vuln.get("fix_versions", [""])[0] if vuln.get("fix_versions") else "",
                 ))
                 if severity == "critical": scan.critical += 1
@@ -187,8 +226,8 @@ def _run_pip_audit(repo_path: str) -> SecurityScan:
                 elif severity == "medium": scan.medium += 1
                 else: scan.low += 1
             scan.total_vulnerabilities = len(scan.issues)
-        except (_json.JSONDecodeError, KeyError):
-            scan.error_output = result.stderr[:2000]
+        except (_json.JSONDecodeError, KeyError, AttributeError, TypeError) as exc:
+            scan.error_output = f"{exc}: {result.stderr[:1500]}"
         return scan
     except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
         return SecurityScan(tool="pip-audit", error_output="pip-audit not available")
@@ -196,6 +235,11 @@ def _run_pip_audit(repo_path: str) -> SecurityScan:
 
 def _run_npm_audit(repo_path: str) -> SecurityScan:
     try:
+        # Install dependencies first
+        subprocess.run(
+            ["npm", "install", "--ignore-scripts", "--no-audit", "--no-fund"],
+            cwd=repo_path, capture_output=True, text=True, timeout=120,
+        )
         result = subprocess.run(
             ["npm", "audit", "--json"],
             cwd=repo_path, capture_output=True, text=True, timeout=60,
@@ -205,16 +249,19 @@ def _run_npm_audit(repo_path: str) -> SecurityScan:
         try:
             data = _json.loads(result.stdout)
             vulns = data.get("vulnerabilities", {})
-            for name, info in vulns.items():
-                severity = info.get("severity", "unknown").lower()
-                scan.issues.append(SecurityIssue(package=name, severity=severity, description=""))
-                if severity == "critical": scan.critical += 1
-                elif severity == "high": scan.high += 1
-                elif severity == "medium": scan.medium += 1
-                else: scan.low += 1
+            if isinstance(vulns, dict):
+                for name, info in vulns.items():
+                    if not isinstance(info, dict):
+                        continue
+                    severity = str(info.get("severity", "unknown")).lower()
+                    scan.issues.append(SecurityIssue(package=str(name), severity=severity, description=""))
+                    if severity == "critical": scan.critical += 1
+                    elif severity == "high": scan.high += 1
+                    elif severity == "medium": scan.medium += 1
+                    else: scan.low += 1
             scan.total_vulnerabilities = len(scan.issues)
-        except (_json.JSONDecodeError, KeyError):
-            scan.error_output = result.stderr[:2000]
+        except (_json.JSONDecodeError, KeyError, AttributeError, TypeError) as exc:
+            scan.error_output = f"{exc}: {result.stderr[:1500]}"
         return scan
     except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
         return SecurityScan(tool="npm audit", error_output="npm audit not available")
