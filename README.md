@@ -2,7 +2,7 @@
 
 A source-backed platform for creating, reviewing, versioning, and releasing technical documentation from verifiable engineering evidence.
 
-> **Current status:** MVP 1 product hardening. The repository is suitable for controlled local development and evaluation. It is not approved for public internet exposure or enterprise production use.
+> **Current status:** MVP 1 product hardening + Repository Scanner with SonarQube integration. The repository is suitable for controlled local development and evaluation. It is not approved for public internet exposure or enterprise production use.
 
 ## Product principles
 
@@ -17,20 +17,76 @@ A source-backed platform for creating, reviewing, versioning, and releasing tech
 
 ```text
 Workspace
-└── Project
-    ├── Feature / Module Registry
-    ├── OpenAPI Source Management
-    ├── API Catalog Synchronization
-    ├── Deterministic Change Detection
-    └── Document Lifecycle
-        ├── Generation
-        ├── Version History
-        ├── Review
-        ├── Approval
-        └── Version Comparison
+├── Project
+│   ├── Feature / Module Registry
+│   ├── OpenAPI Source Management
+│   ├── API Catalog Synchronization
+│   ├── Deterministic Change Detection
+│   └── Document Lifecycle
+│       ├── Generation
+│       ├── Version History
+│       ├── Review
+│       ├── Approval
+│       └── Version Comparison
+└── Repository Scanner
+    ├── Git Clone & Analysis
+    ├── Tech Stack Detection
+    ├── Real Test Execution (pytest, jest, go test)
+    ├── Real Linting (flake8, eslint)
+    ├── Real Security Scanning (pip-audit, npm audit)
+    ├── Health Score Calculation
+    ├── SonarQube Integration (dual scoring)
+    ├── Scan Comparison (delta analysis)
+    ├── Document Suggestions
+    └── Document Generation
 ```
 
 The current generated document profile is **Technical Source Overview** from normalized OpenAPI evidence. Broader evidence types and document profiles remain roadmap items.
+
+The **Repository Scanner** clones repositories, analyzes code structure, runs real tests/linters/security scanners, integrates with SonarQube for dual scoring, and generates document suggestions based on detected tech stack and project stage.
+
+## Repository Scanner
+
+The scanner module analyzes repositories and provides health scoring with optional SonarQube integration.
+
+### Scan a repository
+
+```bash
+curl -X POST http://localhost:8000/api/scanner/scan \
+  -H "Content-Type: application/json" \
+  -d '{"repository_url": "https://github.com/org/repo.git", "branch": "main"}'
+```
+
+### SonarQube integration
+
+Start SonarQube locally:
+
+```bash
+docker compose -f docker-compose.sonarqube.yml up -d
+```
+
+Start the backend with SonarQube environment variables:
+
+```bash
+SONARQUBE_URL=http://localhost:9000 \
+SONARQUBE_TOKEN=<your-user-token> \
+SONARQUBE_PROJECT_KEY=<your-project-key> \
+PYTHONPATH=src uvicorn tdp.main:app --reload --port 8000
+```
+
+The scanner will automatically fetch SonarQube metrics and display a dual scoring comparison (Internal Score vs SonarQube Score) in the UI.
+
+### API endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/scanner/scan` | Start a new scan |
+| GET | `/api/scanner/scans` | List all scans |
+| GET | `/api/scanner/scans/{id}` | Get scan by ID |
+| DELETE | `/api/scanner/scans/{id}` | Delete a scan |
+| POST | `/api/scanner/scans/{id}/rescan` | Re-scan a repository |
+| GET | `/api/scanner/scans/{id}/compare/{other_id}` | Compare two scans |
+| POST | `/api/scanner/scans/{id}/generate` | Generate documents |
 
 ## Quick start
 
@@ -38,6 +94,7 @@ Prerequisites:
 
 - Python 3.12;
 - Node.js 22;
+- Docker (optional, for SonarQube);
 - `uv`;
 - npm;
 - macOS or a compatible Unix-like environment.

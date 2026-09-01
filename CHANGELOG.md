@@ -4,6 +4,60 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+### Repository Scanner — SonarQube Integration (2026-08-31)
+
+#### Added
+- **SonarQube client** — `SonarQubeClient` with Bearer token auth, fetches project measures (bugs, vulnerabilities, code smells, coverage, ratings) and issue counts by severity
+- **Dual scoring system** — Side-by-side comparison of internal health score vs SonarQube quality gate score with delta indicator
+- **SonarQube comparison UI** — `SonarQubeComparison` component with rating badges (A-E), metrics grid, and issues severity bar
+- **SonarQube tab** — New tab in ScannerWorkspace showing SonarQube analysis results when available
+- **SonarQubeResult domain model** — Dataclass storing SonarQube metrics, ratings, issue counts, and computed scores
+- **SQLite schema migration** — Auto-migration for `sonarqube_json` column in `scan_results` table
+- **Docker Compose** — `docker-compose.sonarqube.yml` for local SonarQube 10.7 Community instance
+
+### Repository Scanner — Real Analysis Pipeline (2026-08-31)
+
+#### Changed
+- **Test runner** — Uses `sys.executable` instead of hardcoded `python3` for venv-aware subprocess execution
+- **Test runner** — Installs project dependencies (`pip install -e .`) before running pytest
+- **Test runner** — Installs npm dependencies (`npm install`) before running jest, eslint, and npm audit
+- **Test runner** — Supports `requirements/dev.txt` and `requirements/test.txt` for test dependencies
+- **Linter** — Improved flake8 issue counting with line-level parsing
+- **Security scanner** — Defensive JSON parsing for pip-audit and npm audit responses
+
+### Repository Scanner — Test Suite (2026-08-31)
+
+#### Added
+- **Domain tests (26)** — ScanId, ScanResult.create, ScanResult lifecycle, ProjectHealth, TechStack, FileAnalysis, SecurityScan, TestSuite
+- **Infrastructure tests (19)** — compare_scans: identical detection, health delta, file delta, issues added/removed, frameworks, tests, security, metrics, time_between formatting
+- **Application tests (11)** — get_scan, list_scans, delete_scan, start_scan, rescan, ScanDto.from_domain
+- **Presentation tests (9)** — All API endpoints with 404 cases
+- **pytest-asyncio** — Async test support with auto mode
+
+### Repository Scanner — Complete Module (2026-08-30)
+
+#### Added
+- **Scanner domain model** — ScanResult, ScanId, HealthLevel, TechStack, FileAnalysis, TestSuite, LintResult, SecurityScan, DocumentSuggestion, ProjectHealth, MetricDelta, ScanComparison
+- **Scanner application service** — Start scan, rescan, compare, generate documents, list, get, delete
+- **Git operations** — Clone repositories with branch support and temp directory management
+- **File analyzer** — Count files, lines, detect languages by extension, identify config files and project artifacts
+- **Tech stack detector** — Detect frameworks (Django, Flask, FastAPI, React, Next.js, Vue, Angular, Express, NestJS, Spring Boot, Gin, Echo), databases, tools, CI/CD, testing, linting
+- **Health calculator** — Score calculation based on test pass rate, lint issues, security vulnerabilities, documentation artifacts
+- **Test runner** — Execute pytest, jest, go test; parse results into TestSuite model
+- **Linter** — Execute flake8, eslint; parse results into LintResult model
+- **Security scanner** — Execute pip-audit, npm audit; parse results into SecurityScan model
+- **Scan comparator** — Compare two scans with delta calculation for health, files, lines, issues, frameworks, tests, security
+- **Document generator** — Suggest documents based on tech stack, file analysis, and project stage
+- **Document store** — Save and retrieve generated documents with scan association
+- **SQLite repository** — Persistent storage for scan results with JSON serialization
+- **REST API** — POST /scanner/scan, GET /scanner/scans, GET /scanner/scans/{id}, DELETE /scanner/scans/{id}, POST /scanner/scans/{id}/rescan, GET /scanner/scans/{id}/compare/{other_id}, POST /scanner/scans/{id}/generate
+- **ScannerWorkspace UI** — Grouped repository sidebar, health score ring, tab navigation (Overview, Tech Stack, Tests, Security, Documents), progress tracking
+- **ScanComparisonView** — Side-by-side comparison with delta indicators, metric cards, issues diff, frameworks diff
+- **MarkdownPreview** — Markdown rendering with Mermaid diagram support
+- **Scanner CSS** — Complete styling for scanner workspace, history, comparison, health bars, tabs, suggestions
+
+## [Unreleased]
+
 ### Phase 2: Core Product Quality — Week 2 (2026-08-27)
 
 #### Added
