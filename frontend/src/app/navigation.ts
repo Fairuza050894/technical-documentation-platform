@@ -3,7 +3,7 @@ import type { Workspace } from "../modules/workspaces/types";
 import type { IconName } from "../shared/ui/Icon";
 import type { AppRoute, ProjectStage } from "./router";
 
-export type GlobalNavigation = "Home" | "Projects" | "Templates" | "Scanner" | "System status" | "Audit trail";
+export type GlobalNavigation = "Home" | "Projects" | "Templates" | "Scanner dashboard" | "Scanner" | "System status" | "Audit trail";
 
 export interface NavigationItem {
   id: GlobalNavigation;
@@ -70,6 +70,12 @@ export function buildNavigationGroups(activeWorkspaceId: string | null): readonl
           label: "Templates",
           icon: "documents",
           route: { name: "templates" },
+        },
+        {
+          id: "Scanner dashboard",
+          label: "Dashboard",
+          icon: "overview",
+          route: { name: "scanner-dashboard" },
         },
         {
           id: "Scanner",
