@@ -1,5 +1,5 @@
 import { requestJson } from "../../shared/api/client";
-import type { ScanCollection, ScanResult, WebhookEvent, WebhookEventCollection } from "./types";
+import type { DashboardResponse, ScanCollection, ScanResult, WebhookEvent, WebhookEventCollection } from "./types";
 
 export function startScan(repositoryUrl: string, branch = "main"): Promise<ScanResult> {
   return requestJson<ScanResult>("/scanner/scan", {
@@ -63,4 +63,6 @@ export function listWebhookEvents(signal?: AbortSignal): Promise<WebhookEventCol
 export function getWebhookEvent(eventId: string): Promise<WebhookEvent> {
   return requestJson<WebhookEvent>("/scanner/webhooks/events/${eventId}");
 }
-
+export function getDashboard(signal?: AbortSignal): Promise<DashboardResponse> {
+  return requestJson<DashboardResponse>("/scanner/dashboard", { signal });
+}

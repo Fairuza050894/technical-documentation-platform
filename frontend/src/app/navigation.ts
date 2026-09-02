@@ -106,6 +106,7 @@ export function resolveGlobalNavigation(route: AppRoute): GlobalNavigation | nul
       return null;
     case "templates":
       return "Templates";
+    case "scanner-dashboard":
     case "scanner":
       return "Scanner";
     case "system":
@@ -136,6 +137,7 @@ export function resolvePageContext(
       return { breadcrumb: ["Platform", "System status"], icon: "server" };
     case "templates":
       return { breadcrumb: ["Platform", "Templates"], icon: "documents" };
+    case "scanner-dashboard":
     case "scanner":
       return { breadcrumb: ["Platform", "Scanner"], icon: "search" };
     case "audit":

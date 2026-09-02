@@ -45,6 +45,7 @@ from tdp.modules.scanner.application.service import ScannerApplicationService
 from tdp.modules.scanner.infrastructure.sqlite_repository import SqliteScanRepository
 from tdp.modules.scanner.infrastructure.document_builder import DocumentStore
 from tdp.modules.scanner.presentation.http.router import router as scanner_router
+from tdp.modules.scanner.presentation.http.dashboard_router import router as dashboard_router
 from tdp.modules.scanner.presentation.http.webhook_router import router as webhook_router
 from tdp.modules.scanner.presentation.http.webhook_router import webhook_signature_error_handler, webhook_not_found_handler
 from tdp.modules.scanner.application.webhook_service import WebhookApplicationService, WebhookSignatureError, WebhookEventNotFoundError
@@ -387,6 +388,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.include_router(documents_router, prefix=runtime_settings.api_prefix)
     application.include_router(templates_router, prefix=runtime_settings.api_prefix)
     application.include_router(scanner_router, prefix=runtime_settings.api_prefix)
+    application.include_router(dashboard_router, prefix=runtime_settings.api_prefix)
     application.include_router(webhook_router, prefix=runtime_settings.api_prefix)
     application.include_router(audit_logs_router, prefix=runtime_settings.api_prefix)
 

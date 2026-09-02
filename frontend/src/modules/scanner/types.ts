@@ -109,6 +109,44 @@ export interface SonarQubeResult {
 }
 
 
+
+export interface RepoSummary {
+  repository_name: string;
+  repository_url: string;
+  latest_scan_id: string;
+  branch: string;
+  status: string;
+  health_score: number;
+  sonarqube_score: number | null;
+  total_files: number;
+  total_lines: number;
+  frameworks: string[];
+  test_suites: number;
+  total_tests: number;
+  tests_passed: number;
+  lint_issues: number;
+  vulnerabilities: number;
+  last_scan_at: string;
+  scan_count: number;
+  score_trend: { scan_id: string; score: number; sonarqube_score: number; date: string }[];
+}
+
+export interface DashboardAlert {
+  type: string;
+  severity: string;
+  repository_name: string;
+  message: string;
+  scan_id: string;
+}
+
+export interface DashboardResponse {
+  repos: RepoSummary[];
+  total_repos: number;
+  total_scans: number;
+  avg_health_score: number;
+  alerts: DashboardAlert[];
+}
+
 export interface WebhookEvent {
   id: string;
   event_type: string;

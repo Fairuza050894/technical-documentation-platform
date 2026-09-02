@@ -4,6 +4,20 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+### Scanner Dashboard (2026-09-02)
+
+#### Added
+- **Dashboard overview page** — Grid card per repository showing health score, SonarQube score, sparkline trend, key metrics, and alerts
+- **Dashboard API endpoint** — GET /scanner/dashboard returning aggregated repo summaries with score trends and auto-generated alerts
+- **Score drop alerts** — Automatic detection when health score drops more than 5 points between scans
+- **Security alerts** — Critical vulnerability detection from latest scan data
+- **Test failure alerts** — Warning when test failure rate exceeds 20%
+- **Sparkline charts** — SVG sparkline showing score trend over last 10 scans per repository
+- **Dashboard navigation** — New "Dashboard" entry in sidebar navigation pointing to /scanner/dashboard
+- **Dashboard CSS** — Complete styling for summary bar, alerts panel, repo grid, and repo cards
+
+
+
 ### Repository Scanner — SonarQube Integration (2026-08-31)
 
 #### Added
@@ -57,6 +71,20 @@ All notable changes to this project are documented in this file.
 - **Scanner CSS** — Complete styling for scanner workspace, history, comparison, health bars, tabs, suggestions
 
 ## [Unreleased]
+
+### Scanner Dashboard (2026-09-02)
+
+#### Added
+- **Dashboard overview page** — Grid card per repository showing health score, SonarQube score, sparkline trend, key metrics, and alerts
+- **Dashboard API endpoint** — GET /scanner/dashboard returning aggregated repo summaries with score trends and auto-generated alerts
+- **Score drop alerts** — Automatic detection when health score drops more than 5 points between scans
+- **Security alerts** — Critical vulnerability detection from latest scan data
+- **Test failure alerts** — Warning when test failure rate exceeds 20%
+- **Sparkline charts** — SVG sparkline showing score trend over last 10 scans per repository
+- **Dashboard navigation** — New "Dashboard" entry in sidebar navigation pointing to /scanner/dashboard
+- **Dashboard CSS** — Complete styling for summary bar, alerts panel, repo grid, and repo cards
+
+
 
 ### Phase 2: Core Product Quality — Week 2 (2026-08-27)
 

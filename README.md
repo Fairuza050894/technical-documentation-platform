@@ -87,6 +87,9 @@ The scanner will automatically fetch SonarQube metrics and display a dual scorin
 | POST | `/api/scanner/scans/{id}/rescan` | Re-scan a repository |
 | GET | `/api/scanner/scans/{id}/compare/{other_id}` | Compare two scans |
 | POST | `/api/scanner/scans/{id}/generate` | Generate documents |
+| GET | `/api/scanner/dashboard` | Dashboard overview with alerts |
+| POST | `/api/scanner/webhooks/github` | GitHub webhook receiver |
+| GET | `/api/scanner/webhooks/events` | List webhook events |
 
 ## Quick start
 

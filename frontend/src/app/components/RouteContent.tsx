@@ -1,6 +1,7 @@
 import { AuditTrailViewer } from "../../modules/audit/AuditTrailViewer";
 import { TemplateWorkspace } from "../../modules/templates/TemplateWorkspace";
 import { ScannerWorkspace } from "../../modules/scanner/ScannerWorkspace";
+import { ScannerDashboard } from "../../modules/scanner/ScannerDashboard";
 import {
   OperationalOverview,
   type OverviewNavigationTarget,
@@ -155,6 +156,7 @@ export function RouteContent({
 
       {route.name === "templates" && <TemplateWorkspace />}
 
+      {route.name === "scanner-dashboard" && <ScannerDashboard />}
       {route.name === "scanner" && <ScannerWorkspace />}
 
       {workspaceLoadState === "ready" && route.name === "not-found" && (
