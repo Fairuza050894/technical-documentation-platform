@@ -45,6 +45,10 @@ from tdp.modules.scanner.application.service import ScannerApplicationService
 from tdp.modules.scanner.infrastructure.sqlite_repository import SqliteScanRepository
 from tdp.modules.scanner.infrastructure.document_builder import DocumentStore
 from tdp.modules.scanner.presentation.http.router import router as scanner_router
+from tdp.modules.scanner.presentation.http.webhook_router import router as webhook_router
+from tdp.modules.scanner.presentation.http.webhook_router import webhook_signature_error_handler, webhook_not_found_handler
+from tdp.modules.scanner.application.webhook_service import WebhookApplicationService, WebhookSignatureError, WebhookEventNotFoundError
+from tdp.modules.scanner.infrastructure.webhook_repository import SqliteWebhookRepository
 from tdp.modules.scanner.presentation.http.router import scanner_error_handler
 from tdp.modules.scanner.domain.errors import ScannerError
 from tdp.modules.templates.infrastructure.sqlite_repository import SqliteTemplateRepository
@@ -243,6 +247,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     application.state.template_service = TemplateApplicationService(template_repository)
     application.state.scanner_service = ScannerApplicationService(scan_repository)
+    webhook_repository = SqliteWebhookRepository(runtime_settings.database_path)
+    application.state.webhook_service = WebhookApplicationService(
+        webhook_repository=webhook_repository,
+        scanner_service=application.state.scanner_service,
+        webhook_secret="",
+    )
     application.state.document_store = DocumentStore(runtime_settings.database_path)
 
     @application.on_event("startup")
@@ -351,6 +361,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.add_exception_handler(EvidenceError, evidence_error_handler)
     application.add_exception_handler(TemplateError, template_error_handler)
     application.add_exception_handler(ScannerError, scanner_error_handler)
+    application.add_exception_handler(WebhookSignatureError, webhook_signature_error_handler)
+    application.add_exception_handler(WebhookEventNotFoundError, webhook_not_found_handler)
     application.add_exception_handler(FeatureError, feature_error_handler)
     application.add_exception_handler(ProjectError, project_error_handler)
     application.add_exception_handler(ReadinessError, readiness_error_handler)
@@ -375,6 +387,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.include_router(documents_router, prefix=runtime_settings.api_prefix)
     application.include_router(templates_router, prefix=runtime_settings.api_prefix)
     application.include_router(scanner_router, prefix=runtime_settings.api_prefix)
+    application.include_router(webhook_router, prefix=runtime_settings.api_prefix)
     application.include_router(audit_logs_router, prefix=runtime_settings.api_prefix)
 
     return application

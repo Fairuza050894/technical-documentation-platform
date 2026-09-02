@@ -108,6 +108,30 @@ export interface SonarQubeResult {
   error: string;
 }
 
+
+export interface WebhookEvent {
+  id: string;
+  event_type: string;
+  repository_url: string;
+  repository_name: string;
+  branch: string;
+  commit_sha: string;
+  commit_message: string;
+  sender: string;
+  status: string;
+  scan_id: string;
+  previous_scan_id: string;
+  score_delta: number;
+  error_message: string;
+  created_at: string;
+  processed_at: string | null;
+}
+
+export interface WebhookEventCollection {
+  items: WebhookEvent[];
+  total: number;
+}
+
 export interface ScanResult {
   id: string;
   repository_url: string;

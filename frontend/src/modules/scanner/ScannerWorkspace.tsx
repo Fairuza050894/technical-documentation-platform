@@ -5,6 +5,7 @@ import type { GeneratedDocument } from "./api";
 import { MarkdownPreview } from "./MarkdownPreview";
 import { ScanComparisonView } from "./ScanComparisonView";
 import { SonarQubeComparison } from "./SonarQubeComparison";
+import { WebhookEventsPanel } from "./WebhookEventsPanel";
 import type { HealthLevel, ScanResult } from "./types";
 import { HEALTH_COLORS, PRIORITY_LABELS, STATUS_LABELS, STATUS_STEPS } from "./types";
 
@@ -12,7 +13,7 @@ interface ScannerWorkspaceProps {
   embedded?: boolean;
 }
 
-type DetailTab = "overview" | "tech" | "tests" | "security" | "documents" | "sonarqube";
+type DetailTab = "overview" | "tech" | "tests" | "security" | "documents" | "sonarqube" | "webhooks";
 
 interface RepoGroup {
   repoName: string;
@@ -242,6 +243,7 @@ export function ScannerWorkspace({ embedded = false }: ScannerWorkspaceProps) {
     if (selectedScan.test_suites.length > 0) tabs.push({ key: "tests", label: "Tests" });
     if (selectedScan.security_scan.total_vulnerabilities > 0) tabs.push({ key: "security", label: "Security", count: selectedScan.security_scan.total_vulnerabilities });
     tabs.push({ key: "documents", label: "Documents", count: generatedDocs.length || undefined });
+    tabs.push({ key: "webhooks", label: "Webhooks" });
     if (selectedScan.sonarqube && !selectedScan.sonarqube.error) tabs.push({ key: "sonarqube", label: "SonarQube" });
   }
 
@@ -479,6 +481,9 @@ export function ScannerWorkspace({ embedded = false }: ScannerWorkspaceProps) {
                         {activeTab === "tech" && <TechTab scan={selectedScan} />}
                         {activeTab === "tests" && <TestsTab scan={selectedScan} />}
                         {activeTab === "security" && <SecurityTab scan={selectedScan} />}
+                        {activeTab === "webhooks" && (
+                          <WebhookEventsPanel />
+                        )}
                         {activeTab === "sonarqube" && selectedScan.sonarqube && (
                           <SonarQubeComparison internalScore={selectedScan.health.score} sonarqube={selectedScan.sonarqube} />
                         )}
