@@ -156,7 +156,7 @@ export function RouteContent({
 
       {route.name === "templates" && <TemplateWorkspace />}
 
-      {route.name === "scanner-dashboard" && <ScannerDashboard />}
+      {route.name === "scanner-dashboard" && <ScannerDashboard onSelectScan={(scanId) => onNavigate({ name: "scanner" })} onSelectRepo={(repoUrl) => onNavigate({ name: "scanner" })} />}
       {route.name === "scanner" && <ScannerWorkspace />}
 
       {workspaceLoadState === "ready" && route.name === "not-found" && (

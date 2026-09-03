@@ -250,3 +250,39 @@ class ScannerApplicationService:
         finally:
             if temp_path:
                 cleanup_temp_dir(temp_path)
+
+    async def generate_documents(self, scan_id: str, template_keys: list[str] | None = None) -> list[dict]:
+        scan = await self._repository.get(ScanId.from_string(scan_id))
+        if scan is None:
+            raise ScanNotFoundError(f"Scan {scan_id} not found.")
+        if scan.status != ScanStatus.COMPLETED:
+            raise ScanInProgressError(f"Scan {scan_id} is not completed yet.")
+
+        from tdp.modules.scanner.infrastructure.document_builder import DocumentStore, build_document
+        from tdp.modules.scanner.infrastructure.document_generator import suggest_documents
+
+        db_path = getattr(self._repository, '_database_path', ':memory:')
+        store = DocumentStore(str(db_path))
+        suggestions = suggest_documents(scan.tech_stack, scan.file_analysis, scan.stage)
+
+        generated = []
+        keys_to_generate = template_keys if template_keys else [s.template_key for s in suggestions]
+
+        for key in keys_to_generate:
+            doc = build_document(scan, key)
+            store.save(doc)
+            generated.append(doc.to_dict())
+
+        return generated
+
+    async def list_documents(self, scan_id: str) -> list[dict]:
+        scan = await self._repository.get(ScanId.from_string(scan_id))
+        if scan is None:
+            raise ScanNotFoundError(f"Scan {scan_id} not found.")
+
+        from tdp.modules.scanner.infrastructure.document_builder import DocumentStore
+        db_path = getattr(self._repository, '_database_path', ':memory:')
+        store = DocumentStore(str(db_path))
+        docs = store.get_by_scan(scan_id)
+
+        return [d.to_dict() for d in docs]
