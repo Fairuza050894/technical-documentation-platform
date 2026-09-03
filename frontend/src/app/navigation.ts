@@ -3,7 +3,7 @@ import type { Workspace } from "../modules/workspaces/types";
 import type { IconName } from "../shared/ui/Icon";
 import type { AppRoute, ProjectStage } from "./router";
 
-export type GlobalNavigation = "Home" | "Projects" | "Templates" | "Scanner dashboard" | "Scanner" | "System status" | "Audit trail";
+export type GlobalNavigation = "Home" | "Projects" | "Templates" | "Scanner" | "System status" | "Audit trail";
 
 export interface NavigationItem {
   id: GlobalNavigation;
@@ -72,12 +72,6 @@ export function buildNavigationGroups(activeWorkspaceId: string | null): readonl
           route: { name: "templates" },
         },
         {
-          id: "Scanner dashboard",
-          label: "Dashboard",
-          icon: "overview",
-          route: { name: "scanner-dashboard" },
-        },
-        {
           id: "Scanner",
           label: "Scanner",
           icon: "search",
@@ -112,7 +106,6 @@ export function resolveGlobalNavigation(route: AppRoute): GlobalNavigation | nul
       return null;
     case "templates":
       return "Templates";
-    case "scanner-dashboard":
     case "scanner":
       return "Scanner";
     case "system":
@@ -145,7 +138,6 @@ export function resolvePageContext(
       return { breadcrumb: ["Platform", "System status"], icon: "server" };
     case "templates":
       return { breadcrumb: ["Platform", "Templates"], icon: "documents" };
-    case "scanner-dashboard":
     case "scanner":
       return { breadcrumb: ["Platform", "Scanner"], icon: "search" };
     case "audit":
@@ -164,5 +156,7 @@ export function resolvePageContext(
       };
     case "not-found":
       return { breadcrumb: [workspaceLabel, "Not found"], icon: "alert" };
+    default:
+      return { breadcrumb: ["Unknown"], icon: "overview" };
   }
 }
