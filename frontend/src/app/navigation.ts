@@ -123,6 +123,8 @@ export function resolveGlobalNavigation(route: AppRoute): GlobalNavigation | nul
       return null;
     case "not-found":
       return null;
+    default:
+      return null;
   }
 }
 

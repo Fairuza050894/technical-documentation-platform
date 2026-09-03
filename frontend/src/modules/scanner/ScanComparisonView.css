@@ -1,0 +1,52 @@
+
+/* Visual Diff Highlighting */
+
+.scanner-compare__metric-delta--up {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.scanner-compare__metric-delta--down {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.scanner-compare__metric-delta--same {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.scanner-compare__issue--added {
+  background: #fef2f2;
+  border-left: 3px solid #dc2626;
+}
+
+.scanner-compare__issue--added .scanner-compare__issue-icon {
+  color: #dc2626;
+}
+
+.scanner-compare__issue--removed {
+  background: #dcfce7;
+  border-left: 3px solid #16a34a;
+}
+
+.scanner-compare__issue--removed .scanner-compare__issue-icon {
+  color: #16a34a;
+}
+
+.scanner-compare__framework--added {
+  background: #dcfce7;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+.scanner-compare__framework--removed {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+/* Health delta colors */
+.scanner-compare__stat-value--positive::before {
+  content: "+";
+}

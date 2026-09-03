@@ -257,3 +257,17 @@ export interface ScanComparison {
   metrics: MetricDelta[];
   is_identical: boolean;
 }
+
+export interface GeneratedDocument {
+  id: string;
+  scan_id: string;
+  template_key: string;
+  name: string;
+  content: string;
+  created_at: string;
+}
+
+export interface ScanCollection {
+  items: ScanResult[];
+  total: number;
+}

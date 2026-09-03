@@ -204,6 +204,7 @@ export function routeWorkspaceId(route: AppRoute): string | null {
     case "templates":
     case "scanner":
     case "scanner-dashboard":
+    case "document-generation":
     case "audit":
     case "login":
     case "not-found":
