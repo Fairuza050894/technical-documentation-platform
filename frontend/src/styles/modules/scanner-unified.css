@@ -966,15 +966,7 @@
   margin-bottom: 10px;
 }
 
-.scanner-suggestion {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  margin-bottom: 6px;
-}
+
 
 .scanner-suggestion__title {
   font-size: 13px;

@@ -7,7 +7,7 @@ import { ScanComparisonView } from "./ScanComparisonView";
 import { SonarQubeComparison } from "./SonarQubeComparison";
 import { WebhookEventsPanel } from "./WebhookEventsPanel";
 import type { DashboardResponse, HealthLevel, RepoSummary, ScanResult, SonarQubeResult } from "./types";
-import { HEALTH_COLORS, PRIORITY_LABELS, STATUS_LABELS, STATUS_STEPS } from "./types";
+import { HEALTH_COLORS, PRIORITY_LABELS, STATUS_LABELS, STATUS_STEPS, DOCUMENT_TYPE_LABELS, TEMPLATE_KEY_LABELS } from "./types";
 
 interface ScannerWorkspaceProps {
   embedded?: boolean;
@@ -756,7 +756,7 @@ export function ScannerWorkspace({ embedded = false }: ScannerWorkspaceProps) {
                                   }}
                                 />
                                 <span className="scanner-suggestion__name">{sug.name}</span>
-                                <span className="scanner-suggestion__type">{sug.document_type}</span>
+                                <span className="scanner-suggestion__type">{DOCUMENT_TYPE_LABELS[sug.document_type] ?? sug.document_type}</span>
                                 <span className={`scanner-suggestion__priority scanner-suggestion__priority--${sug.priority}`}>
                                   {PRIORITY_LABELS[sug.priority as keyof typeof PRIORITY_LABELS] ?? sug.priority}
                                 </span>
@@ -792,7 +792,7 @@ export function ScannerWorkspace({ embedded = false }: ScannerWorkspaceProps) {
                                 >
                                   <span className="scanner-document__chevron">{isExpanded ? "▼" : "▶"}</span>
                                   <span className="scanner-document__title">{doc.name}</span>
-                                  <span className="scanner-document__type">{doc.template_key}</span>
+                                  <span className="scanner-document__type">{TEMPLATE_KEY_LABELS[doc.template_key] ?? doc.template_key}</span>
                                 </button>
                                 {isExpanded && (
                                   <div className="scanner-document__preview">

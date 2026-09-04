@@ -220,6 +220,35 @@ export const PRIORITY_LABELS: Record<string, string> = {
   could: "Could Have",
 };
 
+export const DOCUMENT_TYPE_LABELS: Record<string, string> = {
+  BRD: "Business Requirements",
+  SRS: "Software Requirements",
+  HLD: "System Architecture",
+  LLD: "API Documentation",
+  UAT_EVIDENCE: "Test Cases",
+  AS_BUILT: "Test Report",
+  DEPLOY_GUIDE: "Deployment Guide",
+  INSTALL_GUIDE: "Installation Guide",
+  HANDOVER: "Project Handover",
+  NCR: "Nonconformity Register",
+  SOP: "Standard Operating Procedure",
+};
+
+export const TEMPLATE_KEY_LABELS: Record<string, string> = {
+  "api-documentation": "API Documentation",
+  "architecture-overview": "Architecture Overview",
+  "brd": "Business Requirements",
+  "srs": "Software Requirements",
+  "system-architecture": "System Architecture",
+  "database-schema": "Database Schema",
+  "test-cases": "Test Cases",
+  "test-report": "Test Report",
+  "deployment-guide": "Deployment Guide",
+  "handover": "Project Handover",
+  "ncr": "Nonconformity Register",
+  "sop": "Standard Operating Procedure",
+};
+
 export interface MetricDelta {
   label: string;
   before: string;
