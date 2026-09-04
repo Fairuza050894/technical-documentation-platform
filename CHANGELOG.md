@@ -4,6 +4,22 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+### Scanner UI Refinement (2026-09-04)
+
+#### Changed
+- **Removed redundant Scanner Dashboard page** — Scanner workspace now serves as the single entry point for all scanner features, eliminating duplicate stats and alerts display
+- **Documents tab UX improvement** — Replaced text buttons (Select All / Deselect All) with SVG checkbox icons for cleaner interface
+- **Generate button text** — Shows "Select documents to generate" when no documents are selected instead of "Generate 0 Documents"
+- **Sidebar items polish** — Added borders and white backgrounds to sidebar items so they no longer appear floating
+- **Tech stack tags** — Added border styling for better visual definition
+- **Overview cards** — Added subtle box shadows for depth
+- **Branch protection** — Enabled main branch protection requiring PR approval before merge
+
+#### Removed
+- **Scanner Dashboard route** — Removed /scanner/dashboard route, navigation entry, and ScannerDashboard component references
+- **document-generation route** — Cleaned up unused route reference from router
+
+
 ### Scanner Dashboard (2026-09-02)
 
 #### Added
@@ -71,6 +87,22 @@ All notable changes to this project are documented in this file.
 - **Scanner CSS** — Complete styling for scanner workspace, history, comparison, health bars, tabs, suggestions
 
 ## [Unreleased]
+
+### Scanner UI Refinement (2026-09-04)
+
+#### Changed
+- **Removed redundant Scanner Dashboard page** — Scanner workspace now serves as the single entry point for all scanner features, eliminating duplicate stats and alerts display
+- **Documents tab UX improvement** — Replaced text buttons (Select All / Deselect All) with SVG checkbox icons for cleaner interface
+- **Generate button text** — Shows "Select documents to generate" when no documents are selected instead of "Generate 0 Documents"
+- **Sidebar items polish** — Added borders and white backgrounds to sidebar items so they no longer appear floating
+- **Tech stack tags** — Added border styling for better visual definition
+- **Overview cards** — Added subtle box shadows for depth
+- **Branch protection** — Enabled main branch protection requiring PR approval before merge
+
+#### Removed
+- **Scanner Dashboard route** — Removed /scanner/dashboard route, navigation entry, and ScannerDashboard component references
+- **document-generation route** — Cleaned up unused route reference from router
+
 
 ### Scanner Dashboard (2026-09-02)
 
