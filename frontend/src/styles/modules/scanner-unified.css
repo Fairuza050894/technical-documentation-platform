@@ -1265,3 +1265,27 @@
   max-height: 500px;
   overflow-y: auto;
 }
+
+/* -- Icon Buttons -- */
+
+.scanner-documents__icon-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #ffffff;
+  cursor: pointer;
+  font-size: 18px;
+  color: #374151;
+  transition: all 0.12s ease;
+  padding: 0;
+  line-height: 1;
+}
+
+.scanner-documents__icon-btn:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}

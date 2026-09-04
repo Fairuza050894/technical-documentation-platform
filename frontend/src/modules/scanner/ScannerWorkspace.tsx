@@ -693,20 +693,22 @@ export function ScannerWorkspace({ embedded = false }: ScannerWorkspaceProps) {
                           <div className="scanner-documents__suggestions-actions">
                             <button
                               type="button"
-                              className="scanner-documents__select-btn"
+                              className="scanner-documents__icon-btn"
+                              title="Select All"
                               onClick={() => {
                                 const allKeys = new Set(selectedScan.suggestions.map((s) => s.template_key));
                                 setSelectedSuggestions(allKeys);
                               }}
                             >
-                              Select All
+                              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="1" width="14" height="14" rx="2" fill="#111827" stroke="#111827"/><polyline points="3.5,8 6.5,11 12.5,5" stroke="white" fill="none"/></svg>
                             </button>
                             <button
                               type="button"
-                              className="scanner-documents__select-btn"
+                              className="scanner-documents__icon-btn"
+                              title="Deselect All"
                               onClick={() => setSelectedSuggestions(new Set())}
                             >
-                              Deselect All
+                              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#9ca3af" strokeWidth="1.5"><rect x="1" y="1" width="14" height="14" rx="2"/></svg>
                             </button>
                             <button
                               type="button"
@@ -726,7 +728,7 @@ export function ScannerWorkspace({ embedded = false }: ScannerWorkspaceProps) {
                                 }
                               }}
                             >
-                              {isBusy ? "Generating..." : `Generate ${selectedSuggestions.size} Document${selectedSuggestions.size !== 1 ? "s" : ""}`}
+                              {isBusy ? "Generating..." : selectedSuggestions.size === 0 ? "Select documents to generate" : `Generate ${selectedSuggestions.size} Document${selectedSuggestions.size !== 1 ? "s" : ""}`}
                             </button>
                           </div>
                         </div>
