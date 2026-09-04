@@ -4,6 +4,16 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+### Scanner Header Cleanup (2026-09-04)
+
+#### Changed
+- **Header button alignment** — Re-scan and Delete buttons now consistently align to the right regardless of repository name length
+- **Header layout** — Title row and actions use flexbox with space-between for consistent positioning
+
+#### Removed
+- **Generate Docs button** — Removed redundant header button; document generation is handled via the Documents tab with selective generation
+
+
 ### Scanner UI Refinement (2026-09-04)
 
 #### Changed
@@ -87,6 +97,16 @@ All notable changes to this project are documented in this file.
 - **Scanner CSS** — Complete styling for scanner workspace, history, comparison, health bars, tabs, suggestions
 
 ## [Unreleased]
+
+### Scanner Header Cleanup (2026-09-04)
+
+#### Changed
+- **Header button alignment** — Re-scan and Delete buttons now consistently align to the right regardless of repository name length
+- **Header layout** — Title row and actions use flexbox with space-between for consistent positioning
+
+#### Removed
+- **Generate Docs button** — Removed redundant header button; document generation is handled via the Documents tab with selective generation
+
 
 ### Scanner UI Refinement (2026-09-04)
 

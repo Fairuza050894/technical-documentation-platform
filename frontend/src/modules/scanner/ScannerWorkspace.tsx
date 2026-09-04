@@ -181,19 +181,6 @@ export function ScannerWorkspace({ embedded = false }: ScannerWorkspaceProps) {
     await loadDashboard();
   };
 
-  const handleGenerate = async (scanId: string) => {
-    setIsBusy(true);
-    try {
-      await generateDocuments(scanId, []);
-      const docs = await listGeneratedDocuments(scanId);
-      setGeneratedDocs(docs);
-      setActiveTab("documents");
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsBusy(false);
-    }
-  };
 
   const handleSelectRepo = (repoUrl: string) => {
     setSelectedRepoUrl(repoUrl);
@@ -363,9 +350,6 @@ export function ScannerWorkspace({ embedded = false }: ScannerWorkspaceProps) {
                 <div className="scanner-content__actions">
                   <button type="button" className="scanner-action-btn" disabled={isBusy} onClick={() => void handleRescan(selectedScan.id)}>
                     Re-scan
-                  </button>
-                  <button type="button" className="scanner-action-btn" disabled={isBusy} onClick={() => void handleGenerate(selectedScan.id)}>
-                    Generate Docs
                   </button>
                   {selectedGroup && selectedGroup.scans.length >= 2 && (
                     <select
