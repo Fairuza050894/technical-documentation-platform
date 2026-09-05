@@ -3,7 +3,7 @@ import type { Workspace } from "../modules/workspaces/types";
 import type { IconName } from "../shared/ui/Icon";
 import type { AppRoute, ProjectStage } from "./router";
 
-export type GlobalNavigation = "Home" | "Projects" | "Templates" | "Scanner" | "System status" | "Audit trail";
+export type GlobalNavigation = "Home" | "Projects" | "Templates" | "Scanner" | "Intelligence" | "Knowledge Map" | "System status" | "Audit trail";
 
 export interface NavigationItem {
   id: GlobalNavigation;
@@ -11,6 +11,7 @@ export interface NavigationItem {
   icon: IconName;
   route: AppRoute;
   adminOnly?: boolean;
+  badge?: number;
 }
 
 export interface NavigationGroup {
@@ -78,6 +79,19 @@ export function buildNavigationGroups(activeWorkspaceId: string | null): readonl
           route: { name: "scanner" },
         },
         {
+          id: "Intelligence",
+          label: "Intelligence",
+          icon: "search",
+          route: { name: "intelligence" },
+        },
+        {
+          id: "Knowledge Map",
+          label: "Knowledge Map",
+          icon: "overview",
+          route: { name: "knowledge-map" },
+          badge: 3,
+        },
+        {
           id: "System status",
           label: "System status",
           icon: "server",
@@ -108,6 +122,10 @@ export function resolveGlobalNavigation(route: AppRoute): GlobalNavigation | nul
       return "Templates";
     case "scanner":
       return "Scanner";
+    case "intelligence":
+      return "Intelligence";
+    case "knowledge-map":
+      return "Knowledge Map";
     case "system":
       return "System status";
     case "audit":
@@ -140,6 +158,10 @@ export function resolvePageContext(
       return { breadcrumb: ["Platform", "Templates"], icon: "documents" };
     case "scanner":
       return { breadcrumb: ["Platform", "Scanner"], icon: "search" };
+    case "intelligence":
+      return { breadcrumb: ["Platform", "Intelligence"], icon: "search" };
+    case "knowledge-map":
+      return { breadcrumb: ["Platform", "Knowledge Map"], icon: "overview" };
     case "audit":
       return { breadcrumb: ["Platform", "Audit trail"], icon: "documents" };
     case "login":
