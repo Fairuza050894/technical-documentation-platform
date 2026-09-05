@@ -115,6 +115,9 @@ export function AppSidebar({
                         <Icon name={item.icon} size={17} />
                       </span>
                       <span className="navigation-item__label">{item.label}</span>
+                      {typeof item.badge === "number" && item.badge > 0 && (
+                        <span className="navigation-item__badge">{item.badge}</span>
+                      )}
                     </button>
                   </li>
                 ))}

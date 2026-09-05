@@ -1,0 +1,285 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Source+Serif+4:wght@400;600;700&display=swap');
+
+.km {
+  padding: 24px 28px;
+  max-width: 1200px;
+  font-family: 'Source Serif 4', Georgia, serif;
+}
+
+.km__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.km__title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.02em;
+}
+
+.km__subtitle {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+  font-style: italic;
+}
+
+.km__section {
+  margin-bottom: 32px;
+}
+
+.km__section-title {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9ca3af;
+  margin: 0 0 12px 0;
+}
+
+/* ─── Role Switcher ─── */
+
+.km-roles {
+  display: flex;
+  gap: 2px;
+  background: #f3f4f6;
+  border-radius: 6px;
+  padding: 2px;
+}
+
+.km-roles__btn {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: 'DM Mono', monospace;
+  color: #6b7280;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.km-roles__btn:hover {
+  color: #374151;
+}
+
+.km-roles__btn--active {
+  background: #ffffff;
+  color: #111827;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+}
+
+/* ─── Overview Cards ─── */
+
+.km-overview {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.km-overview__card {
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.km-overview__card--ready {
+  border-left: 3px solid #059669;
+}
+
+.km-overview__card--partial {
+  border-left: 3px solid #d97706;
+}
+
+.km-overview__card--missing {
+  border-left: 3px solid #dc2626;
+}
+
+.km-overview__value {
+  font-family: 'DM Mono', monospace;
+  font-size: 22px;
+  font-weight: 500;
+  color: #111827;
+}
+
+.km-overview__label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #374151;
+}
+
+.km-overview__detail {
+  font-size: 12px;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* ─── Tables ─── */
+
+.km-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.km-table thead th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #9ca3af;
+  padding: 8px 12px;
+  border-bottom: 2px solid #e5e7eb;
+  font-family: 'DM Mono', monospace;
+}
+
+.km-table tbody tr {
+  border-bottom: 1px solid #f3f4f6;
+  transition: background 0.1s ease;
+}
+
+.km-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.km-table td {
+  padding: 10px 12px;
+  color: #374151;
+  vertical-align: top;
+}
+
+.km-table__remediation {
+  font-size: 12px;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.km-table__source {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.km-table__count {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: #6b7280;
+  margin-left: 6px;
+}
+
+/* ─── Status Dots ─── */
+
+.km-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.km-status--ready {
+  background: #d1fae5;
+  color: #059669;
+}
+
+.km-status--partial {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.km-status--missing {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* ─── Badges ─── */
+
+.km-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: 'DM Mono', monospace;
+}
+
+.km-badge--critical {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.km-badge--important {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.km-badge--deferrable {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+/* ─── Empty State ─── */
+
+.km-empty {
+  padding: 24px;
+  text-align: center;
+  color: #9ca3af;
+  font-style: italic;
+  font-size: 14px;
+}
+
+/* ─── Recent Changes ─── */
+
+.km-change-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: 'DM Mono', monospace;
+}
+
+.km-change-badge--added {
+  background: #d1fae5;
+  color: #059669;
+}
+
+.km-change-badge--removed {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.km-change-badge--modified {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.km-table__detail {
+  display: block;
+  font-size: 11px;
+  color: #9ca3af;
+  margin-top: 2px;
+}
+
+.km-table__time {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: #9ca3af;
+  white-space: nowrap;
+}

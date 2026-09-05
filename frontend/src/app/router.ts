@@ -17,6 +17,8 @@ export type AppRoute =
   | { name: "system" }
   | { name: "templates" }
   | { name: "scanner" }
+  | { name: "knowledge-map" }
+  | { name: "intelligence" }
   | { name: "audit" }
   | { name: "login" }
   | {
@@ -55,6 +57,12 @@ export function parseRoute(pathname: string): AppRoute {
   }
   if (normalized === "/scanner") {
     return { name: "scanner" };
+  }
+  if (normalized === "/knowledge-map") {
+    return { name: "knowledge-map" };
+  }
+  if (normalized === "/intelligence") {
+    return { name: "intelligence" };
   }
   if (normalized === "/audit") {
     return { name: "audit" };
@@ -134,6 +142,10 @@ export function routePath(route: AppRoute): string {
       return "/templates";
     case "scanner":
       return "/scanner";
+    case "knowledge-map":
+      return "/knowledge-map";
+    case "intelligence":
+      return "/intelligence";
     case "audit":
       return "/audit";
     case "login":
@@ -192,7 +204,10 @@ export function routeWorkspaceId(route: AppRoute): string | null {
     case "workspaces":
     case "system":
     case "templates":
+    case "knowledge-map":
+    case "intelligence":
     case "scanner":
+    case "intelligence":
     case "audit":
     case "login":
     case "not-found":
