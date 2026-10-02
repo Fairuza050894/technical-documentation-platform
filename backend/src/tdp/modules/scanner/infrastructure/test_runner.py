@@ -264,11 +264,7 @@ def _run_pip_audit(repo_path: str) -> SecurityScan:
                 if not isinstance(vuln, dict):
                     continue
                 severity = str(vuln.get("severity", "unknown")).lower()
-                name = (
-                    vuln.get("name", vuln.get("package", "unknown"))
-                    if isinstance(vuln.get("name"), str)
-                    else "unknown"
-                )
+                name = str(vuln.get("name") or vuln.get("package") or "unknown")
                 scan.issues.append(
                     SecurityIssue(
                         package=name,
