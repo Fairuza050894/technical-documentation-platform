@@ -3,14 +3,16 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 
+from tdp.modules.scanner.application.service import ScannerApplicationService
+
 router = APIRouter(tags=["scanner-dashboard"])
 
 
-async def get_scanner_service(request: Request):
+async def get_scanner_service(request: Request) -> ScannerApplicationService:
     return request.app.state.scanner_service
 
 
-ScannerServiceDependency = Annotated[object, Depends(get_scanner_service)]
+ScannerServiceDependency = Annotated[ScannerApplicationService, Depends(get_scanner_service)]
 
 
 class RepoSummary(BaseModel):
