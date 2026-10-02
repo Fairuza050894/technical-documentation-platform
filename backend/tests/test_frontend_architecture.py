@@ -25,6 +25,8 @@ def test_global_css_is_an_explicit_import_manifest() -> None:
     imports = re.findall(r'^@import "([^"]+)";$', source, flags=re.MULTILINE)
 
     assert imports == [
+        "./modules/login.css",
+        "./modules/audit.css",
         "./foundation.css",
         "./application-shell.css",
         "./components.css",
@@ -36,6 +38,12 @@ def test_global_css_is_an_explicit_import_manifest() -> None:
         "./modules/catalog.css",
         "./modules/changes.css",
         "./modules/documents.css",
+        "./modules/evidence.css",
+        "./modules/search.css",
+        "./modules/templates.css",
+        "./modules/scanner.css",
+        "./modules/scanner-unified.css",
+        "./modules/knowledge-map.css",
     ]
     assert len(source.splitlines()) == len(imports)
 
