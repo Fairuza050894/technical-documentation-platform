@@ -45,9 +45,15 @@ jobs:
       # ── Python dependency audit (1.4.6) ──
       - name: Audit Python dependencies (pip-audit)
         run: |
+          uv export \
+            --project backend \
+            --frozen \
+            --no-emit-project \
+            --format requirements.txt \
+            --output-file /tmp/backend-requirements.txt
           uv run --project backend pip-audit \
             --strict \
-            --locked backend \
+            --requirement /tmp/backend-requirements.txt \
             --desc \
             --fix --dry-run
         continue-on-error: false
