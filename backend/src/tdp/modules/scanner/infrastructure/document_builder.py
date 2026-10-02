@@ -186,9 +186,10 @@ def _mermaid_architecture(c):
     dirs = [d.lower() for d in c.get("directories", [])]
     langs = c.get("languages_dict", {})
     fws = c["frameworks_list"]
-    has_backend = any(l in langs for l in ["Python", "Java", "Go", "Rust", "Ruby", "PHP", "C#"])
+    has_backend = any(language in langs for language in ["Python", "Java", "Go", "Rust", "Ruby", "PHP", "C#"])
     has_frontend = any(
-        l in langs for l in ["JavaScript", "TypeScript", "TypeScript (React)", "JavaScript (React)"]
+        language in langs
+        for language in ["JavaScript", "TypeScript", "TypeScript (React)", "JavaScript (React)"]
     )
     has_react = (
         "React" in fws
@@ -760,59 +761,53 @@ def _build_test_report(scan):
     if not lint_rows:
         lint_rows.append("| N/A | - | - | - |")
     sec = c["security_scan"]
-    lines = (
-        [
-            "# Test Report",
-            "",
-            "> **Project:** " + c["repo_name"] + "  ",
-            "> **Generated:** " + c["date"] + "  ",
-            "> **Health Score:** " + c["health_score"] + "/100",
-            "",
-            "---",
-            "",
-            "## 1. Summary",
-            "",
-            "| Metric | Value |",
-            "|--------|-------|",
-            "| Overall Health | " + c["health_overall"] + " |",
-            "| Test Coverage | " + c["test_coverage"] + " |",
-            "| Code Quality | " + c["code_quality"] + " |",
-            "| Security | " + c["security"] + " |",
-            "",
-            "## 2. Test Results",
-            "",
-            "| Suite | Framework | Total | Passed | Failed | Pass Rate |",
-            "|-------|-----------|-------|--------|--------|-----------|",
-        ]
-        + tests_rows
-        + [
-            "",
-            "## 3. Code Quality",
-            "",
-            "| Tool | Issues | Errors | Warnings |",
-            "|------|--------|--------|----------|",
-        ]
-        + lint_rows
-        + [
-            "",
-            "## 4. Security Scan",
-            "",
-            "| Severity | Count |",
-            "|----------|-------|",
-            "| Critical | " + str(sec.critical) + " |",
-            "| High | " + str(sec.high) + " |",
-            "| Medium | " + str(sec.medium) + " |",
-            "| Low | " + str(sec.low) + " |",
-            "| **Total** | **" + str(sec.total_vulnerabilities) + "** |",
-            "",
-            "## 5. Issues",
-            "",
-            _issues_section(c["issues"]),
-            "",
-            "---",
-            "*Auto-generated on " + c["date"] + "*",
-        ]
-    )
+    lines = [
+        "# Test Report",
+        "",
+        "> **Project:** " + c["repo_name"] + "  ",
+        "> **Generated:** " + c["date"] + "  ",
+        "> **Health Score:** " + c["health_score"] + "/100",
+        "",
+        "---",
+        "",
+        "## 1. Summary",
+        "",
+        "| Metric | Value |",
+        "|--------|-------|",
+        "| Overall Health | " + c["health_overall"] + " |",
+        "| Test Coverage | " + c["test_coverage"] + " |",
+        "| Code Quality | " + c["code_quality"] + " |",
+        "| Security | " + c["security"] + " |",
+        "",
+        "## 2. Test Results",
+        "",
+        "| Suite | Framework | Total | Passed | Failed | Pass Rate |",
+        "|-------|-----------|-------|--------|--------|-----------|",
+        *tests_rows,
+        "",
+        "## 3. Code Quality",
+        "",
+        "| Tool | Issues | Errors | Warnings |",
+        "|------|--------|--------|----------|",
+        *lint_rows,
+        "",
+        "## 4. Security Scan",
+        "",
+        "| Severity | Count |",
+        "|----------|-------|",
+        "| Critical | " + str(sec.critical) + " |",
+        "| High | " + str(sec.high) + " |",
+        "| Medium | " + str(sec.medium) + " |",
+        "| Low | " + str(sec.low) + " |",
+        "| **Total** | **" + str(sec.total_vulnerabilities) + "** |",
+        "",
+        "## 5. Issues",
+        "",
+        _issues_section(c["issues"]),
+        "",
+        "---",
+        "*Auto-generated on " + c["date"] + "*",
+    ]
     return "\n".join(lines)
 
 
