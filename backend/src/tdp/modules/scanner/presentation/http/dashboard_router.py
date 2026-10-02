@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
@@ -6,11 +6,11 @@ from pydantic import BaseModel
 router = APIRouter(tags=["scanner-dashboard"])
 
 
-async def get_scanner_service(request: Request):
+async def get_scanner_service(request: Request) -> Any:
     return request.app.state.scanner_service
 
 
-ScannerServiceDependency = Annotated[object, Depends(get_scanner_service)]
+ScannerServiceDependency = Annotated[Any, Depends(get_scanner_service)]
 
 
 class RepoSummary(BaseModel):
