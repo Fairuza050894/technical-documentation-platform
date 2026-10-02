@@ -57,6 +57,7 @@ REQUIRED_DOCUMENTS = {
     "docs/architecture/security-architecture.md",
     "docs/architecture/deployment-view.md",
     "docs/governance/documentation-policy.md",
+    "docs/governance/changelog-policy.md",
     "docs/governance/document-control.md",
     "docs/governance/ownership-and-approval.md",
     "docs/governance/external-audit-response-2026-08.md",
