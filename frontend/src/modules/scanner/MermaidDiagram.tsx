@@ -38,7 +38,7 @@ export function MermaidDiagram({ chart, id }: MermaidDiagramProps) {
         if (!cancelled && containerRef.current) {
           containerRef.current.innerHTML = svg;
         }
-      } catch (err) {
+      } catch {
         if (!cancelled && containerRef.current) {
           containerRef.current.innerHTML = '<pre class="mermaid-fallback">' + chart + '</pre>';
         }
