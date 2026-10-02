@@ -75,8 +75,8 @@ async def refresh_token(
             access_token=result["access_token"],
             expires_in=result.get("expires_in", 3600),
         )
-    except JwtValidationError as e:
-        raise HTTPException(status_code=401, detail=str(e))
+    except JwtValidationError as exc:
+        raise HTTPException(status_code=401, detail=str(exc)) from exc
 
 
 @router.post("/logout", response_model=LogoutResponse)

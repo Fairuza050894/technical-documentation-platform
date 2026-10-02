@@ -202,14 +202,14 @@ async def add_workspace_member(
     # Validate role against the Role enum
     try:
         role = Role(payload.role)
-    except ValueError:
+    except ValueError as exc:
         valid_roles = [r.value for r in Role]
         from fastapi import HTTPException
 
         raise HTTPException(
             status_code=422,
             detail=f"Invalid role '{payload.role}'. Valid roles: {valid_roles}",
-        )
+        ) from exc
 
     member = WorkspaceMember(
         workspace_id=workspace_id,
@@ -236,12 +236,12 @@ async def remove_workspace_member(
 ) -> None:
     try:
         role = Role(payload.role)
-    except ValueError:
+    except ValueError as exc:
         valid_roles = [r.value for r in Role]
         from fastapi import HTTPException
 
         raise HTTPException(
             status_code=422,
             detail=f"Invalid role '{payload.role}'. Valid roles: {valid_roles}",
-        )
+        ) from exc
     repo.remove_member(workspace_id, payload.subject_id, role)
