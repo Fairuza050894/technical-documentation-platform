@@ -131,10 +131,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: security-scan
+    permissions:
+      contents: write
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
+        with:
+          ref: ${{ github.head_ref }}
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v6
@@ -159,6 +163,23 @@ jobs:
 
       - name: Install frontend dependencies
         run: npm ci --prefix frontend
+
+      - name: Apply targeted mechanical lint fixes
+        run: |
+          uv run --project backend ruff check backend \
+            --fix \
+            --unsafe-fixes \
+            --select E701,SIM105,SIM102,RUF005,SIM118,B007,UP017 || true
+          uv run --project backend ruff format backend
+          if git diff --quiet -- backend; then
+            echo "No targeted lint changes to commit."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add backend
+            git commit -m "chore: apply targeted mechanical lint fixes"
+            git push origin "HEAD:${GITHUB_HEAD_REF}"
+          fi
 
       - name: Run repository quality gate
         env:
