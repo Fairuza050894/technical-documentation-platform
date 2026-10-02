@@ -2,6 +2,7 @@ import shutil
 import tempfile
 
 from git import Repo
+import contextlib
 
 
 def clone_repository(url: str, branch: str = "main", depth: int = 1) -> str:
@@ -15,7 +16,5 @@ def clone_repository(url: str, branch: str = "main", depth: int = 1) -> str:
 
 
 def cleanup_temp_dir(path: str) -> None:
-    try:
+    with contextlib.suppress(OSError):
         shutil.rmtree(path, ignore_errors=True)
-    except OSError:
-        pass
