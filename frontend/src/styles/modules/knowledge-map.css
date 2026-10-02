@@ -283,3 +283,81 @@
   color: #9ca3af;
   white-space: nowrap;
 }
+
+
+/* ─── Data integrity states ─── */
+
+.km-integrity-state {
+  max-width: 760px;
+  padding: 24px;
+  border: 1px solid #d1d5db;
+  border-left: 3px solid #111827;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.km-integrity-state__eyebrow {
+  display: block;
+  margin-bottom: 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+.km-integrity-state h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  color: #111827;
+}
+
+.km-integrity-state p {
+  margin: 0;
+  color: #4b5563;
+  line-height: 1.6;
+}
+
+.km-integrity-state__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 18px;
+  margin-top: 18px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.km-integrity-state__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid #111827;
+  border-radius: 4px;
+  color: #111827;
+  font-family: 'DM Mono', monospace;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.km-integrity-state__link:hover {
+  background: #111827;
+  color: #ffffff;
+}
+
+.km-integrity-state code {
+  font-family: 'DM Mono', monospace;
+  color: #374151;
+}
+
+.km-demo-banner {
+  margin-bottom: 24px;
+  padding: 10px 12px;
+  border: 1px solid #f59e0b;
+  border-radius: 4px;
+  background: #fffbeb;
+  color: #92400e;
+  font-size: 12px;
+}
