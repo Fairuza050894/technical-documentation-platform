@@ -26,6 +26,8 @@ describe("workspace and project routing", () => {
       workspaceId: "workspace-1",
     });
     expect(parseRoute("/system")).toEqual({ name: "system" });
+    expect(parseRoute("/intelligence")).toEqual({ name: "intelligence" });
+    expect(parseRoute("/knowledge-map")).toEqual({ name: "knowledge-map" });
   });
 
   it("parses and builds persistent workspace-scoped project routes", () => {
