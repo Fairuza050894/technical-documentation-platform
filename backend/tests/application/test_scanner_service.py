@@ -53,6 +53,37 @@ class TestScannerServiceGetScan:
         assert result.id == str(scan.id)
 
     @pytest.mark.asyncio
+    async def test_get_scan_result_returns_domain_object(self) -> None:
+        repo = InMemoryScanRepository()
+        service = ScannerApplicationService(repo)
+        scan = ScanResult.create("https://github.com/org/repo.git")
+        await repo.save(scan)
+
+        result = await service.get_scan_result(str(scan.id))
+        assert result is scan
+
+    @pytest.mark.asyncio
+    async def test_require_completed_scan_result_rejects_pending_scan(self) -> None:
+        repo = InMemoryScanRepository()
+        service = ScannerApplicationService(repo)
+        scan = ScanResult.create("https://github.com/org/repo.git")
+        await repo.save(scan)
+
+        with pytest.raises(ScanInProgressError):
+            await service.require_completed_scan_result(str(scan.id))
+
+    @pytest.mark.asyncio
+    async def test_require_completed_scan_result_returns_completed_scan(self) -> None:
+        repo = InMemoryScanRepository()
+        service = ScannerApplicationService(repo)
+        scan = ScanResult.create("https://github.com/org/repo.git")
+        scan.status = ScanStatus.COMPLETED
+        await repo.save(scan)
+
+        result = await service.require_completed_scan_result(str(scan.id))
+        assert result is scan
+
+    @pytest.mark.asyncio
     async def test_get_nonexistent_scan_raises(self) -> None:
         repo = InMemoryScanRepository()
         service = ScannerApplicationService(repo)
