@@ -9,6 +9,7 @@
 - `catalog`
 - `changes`
 - `documents`
+- `evidence`
 
 ## Router matchers
 
@@ -22,7 +23,13 @@
 ## Static path literals
 
 - `/`
+- `/audit`
 - `/home`
+- `/intelligence`
+- `/knowledge-map`
+- `/login`
 - `/projects`
+- `/scanner`
 - `/system`
+- `/templates`
 - `/workspaces`

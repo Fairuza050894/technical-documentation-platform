@@ -9,7 +9,9 @@
 | backend/tests/application/test_enterprise_generation_service.py | 3 |
 | backend/tests/application/test_feature_service.py | 2 |
 | backend/tests/application/test_project_service.py | 2 |
+| backend/tests/application/test_scanner_service.py | 14 |
 | backend/tests/application/test_source_service.py | 3 |
+| backend/tests/application/test_webhook_service.py | 9 |
 | backend/tests/application/test_workspace_service.py | 1 |
 | backend/tests/domain/test_change_detection.py | 1 |
 | backend/tests/domain/test_document_governance.py | 3 |
@@ -23,8 +25,10 @@
 | backend/tests/domain/test_identity.py | 2 |
 | backend/tests/domain/test_project.py | 4 |
 | backend/tests/domain/test_readiness_policy.py | 7 |
+| backend/tests/domain/test_scanner.py | 26 |
 | backend/tests/domain/test_semantic_generation_profiles.py | 1 |
 | backend/tests/domain/test_source.py | 3 |
+| backend/tests/domain/test_webhook.py | 8 |
 | backend/tests/domain/test_workspace.py | 2 |
 | backend/tests/infrastructure/test_document_nullable_snapshot_provenance.py | 1 |
 | backend/tests/infrastructure/test_enterprise_generation_renderer.py | 4 |
@@ -33,6 +37,7 @@
 | backend/tests/infrastructure/test_openapi_catalog_parser.py | 1 |
 | backend/tests/infrastructure/test_openapi_inspector.py | 4 |
 | backend/tests/infrastructure/test_project_workspace_migration.py | 1 |
+| backend/tests/infrastructure/test_scan_comparator.py | 19 |
 | backend/tests/infrastructure/test_sqlite_evidence_repository.py | 4 |
 | backend/tests/infrastructure/test_sqlite_feature_repository.py | 1 |
 | backend/tests/infrastructure/test_sqlite_project_repository.py | 1 |
@@ -50,12 +55,16 @@
 | backend/tests/presentation/test_projects_api.py | 3 |
 | backend/tests/presentation/test_rate_limiting.py | 5 |
 | backend/tests/presentation/test_readiness_api.py | 6 |
+| backend/tests/presentation/test_scanner_api.py | 10 |
 | backend/tests/presentation/test_security_headers.py | 1 |
 | backend/tests/presentation/test_semantic_generation_pack_api.py | 3 |
 | backend/tests/presentation/test_sources_api.py | 3 |
+| backend/tests/presentation/test_webhook_api.py | 8 |
 | backend/tests/presentation/test_workspaces_api.py | 4 |
 | backend/tests/test_architecture.py | 9 |
 | backend/tests/test_audit.py | 7 |
+| backend/tests/test_authorization_model.py | 11 |
+| backend/tests/test_authorization_policy.py | 12 |
 | backend/tests/test_config.py | 3 |
 | backend/tests/test_config_phase1.py | 4 |
 | backend/tests/test_enterprise_generation_architecture.py | 7 |
@@ -73,9 +82,11 @@
 | backend/tests/test_health.py | 4 |
 | backend/tests/test_readiness_architecture.py | 3 |
 | backend/tests/test_repository_documentation.py | 1 |
+| backend/tests/test_scanner_architecture.py | 1 |
 | backend/tests/test_workspace_architecture.py | 2 |
+| backend/tests/test_workspace_membership.py | 9 |
 
-Backend total: **221** tests.
+Backend total: **348** tests.
 
 ## Frontend
 
@@ -86,17 +97,19 @@ Backend total: **221** tests.
 | frontend/src/app/router.test.ts | 7 |
 | frontend/src/modules/catalog/ApiCatalogWorkspace.test.tsx | 2 |
 | frontend/src/modules/changes/ChangesWorkspace.test.tsx | 1 |
-| frontend/src/modules/documents/DocumentsWorkspace.test.tsx | 4 |
+| frontend/src/modules/documents/DocumentsWorkspace.test.tsx | 3 |
 | frontend/src/modules/features/FeatureWorkspace.test.tsx | 3 |
 | frontend/src/modules/overview/OperationalOverview.test.tsx | 2 |
 | frontend/src/modules/projects/ProjectWorkspace.test.tsx | 4 |
+| frontend/src/modules/scanner/api.test.ts | 1 |
 | frontend/src/modules/sources/SourceWorkspace.test.tsx | 2 |
 | frontend/src/modules/workbench/ProjectDocumentationOverview.test.tsx | 4 |
 | frontend/src/modules/workbench/ProjectWorkbench.test.tsx | 6 |
 | frontend/src/modules/workspaces/WorkspaceRegistry.test.tsx | 2 |
 | frontend/src/modules/workspaces/WorkspaceSwitcher.test.tsx | 5 |
+| frontend/src/shared/api/client.test.ts | 1 |
 | frontend/src/shared/api/config.test.ts | 3 |
 
-Frontend total: **57** tests (47 passing; 9 in App.test.tsx have pre-existing timeout issue).
+Frontend total: **58** tests.
 
 Counts are structural and do not replace execution evidence from `make verify`.

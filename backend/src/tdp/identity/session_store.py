@@ -41,9 +41,7 @@ class TokenBlacklist:
     def is_blacklisted(self, jti: str) -> bool:
         """Check if a token JTI is blacklisted."""
         with self._connect() as conn:
-            row = conn.execute(
-                "SELECT 1 FROM token_blacklist WHERE jti = ?", (jti,)
-            ).fetchone()
+            row = conn.execute("SELECT 1 FROM token_blacklist WHERE jti = ?", (jti,)).fetchone()
             return row is not None
 
     def add(self, jti: str, expires_at: str) -> None:
@@ -58,8 +56,6 @@ class TokenBlacklist:
     def cleanup_expired(self) -> int:
         """Remove expired entries. Returns number of rows deleted."""
         with self._connect() as conn:
-            cursor = conn.execute(
-                "DELETE FROM token_blacklist WHERE expires_at < datetime('now')"
-            )
+            cursor = conn.execute("DELETE FROM token_blacklist WHERE expires_at < datetime('now')")
             conn.commit()
             return cursor.rowcount

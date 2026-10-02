@@ -67,26 +67,41 @@ def _run_pytest(repo_path: str) -> TestSuite | None:
         if (root / "pyproject.toml").exists():
             subprocess.run(
                 [sys.executable, "-m", "pip", "install", "-e", ".", "-q"],
-                cwd=repo_path, capture_output=True, text=True, timeout=180,
+                cwd=repo_path,
+                capture_output=True,
+                text=True,
+                timeout=180,
             )
         if (root / "requirements.txt").exists():
             subprocess.run(
                 [sys.executable, "-m", "pip", "install", "-r", "requirements.txt", "-q"],
-                cwd=repo_path, capture_output=True, text=True, timeout=180,
+                cwd=repo_path,
+                capture_output=True,
+                text=True,
+                timeout=180,
             )
         if (root / "requirements" / "dev.txt").exists():
             subprocess.run(
                 [sys.executable, "-m", "pip", "install", "-r", "requirements/dev.txt", "-q"],
-                cwd=repo_path, capture_output=True, text=True, timeout=180,
+                cwd=repo_path,
+                capture_output=True,
+                text=True,
+                timeout=180,
             )
         if (root / "requirements" / "test.txt").exists():
             subprocess.run(
                 [sys.executable, "-m", "pip", "install", "-r", "requirements/test.txt", "-q"],
-                cwd=repo_path, capture_output=True, text=True, timeout=180,
+                cwd=repo_path,
+                capture_output=True,
+                text=True,
+                timeout=180,
             )
         result = subprocess.run(
             [sys.executable, "-m", "pytest", "--tb=short", "-q", "--no-header"],
-            cwd=repo_path, capture_output=True, text=True, timeout=120,
+            cwd=repo_path,
+            capture_output=True,
+            text=True,
+            timeout=120,
         )
         suite = TestSuite(name="pytest", framework="pytest")
         suite.error_output = result.stderr[:2000] if result.stderr else ""
@@ -114,14 +129,21 @@ def _run_pytest(repo_path: str) -> TestSuite | None:
 def _run_jest(repo_path: str) -> TestSuite | None:
     try:
         import json as _json
+
         # Install dependencies first
         subprocess.run(
             ["npm", "install", "--ignore-scripts", "--no-audit", "--no-fund"],
-            cwd=repo_path, capture_output=True, text=True, timeout=120,
+            cwd=repo_path,
+            capture_output=True,
+            text=True,
+            timeout=120,
         )
         result = subprocess.run(
             ["npx", "jest", "--passWithNoTests", "--json", "--silent"],
-            cwd=repo_path, capture_output=True, text=True, timeout=120,
+            cwd=repo_path,
+            capture_output=True,
+            text=True,
+            timeout=120,
         )
         suite = TestSuite(name="jest", framework="jest")
         try:
@@ -141,7 +163,10 @@ def _run_go_test(repo_path: str) -> TestSuite | None:
     try:
         result = subprocess.run(
             ["go", "test", "-v", "-count=1", "./..."],
-            cwd=repo_path, capture_output=True, text=True, timeout=120,
+            cwd=repo_path,
+            capture_output=True,
+            text=True,
+            timeout=120,
         )
         suite = TestSuite(name="go test", framework="go test")
         for line in result.stdout.split("\n"):
@@ -160,8 +185,19 @@ def _run_go_test(repo_path: str) -> TestSuite | None:
 def _run_flake8(repo_path: str) -> LintResult | None:
     try:
         result = subprocess.run(
-            [sys.executable, "-m", "flake8", ".", "--count", "--statistics", "--max-line-length=120"],
-            cwd=repo_path, capture_output=True, text=True, timeout=60,
+            [
+                sys.executable,
+                "-m",
+                "flake8",
+                ".",
+                "--count",
+                "--statistics",
+                "--max-line-length=120",
+            ],
+            cwd=repo_path,
+            capture_output=True,
+            text=True,
+            timeout=60,
         )
         lint = LintResult(tool="flake8")
         lines = [l for l in result.stdout.strip().split("\n") if l.strip()]
@@ -181,11 +217,17 @@ def _run_eslint(repo_path: str) -> LintResult | None:
         # Install dependencies first
         subprocess.run(
             ["npm", "install", "--ignore-scripts", "--no-audit", "--no-fund"],
-            cwd=repo_path, capture_output=True, text=True, timeout=120,
+            cwd=repo_path,
+            capture_output=True,
+            text=True,
+            timeout=120,
         )
         result = subprocess.run(
             ["npx", "eslint", ".", "--format=compact"],
-            cwd=repo_path, capture_output=True, text=True, timeout=60,
+            cwd=repo_path,
+            capture_output=True,
+            text=True,
+            timeout=60,
         )
         lint = LintResult(tool="eslint")
         lines = result.stdout.strip().split("\n")
@@ -202,29 +244,50 @@ def _run_pip_audit(repo_path: str) -> SecurityScan:
     try:
         result = subprocess.run(
             [sys.executable, "-m", "pip_audit", "--format=json"],
-            cwd=repo_path, capture_output=True, text=True, timeout=120,
+            cwd=repo_path,
+            capture_output=True,
+            text=True,
+            timeout=120,
         )
         import json as _json
+
         scan = SecurityScan(tool="pip-audit")
         try:
             data = _json.loads(result.stdout)
-            vulns = data if isinstance(data, list) else data.get("dependencies", data.get("vulnerabilities", []))
+            vulns = (
+                data
+                if isinstance(data, list)
+                else data.get("dependencies", data.get("vulnerabilities", []))
+            )
             if isinstance(vulns, dict):
                 vulns = list(vulns.values())
             for vuln in vulns:
                 if not isinstance(vuln, dict):
                     continue
                 severity = str(vuln.get("severity", "unknown")).lower()
-                name = vuln.get("name", vuln.get("package", "unknown")) if isinstance(vuln.get("name"), str) else "unknown"
-                scan.issues.append(SecurityIssue(
-                    package=name, severity=severity,
-                    description=str(vuln.get("description", "")),
-                    fix_version=vuln.get("fix_versions", [""])[0] if vuln.get("fix_versions") else "",
-                ))
-                if severity == "critical": scan.critical += 1
-                elif severity == "high": scan.high += 1
-                elif severity == "medium": scan.medium += 1
-                else: scan.low += 1
+                name = (
+                    vuln.get("name", vuln.get("package", "unknown"))
+                    if isinstance(vuln.get("name"), str)
+                    else "unknown"
+                )
+                scan.issues.append(
+                    SecurityIssue(
+                        package=name,
+                        severity=severity,
+                        description=str(vuln.get("description", "")),
+                        fix_version=vuln.get("fix_versions", [""])[0]
+                        if vuln.get("fix_versions")
+                        else "",
+                    )
+                )
+                if severity == "critical":
+                    scan.critical += 1
+                elif severity == "high":
+                    scan.high += 1
+                elif severity == "medium":
+                    scan.medium += 1
+                else:
+                    scan.low += 1
             scan.total_vulnerabilities = len(scan.issues)
         except (_json.JSONDecodeError, KeyError, AttributeError, TypeError) as exc:
             scan.error_output = f"{exc}: {result.stderr[:1500]}"
@@ -238,13 +301,20 @@ def _run_npm_audit(repo_path: str) -> SecurityScan:
         # Install dependencies first
         subprocess.run(
             ["npm", "install", "--ignore-scripts", "--no-audit", "--no-fund"],
-            cwd=repo_path, capture_output=True, text=True, timeout=120,
+            cwd=repo_path,
+            capture_output=True,
+            text=True,
+            timeout=120,
         )
         result = subprocess.run(
             ["npm", "audit", "--json"],
-            cwd=repo_path, capture_output=True, text=True, timeout=60,
+            cwd=repo_path,
+            capture_output=True,
+            text=True,
+            timeout=60,
         )
         import json as _json
+
         scan = SecurityScan(tool="npm audit")
         try:
             data = _json.loads(result.stdout)
@@ -254,11 +324,17 @@ def _run_npm_audit(repo_path: str) -> SecurityScan:
                     if not isinstance(info, dict):
                         continue
                     severity = str(info.get("severity", "unknown")).lower()
-                    scan.issues.append(SecurityIssue(package=str(name), severity=severity, description=""))
-                    if severity == "critical": scan.critical += 1
-                    elif severity == "high": scan.high += 1
-                    elif severity == "medium": scan.medium += 1
-                    else: scan.low += 1
+                    scan.issues.append(
+                        SecurityIssue(package=str(name), severity=severity, description="")
+                    )
+                    if severity == "critical":
+                        scan.critical += 1
+                    elif severity == "high":
+                        scan.high += 1
+                    elif severity == "medium":
+                        scan.medium += 1
+                    else:
+                        scan.low += 1
             scan.total_vulnerabilities = len(scan.issues)
         except (_json.JSONDecodeError, KeyError, AttributeError, TypeError) as exc:
             scan.error_output = f"{exc}: {result.stderr[:1500]}"

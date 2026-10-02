@@ -8,7 +8,7 @@ Endpoints:
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import jwt as pyjwt
 from fastapi import APIRouter, HTTPException, Request
@@ -97,7 +97,7 @@ async def logout(
 
             if jti and exp:
                 blacklist: TokenBlacklist = request.app.state.token_blacklist
-                expires_at = datetime.fromtimestamp(exp, tz=timezone.utc).isoformat()
+                expires_at = datetime.fromtimestamp(exp, tz=UTC).isoformat()
                 blacklist.add(jti, expires_at)
         except Exception:
             pass  # Best-effort — logout still succeeds

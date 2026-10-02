@@ -122,6 +122,7 @@ class ProjectApplicationService:
             project.description = ProjectDescription(command.description)
 
         from datetime import UTC, datetime
+
         project.updated_at = datetime.now(UTC)
 
         await self._repository.update(project)

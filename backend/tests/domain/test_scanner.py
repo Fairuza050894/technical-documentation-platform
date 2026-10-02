@@ -1,10 +1,7 @@
-from datetime import UTC
-
 from tdp.modules.scanner.domain.model import (
     FileAnalysis,
     HealthLevel,
     ProjectHealth,
-    ScanComparison,
     ScanId,
     ScanResult,
     ScanStatus,

@@ -14,13 +14,15 @@ from starlette.responses import JSONResponse, Response
 from tdp.identity.jwt_service import JwtService, JwtValidationError
 from tdp.identity.session_store import TokenBlacklist
 
-_PUBLIC_PATHS = frozenset({
-    "/api/health",
-    "/api/docs",
-    "/api/openapi.json",
-    "/api/csrf-token",
-    "/api/auth/refresh",
-})
+_PUBLIC_PATHS = frozenset(
+    {
+        "/api/health",
+        "/api/docs",
+        "/api/openapi.json",
+        "/api/csrf-token",
+        "/api/auth/refresh",
+    }
+)
 
 
 class JwtAuthMiddleware(BaseHTTPMiddleware):
@@ -38,9 +40,7 @@ class JwtAuthMiddleware(BaseHTTPMiddleware):
         self._token_blacklist = token_blacklist
         self._auth_mode = auth_mode
 
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         # Skip if not in OIDC mode
         if self._auth_mode != "oidc":
             return await call_next(request)

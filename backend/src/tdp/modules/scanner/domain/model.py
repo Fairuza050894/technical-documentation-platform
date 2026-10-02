@@ -148,7 +148,6 @@ class ProjectHealth:
     issues: list[str] = field(default_factory=list)
 
 
-
 @dataclass
 class SonarQubeResult:
     project_key: str = ""
@@ -228,7 +227,6 @@ class ScanResult:
         self.status = ScanStatus.FAILED
         self.error_message = error
         self.completed_at = datetime.now(UTC)
-
 
 
 @dataclass

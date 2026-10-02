@@ -184,15 +184,17 @@ async def delete_template(
     await service.delete_template(template_id)
 
 
-@router.post("/templates/{template_id}/duplicate", response_model=TemplateResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/templates/{template_id}/duplicate",
+    response_model=TemplateResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 async def duplicate_template(
     template_id: str,
     payload: DuplicateTemplateRequest,
     service: TemplateServiceDependency,
 ) -> TemplateResponse:
-    return TemplateResponse.from_dto(
-        await service.duplicate_template(template_id, payload.key)
-    )
+    return TemplateResponse.from_dto(await service.duplicate_template(template_id, payload.key))
 
 
 _TEMPLATE_ERROR_STATUS: Mapping[type[TemplateError], int] = {

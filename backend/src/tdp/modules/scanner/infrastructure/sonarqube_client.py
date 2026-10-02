@@ -35,9 +35,16 @@ class SonarQubeMetrics:
 
 class SonarQubeClient:
     METRIC_KEYS = [
-        "bugs", "vulnerabilities", "code_smells", "coverage",
-        "duplicated_lines_density", "ncloc", "sqale_rating",
-        "reliability_rating", "security_rating", "security_hotspots",
+        "bugs",
+        "vulnerabilities",
+        "code_smells",
+        "coverage",
+        "duplicated_lines_density",
+        "ncloc",
+        "sqale_rating",
+        "reliability_rating",
+        "security_rating",
+        "security_hotspots",
         "cognitive_complexity",
     ]
 

@@ -5,7 +5,10 @@ from fastapi import APIRouter, Depends, Request, status
 from pydantic import BaseModel, Field
 
 from tdp.authorization.model import Role
-from tdp.modules.workspaces.application.commands import CreateWorkspaceCommand, UpdateWorkspaceCommand
+from tdp.modules.workspaces.application.commands import (
+    CreateWorkspaceCommand,
+    UpdateWorkspaceCommand,
+)
 from tdp.modules.workspaces.application.dto import WorkspaceDto
 from tdp.modules.workspaces.application.service import WorkspaceApplicationService
 from tdp.modules.workspaces.domain.membership import WorkspaceMember
@@ -202,6 +205,7 @@ async def add_workspace_member(
     except ValueError:
         valid_roles = [r.value for r in Role]
         from fastapi import HTTPException
+
         raise HTTPException(
             status_code=422,
             detail=f"Invalid role '{payload.role}'. Valid roles: {valid_roles}",
@@ -235,6 +239,7 @@ async def remove_workspace_member(
     except ValueError:
         valid_roles = [r.value for r in Role]
         from fastapi import HTTPException
+
         raise HTTPException(
             status_code=422,
             detail=f"Invalid role '{payload.role}'. Valid roles: {valid_roles}",

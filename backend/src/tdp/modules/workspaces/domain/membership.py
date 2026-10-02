@@ -1,4 +1,5 @@
 """Workspace membership domain model."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -24,9 +25,7 @@ class MembershipRepository(Protocol):
 
     def add_member(self, member: WorkspaceMember) -> None: ...
 
-    def remove_member(
-        self, workspace_id: str, subject_id: str, role: Role
-    ) -> None: ...
+    def remove_member(self, workspace_id: str, subject_id: str, role: Role) -> None: ...
 
     def get_roles(self, subject_id: str, workspace_id: str) -> frozenset[Role]: ...
 
