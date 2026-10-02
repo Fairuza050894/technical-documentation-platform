@@ -1,0 +1,33 @@
+name: Regenerate repository docs
+
+on:
+  push:
+    branches:
+      - fix/source-backed-ui-integrity-clean
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out PR branch
+        uses: actions/checkout@v6
+        with:
+          ref: fix/source-backed-ui-integrity-clean
+
+      - name: Regenerate deterministic repository evidence
+        run: python3 scripts/generate_repository_docs.py
+
+      - name: Commit generated documentation
+        run: |
+          if git diff --quiet -- docs/_generated; then
+            echo "Generated documentation is already current."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/_generated
+          git commit -m "docs: refresh generated API surface"
+          git push origin HEAD:fix/source-backed-ui-integrity-clean
