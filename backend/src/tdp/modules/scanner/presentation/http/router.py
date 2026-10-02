@@ -110,7 +110,7 @@ async def generate_documents(
     service: ScannerServiceDependency,
     doc_store: DocumentStoreDependency,
 ) -> list[GeneratedDocumentResponse]:
-    scan = await service.get_scan(scan_id)
+    await service.get_scan(scan_id)
     from tdp.modules.scanner.domain.model import ScanId
 
     scan_domain = await service._repository.get(ScanId.from_string(scan_id))

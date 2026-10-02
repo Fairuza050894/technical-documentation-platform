@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Header, HTTPException, Request, status
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from pydantic import BaseModel
 
 from tdp.modules.scanner.application.webhook_service import (
@@ -36,10 +38,6 @@ def webhook_not_found_handler(request, exc):
 async def get_webhook_service(request: Request) -> WebhookApplicationService:
     return request.app.state.webhook_service
 
-
-from typing import Annotated
-
-from fastapi import Depends
 
 WebhookServiceDependency = Annotated[WebhookApplicationService, Depends(get_webhook_service)]
 

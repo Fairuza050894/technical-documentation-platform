@@ -1,3 +1,4 @@
+from contextlib import suppress
 import os
 from pathlib import Path
 
@@ -57,9 +58,8 @@ def detect_tech_stack(analysis: FileAnalysis, repo_path: str) -> TechStack:
             stack.frameworks.append("Next.js")
         if '"react"' in pkg_text:
             stack.frameworks.append("React")
-        if '"react-dom"' in pkg_text:
-            if "React" not in stack.frameworks:
-                stack.frameworks.append("React")
+        if '"react-dom"' in pkg_text and "React" not in stack.frameworks:
+            stack.frameworks.append("React")
         if '"vue"' in pkg_text:
             stack.frameworks.append("Vue.js")
         if '"@angular/core"' in pkg_text:
@@ -157,10 +157,8 @@ def _get_python_deps_text(root: Path) -> str:
             "setup.cfg",
             "Pipfile",
         ]:
-            try:
+            with suppress(OSError):
                 parts.append((d / fname).read_text(encoding="utf-8", errors="ignore").lower())
-            except OSError:
-                pass
     return " ".join(parts)
 
 
@@ -168,10 +166,8 @@ def _get_package_json_text(root: Path) -> str:
     search_dirs = [root, root / "frontend", root / "client", root / "web", root / "app"]
     parts = []
     for d in search_dirs:
-        try:
+        with suppress(OSError):
             parts.append((d / "package.json").read_text(encoding="utf-8", errors="ignore"))
-        except OSError:
-            pass
     return " ".join(parts)
 
 
@@ -196,7 +192,7 @@ def _has_tests(root: Path, analysis: FileAnalysis) -> bool:
     cfg = set(analysis.config_files)
     if cfg & {"pytest.ini", "tox.ini", "jest.config.js", "jest.config.ts", "vitest.config.ts"}:
         return True
-    for dirpath, _, filenames in os.walk(root):
+    for _dirpath, _, filenames in os.walk(root):
         for fn in filenames:
             if fn.startswith("test_") or fn.endswith(".test.ts") or fn.endswith(".test.js"):
                 return True
@@ -217,13 +213,9 @@ def _file_contains(root: Path, filename: str, terms: list[str]) -> bool:
 def _get_all_config_text(root: Path, analysis: FileAnalysis) -> str:
     parts = []
     for cfg in analysis.config_files:
-        try:
+        with suppress(OSError):
             parts.append((root / cfg).read_text(encoding="utf-8", errors="ignore").lower())
-        except OSError:
-            pass
     for req in ["requirements.txt", "package.json", "go.mod", "Cargo.toml"]:
-        try:
+        with suppress(OSError):
             parts.append((root / req).read_text(encoding="utf-8", errors="ignore").lower())
-        except OSError:
-            pass
     return " ".join(parts)
