@@ -162,6 +162,12 @@ class ScanDto:
 class ScannerApplicationService:
     def __init__(self, repository: SqliteScanRepository) -> None:
         self._repository = repository
+        self._background_tasks: set[asyncio.Task[None]] = set()
+
+    def _schedule_scan(self, scan_id: ScanId) -> None:
+        task = asyncio.create_task(self._execute_scan(scan_id))
+        self._background_tasks.add(task)
+        task.add_done_callback(self._background_tasks.discard)
 
     async def get_scan(self, scan_id: str) -> ScanDto:
         scan = await self._repository.get(ScanId.from_string(scan_id))
@@ -184,7 +190,7 @@ class ScannerApplicationService:
     async def start_scan(self, repository_url: str, branch: str = "main") -> ScanDto:
         scan = ScanResult.create(repository_url, branch)
         await self._repository.save(scan)
-        asyncio.create_task(self._execute_scan(scan.id))
+        self._schedule_scan(scan.id)
         return ScanDto.from_domain(scan)
 
     async def rescan(self, scan_id: str) -> ScanDto:
@@ -201,7 +207,7 @@ class ScannerApplicationService:
         # Create a fresh scan for the same repo
         new_scan = ScanResult.create(existing.repository_url, existing.branch)
         await self._repository.save(new_scan)
-        asyncio.create_task(self._execute_scan(new_scan.id))
+        self._schedule_scan(new_scan.id)
         return ScanDto.from_domain(new_scan)
 
     async def _execute_scan(self, scan_id: ScanId) -> None:
