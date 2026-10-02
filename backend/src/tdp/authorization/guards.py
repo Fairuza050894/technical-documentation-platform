@@ -15,6 +15,7 @@ Usage::
 from __future__ import annotations
 
 from fastapi import Depends, Request
+from fastapi.params import Depends as DependsParam
 
 from tdp.authorization.errors import PermissionDeniedError
 from tdp.authorization.model import Permission
@@ -24,7 +25,7 @@ from tdp.authorization.policy import AuthorizationPolicy
 def require_workspace_permission(
     permission: Permission,
     workspace_id_param: str = "workspace_id",
-) -> Depends:
+) -> DependsParam:
     """Return a FastAPI dependency that enforces a workspace-level permission."""
 
     async def _guard(request: Request) -> None:
