@@ -1,6 +1,6 @@
 import type { KnowledgeMapData } from "../domain/types";
 
-export function getMockKnowledgeMapData(): KnowledgeMapData {
+export function getDemoKnowledgeMapData(): KnowledgeMapData {
   return {
     overview: [
       { label: "Fitur Terdokumentasi", value: "4 / 7", status: "partial", detail: "3 fitur belum ada dokumen" },
