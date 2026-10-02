@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { getDashboard } from "./api";
-import type { DashboardAlert, DashboardResponse, RepoSummary } from "./types";
+import type { DashboardResponse, RepoSummary } from "./types";
 
 interface ScannerDashboardProps {
   onSelectScan?: (scanId: string) => void;
