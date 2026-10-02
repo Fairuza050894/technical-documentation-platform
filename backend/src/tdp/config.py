@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     api_prefix: str = "/api"
     allowed_origins: tuple[str, ...] = ("http://127.0.0.1:4173",)
     database_path: Path = Path(".runtime/tdp.sqlite3")
+    database_url: str = ""
     artifact_root_path: Path = Path(".runtime/artifacts")
     max_source_file_bytes: int = 5 * 1024 * 1024
 
