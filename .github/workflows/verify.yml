@@ -166,6 +166,27 @@ jobs:
           echo "=== Generated documentation drift (must be committed) ==="
           git diff -- docs/_generated
 
+      - name: Generate safe backend lint fixes
+        run: |
+          uv run --project backend ruff check backend --fix || true
+          uv run --project backend ruff format backend
+          mkdir -p /tmp/tdp-autofix
+          git diff --name-only -- backend docs/_generated > /tmp/tdp-autofix/manifest.txt
+          git diff -- backend docs/_generated > /tmp/tdp-autofix/autofix.patch
+          while IFS= read -r path; do
+            [ -n "$path" ] || continue
+            mkdir -p "/tmp/tdp-autofix/files/$(dirname "$path")"
+            cp "$path" "/tmp/tdp-autofix/files/$path"
+          done < /tmp/tdp-autofix/manifest.txt
+
+      - name: Upload safe autofix evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: tdp-safe-autofix
+          path: /tmp/tdp-autofix
+          if-no-files-found: error
+          retention-days: 1
+
       - name: Run repository quality gate
         env:
           TDP_ENVIRONMENT: test
