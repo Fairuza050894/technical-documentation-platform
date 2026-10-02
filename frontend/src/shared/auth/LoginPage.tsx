@@ -68,7 +68,7 @@ export function LoginPage({ authMode, onLogin }: LoginPageProps) {
             <button
               type="button"
               className="login-card__button login-card__button--primary"
-              onClick={handleLocalLogin}
+              onClick={() => { void handleLocalLogin(); }}
               disabled={isLoading}
             >
               {isLoading ? "Signing in…" : "Continue as Developer"}
