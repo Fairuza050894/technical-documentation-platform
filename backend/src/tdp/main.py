@@ -140,6 +140,8 @@ from tdp.presentation.http.routers.identity import router as identity_router
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     runtime_settings = settings or get_settings()
+    runtime_settings.database_path.parent.mkdir(parents=True, exist_ok=True)
+    runtime_settings.artifact_root_path.mkdir(parents=True, exist_ok=True)
 
     # ═══ Identity Provider ═══
     identity_provider = LocalIdentityProvider(
