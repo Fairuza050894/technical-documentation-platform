@@ -1,0 +1,45 @@
+name: Refresh frontend audit lock
+
+on:
+  push:
+    branches:
+      - fix/source-backed-ui-integrity-clean
+    paths:
+      - .github/workflows/refresh-frontend-lock.yml
+      - frontend/package.json
+
+permissions:
+  contents: write
+
+jobs:
+  refresh-lock:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v6
+        with:
+          ref: fix/source-backed-ui-integrity-clean
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Refresh lockfile security updates
+        run: |
+          npm audit fix --package-lock-only --prefix frontend
+          npm audit --audit-level=high --prefix frontend
+
+      - name: Commit refreshed lockfile
+        run: |
+          if git diff --quiet -- frontend/package-lock.json; then
+            echo "No lockfile changes required."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add frontend/package-lock.json
+          git commit -m "security: refresh frontend audited lockfile"
+          git push origin HEAD:fix/source-backed-ui-integrity-clean
