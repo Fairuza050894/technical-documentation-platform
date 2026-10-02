@@ -85,23 +85,23 @@ export async function analyzeRepo(url: string, branch: string = "main"): Promise
     body: JSON.stringify({ repository_url: url, branch }),
   });
   if (!res.ok) throw new Error(`Analyze failed: ${res.status}`);
-  return res.json();
+  return (await res.json()) as Snapshot;
 }
 
 export async function getSnapshots(repoId: string): Promise<{ items: Snapshot[]; total: number }> {
   const res = await fetch(`${API_BASE}/api/intelligence/snapshots/${repoId}`);
   if (!res.ok) throw new Error(`List snapshots failed: ${res.status}`);
-  return res.json();
+  return (await res.json()) as { items: Snapshot[]; total: number };
 }
 
 export async function getDashboard(repoId: string): Promise<Dashboard> {
   const res = await fetch(`${API_BASE}/api/intelligence/dashboard/${repoId}`);
   if (!res.ok) throw new Error(`Dashboard failed: ${res.status}`);
-  return res.json();
+  return (await res.json()) as Dashboard;
 }
 
 export async function getTechRadar(repoId: string): Promise<TechRadarEntry[]> {
   const res = await fetch(`${API_BASE}/api/intelligence/radar/${repoId}`);
   if (!res.ok) throw new Error(`Radar failed: ${res.status}`);
-  return res.json();
+  return (await res.json()) as TechRadarEntry[];
 }
