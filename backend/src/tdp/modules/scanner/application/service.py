@@ -7,7 +7,7 @@ from tdp.modules.scanner.infrastructure.document_generator import suggest_docume
 from tdp.modules.scanner.infrastructure.file_analyzer import analyze_files
 from tdp.modules.scanner.infrastructure.git_operations import cleanup_temp_dir, clone_repository
 from tdp.modules.scanner.infrastructure.health_calculator import calculate_health
-from tdp.modules.scanner.infrastructure.sqlite_repository import SqliteScanRepository
+from tdp.modules.scanner.domain.repository import ScanRepository
 from tdp.modules.scanner.infrastructure.tech_stack_detector import detect_tech_stack
 from tdp.modules.scanner.infrastructure.test_runner import run_lint, run_security_scan, run_tests
 from tdp.modules.scanner.domain.model import SonarQubeResult
@@ -131,23 +131,30 @@ class ScanDto:
 
 
 class ScannerApplicationService:
-    def __init__(self, repository: SqliteScanRepository) -> None:
+    def __init__(self, repository: ScanRepository) -> None:
         self._repository = repository
 
-    async def get_scan(self, scan_id: str) -> ScanDto:
+    async def get_scan_result(self, scan_id: str) -> ScanResult:
         scan = await self._repository.get(ScanId.from_string(scan_id))
         if scan is None:
             raise ScanNotFoundError(f"Scan {scan_id} not found.")
-        return ScanDto.from_domain(scan)
+        return scan
+
+    async def require_completed_scan_result(self, scan_id: str) -> ScanResult:
+        scan = await self.get_scan_result(scan_id)
+        if scan.status != ScanStatus.COMPLETED:
+            raise ScanInProgressError(f"Scan {scan_id} is not completed yet.")
+        return scan
+
+    async def get_scan(self, scan_id: str) -> ScanDto:
+        return ScanDto.from_domain(await self.get_scan_result(scan_id))
 
     async def list_scans(self) -> list[ScanDto]:
         scans = await self._repository.list_all()
         return [ScanDto.from_domain(s) for s in scans]
 
     async def delete_scan(self, scan_id: str) -> None:
-        scan = await self._repository.get(ScanId.from_string(scan_id))
-        if scan is None:
-            raise ScanNotFoundError(f"Scan {scan_id} not found.")
+        scan = await self.get_scan_result(scan_id)
         if scan.status in (ScanStatus.CLONING, ScanStatus.ANALYZING, ScanStatus.TESTING):
             raise ScanInProgressError("Cannot delete a scan that is in progress.")
         await self._repository.delete(scan.id)
@@ -159,9 +166,7 @@ class ScannerApplicationService:
         return ScanDto.from_domain(scan)
 
     async def rescan(self, scan_id: str) -> ScanDto:
-        existing = await self._repository.get(ScanId.from_string(scan_id))
-        if existing is None:
-            raise ScanNotFoundError(f"Scan {scan_id} not found.")
+        existing = await self.get_scan_result(scan_id)
         if existing.status in (ScanStatus.CLONING, ScanStatus.ANALYZING, ScanStatus.TESTING, ScanStatus.GENERATING):
             raise ScanInProgressError("Cannot re-scan while scan is in progress.")
         # Create a fresh scan for the same repo
@@ -252,11 +257,7 @@ class ScannerApplicationService:
                 cleanup_temp_dir(temp_path)
 
     async def generate_documents(self, scan_id: str, template_keys: list[str] | None = None) -> list[dict]:
-        scan = await self._repository.get(ScanId.from_string(scan_id))
-        if scan is None:
-            raise ScanNotFoundError(f"Scan {scan_id} not found.")
-        if scan.status != ScanStatus.COMPLETED:
-            raise ScanInProgressError(f"Scan {scan_id} is not completed yet.")
+        scan = await self.require_completed_scan_result(scan_id)
 
         from tdp.modules.scanner.infrastructure.document_builder import DocumentStore, build_document
         from tdp.modules.scanner.infrastructure.document_generator import suggest_documents
@@ -276,9 +277,7 @@ class ScannerApplicationService:
         return generated
 
     async def list_documents(self, scan_id: str) -> list[dict]:
-        scan = await self._repository.get(ScanId.from_string(scan_id))
-        if scan is None:
-            raise ScanNotFoundError(f"Scan {scan_id} not found.")
+        await self.get_scan_result(scan_id)
 
         from tdp.modules.scanner.infrastructure.document_builder import DocumentStore
         db_path = getattr(self._repository, '_database_path', ':memory:')
