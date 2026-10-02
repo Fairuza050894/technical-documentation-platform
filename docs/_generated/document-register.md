@@ -16,6 +16,7 @@ This register inventories Markdown documentation. Formal approval must be record
 | TDP-ARC-005 | Data and Information Model | Architecture | Controlled draft | `docs/architecture/data-and-information-model.md` (Internal project documentation) |
 | TDP-ARC-007 | Deployment View | Architecture | Controlled draft | `docs/architecture/deployment-view.md` (Internal project documentation) |
 | TDP-ARC-004 | Domain Model | Architecture | Controlled draft | `docs/architecture/domain-model.md` (Internal project documentation) |
+| Unassigned | Scanner Module Architecture | Architecture | ScanStatus — PENDING → CLONING → ANALYZING → TESTING → GENERATING → COMPLETED/FAILED | `docs/architecture/scanner-module.md` (Not specified) |
 | TDP-ARC-006 | Security Architecture | Architecture | Controlled draft | `docs/architecture/security-architecture.md` (Internal project documentation) |
 | TDP-ARC-001 | System Context | Architecture | Controlled draft | `docs/architecture/system-context.md` (Internal project documentation) |
 | TDP-COMP-002 | Control Evidence Matrix | Compliance | Controlled draft | `docs/compliance/control-evidence-matrix.md` (Internal project documentation) |
@@ -50,6 +51,7 @@ This register inventories Markdown documentation. Formal approval must be record
 | Unassigned | ADR-028: Generate Semantic Documents from Materialized Evidence | Decisions | Accepted | `docs/decisions/ADR-028-generate-semantic-documents-from-materialized-evidence.md` (Not specified) |
 | Unassigned | Coding Standards | Engineering | Not specified | `docs/engineering/coding-standards.md` (Not specified) |
 | Unassigned | Definition of Done | Engineering | Not specified | `docs/engineering/definition-of-done.md` (Not specified) |
+| Unassigned | Template System | Features | Not specified | `docs/features/template-system.md` (Not specified) |
 | TDP-GOV-006 | Changelog and Versioning Policy | Governance | Controlled draft | `docs/governance/changelog-policy.md` (Internal project documentation) |
 | TDP-GOV-002 | Document Control | Governance | Controlled draft | `docs/governance/document-control.md` (Internal project documentation) |
 | TDP-GOV-001 | Documentation Policy | Governance | Controlled draft | `docs/governance/documentation-policy.md` (Internal project documentation) |
@@ -57,6 +59,7 @@ This register inventories Markdown documentation. Formal approval must be record
 | TDP-GOV-005 | Intellectual Property and Licensing | Governance | Controlled draft | `docs/governance/intellectual-property-and-licensing.md` (Internal project documentation) |
 | TDP-GOV-003 | Ownership and Approval | Governance | Controlled draft | `docs/governance/ownership-and-approval.md` (Internal project documentation) |
 | TDP-OPS-002 | Backup and Restore | Operations | Controlled draft | `docs/operations/backup-and-restore.md` (Internal project documentation) |
+| TDP-OPS-004 | CI/CD Pipeline | Operations | Draft | `docs/operations/ci-cd-pipeline.md` (Internal project documentation) |
 | TDP-OPS-003 | Incident Response | Operations | Controlled draft | `docs/operations/incident-response.md` (Internal project documentation) |
 | TDP-OPS-001 | Local Development Runbook | Operations | Controlled draft | `docs/operations/local-development-runbook.md` (Internal project documentation) |
 | TDP-PRD-001 | Product Requirements Document | Product | Controlled draft | `docs/product/prd.md` (Internal project documentation) |
