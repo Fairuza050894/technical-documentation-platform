@@ -45,9 +45,12 @@ jobs:
       # ── Python dependency audit (1.4.6) ──
       - name: Audit Python dependencies (pip-audit)
         run: |
+          echo "=== Generated lockfile drift (must be committed) ==="
+          git diff -- backend/uv.lock
           uv export \
             --project backend \
             --frozen \
+            --no-dev \
             --no-emit-project \
             --format requirements.txt \
             --output-file /tmp/backend-requirements.txt
