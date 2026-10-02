@@ -201,10 +201,10 @@ def _run_flake8(repo_path: str) -> LintResult | None:
         lint = LintResult(tool="flake8")
         lines = [l for l in result.stdout.strip().split("\n") if l.strip()]
         # Count actual issue lines (contain filename:line:col pattern)
-        issue_lines = [l for l in lines if ":" in l and not l[0].isdigit()]
+        issue_lines = [line for line in lines if ":" in line and not line[0].isdigit()]
         lint.total_issues = len(issue_lines)
-        lint.errors = len([l for l in issue_lines if ": E" in l or ": F" in l])
-        lint.warnings = len([l for l in issue_lines if ": W" in l or ": C" in l])
+        lint.errors = len([line for line in issue_lines if ": E" in line or ": F" in line])
+        lint.warnings = len([line for line in issue_lines if ": W" in line or ": C" in line])
         lint.issues = issue_lines[:20]
         return lint if lint.total_issues > 0 else None
     except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
@@ -230,10 +230,10 @@ def _run_eslint(repo_path: str) -> LintResult | None:
         )
         lint = LintResult(tool="eslint")
         lines = result.stdout.strip().split("\n")
-        lint.total_issues = len([l for l in lines if "Error" in l or "Warning" in l])
-        lint.errors = len([l for l in lines if "Error" in l])
-        lint.warnings = len([l for l in lines if "Warning" in l])
-        lint.issues = [l for l in lines if l.strip()][:20]
+        lint.total_issues = len([line for line in lines if "Error" in line or "Warning" in line])
+        lint.errors = len([line for line in lines if "Error" in line])
+        lint.warnings = len([line for line in lines if "Warning" in line])
+        lint.issues = [line for line in lines if line.strip()][:20]
         return lint if lint.total_issues > 0 else None
     except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
         return None
