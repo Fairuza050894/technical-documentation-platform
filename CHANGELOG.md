@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Scanner webhook event routing** - Fixed webhook event detail requests so event IDs are interpolated and URL encoded correctly
 - **Frontend routing cleanup** - Removed duplicate Intelligence route handling and redundant API client 204 handling
 - **Capability navigation** - Removed the unsupported Intelligence entry point from primary navigation until a source-backed backend is available; direct development route remains intact
+- **Scanner application boundary** - Presentation routes now use public application-service lookup methods instead of reaching into the service repository implementation
 - **Header button alignment** - Re-scan and Delete buttons now consistently align to the right regardless of repository name length (PR #16)
 - **Header layout** - Title row and actions use flexbox with space-between for consistent positioning
 - **Scanner workspace consolidation** - Scanner workspace now serves as the single entry point for all scanner features (PR #14)
