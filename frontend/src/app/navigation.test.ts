@@ -20,6 +20,11 @@ describe("application navigation composition", () => {
       name: "projects",
       workspaceId: "workspace-1",
     });
+
+    const knowledgeMap = groups
+      .flatMap((group) => group.items)
+      .find((item) => item.id === "Knowledge Map");
+    expect(knowledgeMap?.badge).toBeUndefined();
   });
 
   it("maps project routes to the Projects navigation item", () => {
