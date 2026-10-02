@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { analyzeRepo } from "../api";
+import type { Snapshot } from "../api";
 
 interface AnalyzeFormProps {
-  onAnalyze: (snapshot: any) => void;
+  onAnalyze: (snapshot: Snapshot) => void;
 }
 
 export function AnalyzeForm({ onAnalyze }: AnalyzeFormProps) {
@@ -26,7 +27,7 @@ export function AnalyzeForm({ onAnalyze }: AnalyzeFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ marginBottom: "24px", padding: "16px", border: "1px solid #e0e0e0", borderRadius: "8px" }}>
+    <form onSubmit={(event) => { void handleSubmit(event); }} style={{ marginBottom: "24px", padding: "16px", border: "1px solid #e0e0e0", borderRadius: "8px" }}>
       <h3 style={{ marginTop: 0, marginBottom: "12px" }}>Analyze Repository</h3>
       <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "flex-end" }}>
         <div style={{ flex: "1 1 300px" }}>
