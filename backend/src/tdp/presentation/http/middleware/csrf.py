@@ -11,6 +11,7 @@ Uses timing-safe comparison to prevent timing attacks.
 from __future__ import annotations
 
 import secrets
+from typing import Literal
 
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
@@ -39,7 +40,7 @@ class CsrfProtectionMiddleware(BaseHTTPMiddleware):
         *,
         enabled: bool = True,
         cookie_secure: bool = False,
-        cookie_samesite: str = "lax",
+        cookie_samesite: Literal["lax", "strict", "none"] = "lax",
     ) -> None:
         super().__init__(app)
         self._enabled = enabled
