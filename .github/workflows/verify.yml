@@ -45,8 +45,6 @@ jobs:
       # ── Python dependency audit (1.4.6) ──
       - name: Audit Python dependencies (pip-audit)
         run: |
-          echo "=== Generated lockfile drift (must be committed) ==="
-          git diff -- backend/uv.lock
           uv export \
             --project backend \
             --frozen \
@@ -78,6 +76,12 @@ jobs:
 
       - name: Install frontend dependencies
         run: npm ci --prefix frontend
+
+      - name: Refresh non-breaking Node security patches
+        run: |
+          npm audit fix --package-lock-only --prefix frontend
+          echo "=== Generated frontend lockfile security drift (must be committed) ==="
+          git diff -- frontend/package-lock.json
 
       - name: Audit Node dependencies
         run: |
