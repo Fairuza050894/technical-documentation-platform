@@ -25,6 +25,7 @@ export interface StageStatus {
   count?: number;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- pure status helper is shared with tests and the component.
 export function resolveStageStatus(
   stage: ProjectStage,
   data: StageDependencyData,
