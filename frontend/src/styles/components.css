@@ -885,3 +885,20 @@ td strong {
   line-height: 1;
   flex-shrink: 0;
 }
+
+/* Shared fallback and markdown rendering contracts. */
+
+.error-boundary-fallback {
+  display: grid;
+  gap: 10px;
+  max-width: 720px;
+  margin: 32px auto;
+  padding: 20px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-medium);
+  background: var(--color-surface);
+}
+
+.md-table-row {
+  display: table-row;
+}
