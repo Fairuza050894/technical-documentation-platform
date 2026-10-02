@@ -47,7 +47,7 @@ jobs:
         run: |
           uv run --project backend pip-audit \
             --strict \
-            --skip-editable \
+            --locked backend \
             --desc \
             --fix --dry-run
         continue-on-error: false
