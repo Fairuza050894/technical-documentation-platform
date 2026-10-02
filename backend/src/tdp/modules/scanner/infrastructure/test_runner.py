@@ -199,7 +199,7 @@ def _run_flake8(repo_path: str) -> LintResult | None:
             timeout=60,
         )
         lint = LintResult(tool="flake8")
-        lines = [l for l in result.stdout.strip().split("\n") if l.strip()]
+        lines = [line for line in result.stdout.strip().split("\n") if line.strip()]
         # Count actual issue lines (contain filename:line:col pattern)
         issue_lines = [line for line in lines if ":" in line and not line[0].isdigit()]
         lint.total_issues = len(issue_lines)
