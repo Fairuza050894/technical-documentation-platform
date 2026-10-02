@@ -1,9 +1,9 @@
+import contextlib
 import os
 from pathlib import Path
 
 from tdp.modules.scanner.domain.model import TechStack
 from tdp.modules.scanner.infrastructure.file_analyzer import FileAnalysis
-import contextlib
 
 
 def detect_tech_stack(analysis: FileAnalysis, repo_path: str) -> TechStack:
