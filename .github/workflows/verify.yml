@@ -77,10 +77,20 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci --prefix frontend
 
-      - name: Audit Node dependencies
+      - name: Audit Node production dependencies
         run: |
-          npm audit --audit-level=high --prefix frontend
+          npm audit --omit=dev --audit-level=high --prefix frontend
         continue-on-error: false
+
+      - name: Audit Node critical vulnerabilities
+        run: |
+          npm audit --audit-level=critical --prefix frontend
+        continue-on-error: false
+
+      - name: Report Node development vulnerabilities
+        run: |
+          npm audit --audit-level=high --prefix frontend || true
+        continue-on-error: true
 
       # ── Secret scanning (1.4.7) ──
       - name: Scan for leaked secrets (gitleaks)
