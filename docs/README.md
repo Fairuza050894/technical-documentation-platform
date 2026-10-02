@@ -64,6 +64,7 @@ Human-governed documents are edited through reviewed commits. Generated document
 ## Governance, security, and compliance
 
 - [Documentation policy](governance/documentation-policy.md)
+- [Changelog and versioning policy](governance/changelog-policy.md)
 - [Document control](governance/document-control.md)
 - [Ownership and approval](governance/ownership-and-approval.md)
 - [External audit response](governance/external-audit-response-2026-08.md)
