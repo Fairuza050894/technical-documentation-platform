@@ -160,6 +160,12 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci --prefix frontend
 
+      - name: Regenerate documentation evidence
+        run: |
+          make docs
+          echo "=== Generated documentation drift (must be committed) ==="
+          git diff -- docs/_generated
+
       - name: Run repository quality gate
         env:
           TDP_ENVIRONMENT: test
