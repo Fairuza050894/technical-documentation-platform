@@ -188,7 +188,8 @@ def _mermaid_architecture(c):
     fws = c["frameworks_list"]
     has_backend = any(language in langs for language in ["Python", "Java", "Go", "Rust", "Ruby", "PHP", "C#"])
     has_frontend = any(
-        language in langs\n        for language in ["JavaScript", "TypeScript", "TypeScript (React)", "JavaScript (React)"]
+        language in langs
+        for language in ["JavaScript", "TypeScript", "TypeScript (React)", "JavaScript (React)"]
     )
     has_react = (
         "React" in fws
