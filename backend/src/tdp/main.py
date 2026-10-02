@@ -178,8 +178,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     document_repository = SqliteDocumentRepository(runtime_settings.database_path)
     feature_repository = SqliteFeatureRepository(runtime_settings.database_path)
     evidence_repository = SqliteEvidenceRepository(runtime_settings.database_path)
-    template_repository = SqliteTemplateRepository(runtime_settings.database_path)
-    scan_repository = SqliteScanRepository(runtime_settings.database_path)
+    template_repository = SqliteTemplateRepository(str(runtime_settings.database_path))
+    scan_repository = SqliteScanRepository(str(runtime_settings.database_path))
     project_access = RepositoryBackedProjectAccess(
         project_repository,
         workspace_repository,
@@ -255,7 +255,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     application.state.template_service = TemplateApplicationService(template_repository)
     application.state.scanner_service = ScannerApplicationService(scan_repository)
-    webhook_repository = SqliteWebhookRepository(runtime_settings.database_path)
+    webhook_repository = SqliteWebhookRepository(str(runtime_settings.database_path))
     application.state.webhook_service = WebhookApplicationService(
         webhook_repository=webhook_repository,
         scanner_service=application.state.scanner_service,
