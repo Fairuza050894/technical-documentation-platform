@@ -14,7 +14,7 @@ import {
   logout as apiLogout,
   storeToken,
 } from "./api";
-import type { AuthSession, AuthState } from "./types";
+import type { AuthState } from "./types";
 
 interface AuthContextValue extends AuthState {
   login: (token?: string) => Promise<void>;
@@ -24,6 +24,7 @@ interface AuthContextValue extends AuthState {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+// eslint-disable-next-line react-refresh/only-export-components -- hook and provider intentionally share one context module.
 export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext);
   if (!context) {
