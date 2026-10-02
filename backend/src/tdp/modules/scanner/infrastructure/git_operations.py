@@ -1,8 +1,8 @@
+import contextlib
 import shutil
 import tempfile
 
 from git import Repo
-import contextlib
 
 
 def clone_repository(url: str, branch: str = "main", depth: int = 1) -> str:
