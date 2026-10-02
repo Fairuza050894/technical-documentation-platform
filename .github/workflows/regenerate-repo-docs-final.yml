@@ -1,0 +1,35 @@
+name: Regenerate repository docs final
+
+on:
+  push:
+    branches:
+      - fix/source-backed-ui-integrity-v2
+    paths:
+      - .github/workflows/regenerate-repo-docs-final.yml
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v6
+        with:
+          ref: fix/source-backed-ui-integrity-v2
+
+      - name: Regenerate deterministic repository documentation
+        run: make docs
+
+      - name: Commit generated documentation
+        run: |
+          if git diff --quiet -- docs/_generated; then
+            echo "Generated documentation already current."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/_generated
+          git commit -m "docs: refresh indexes after lint normalization"
+          git push origin HEAD:fix/source-backed-ui-integrity-v2
