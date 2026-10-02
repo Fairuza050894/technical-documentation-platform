@@ -20,6 +20,11 @@ describe("application navigation composition", () => {
       name: "projects",
       workspaceId: "workspace-1",
     });
+
+    const platformItems = groups[1]?.items ?? [];
+    expect(platformItems.some((item) => item.id === "Intelligence")).toBe(false);
+    const knowledgeMap = platformItems.find((item) => item.id === "Knowledge Map");
+    expect(knowledgeMap?.badge).toBeUndefined();
   });
 
   it("maps project routes to the Projects navigation item", () => {
