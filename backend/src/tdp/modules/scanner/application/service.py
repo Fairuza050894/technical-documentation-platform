@@ -2,16 +2,19 @@ import asyncio
 from dataclasses import dataclass
 
 from tdp.modules.scanner.domain.errors import ScanInProgressError, ScanNotFoundError
-from tdp.modules.scanner.domain.model import ScanId, ScanResult, ScanStatus
+from tdp.modules.scanner.domain.model import ScanId, ScanResult, ScanStatus, SonarQubeResult
+from tdp.modules.scanner.domain.repository import ScanRepository
 from tdp.modules.scanner.infrastructure.document_generator import suggest_documents
 from tdp.modules.scanner.infrastructure.file_analyzer import analyze_files
 from tdp.modules.scanner.infrastructure.git_operations import cleanup_temp_dir, clone_repository
 from tdp.modules.scanner.infrastructure.health_calculator import calculate_health
-from tdp.modules.scanner.domain.repository import ScanRepository
+from tdp.modules.scanner.infrastructure.sonarqube_client import (
+    SonarQubeClient,
+    SonarQubeConfig,
+    map_sonarqube_to_health,
+)
 from tdp.modules.scanner.infrastructure.tech_stack_detector import detect_tech_stack
 from tdp.modules.scanner.infrastructure.test_runner import run_lint, run_security_scan, run_tests
-from tdp.modules.scanner.domain.model import SonarQubeResult
-from tdp.modules.scanner.infrastructure.sonarqube_client import SonarQubeClient, SonarQubeConfig, map_sonarqube_to_health
 
 
 @dataclass(frozen=True, slots=True)
