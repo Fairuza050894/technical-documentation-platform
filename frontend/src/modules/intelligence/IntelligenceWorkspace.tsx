@@ -47,7 +47,7 @@ export function IntelligenceWorkspace() {
         Analyze repositories to detect tech stack, dependencies, vulnerabilities, and changes.
       </p>
 
-      <AnalyzeForm onAnalyze={handleAnalyze} />
+      <AnalyzeForm onAnalyze={(nextSnapshot) => { void handleAnalyze(nextSnapshot); }} />
 
       {snapshot && (
         <>
