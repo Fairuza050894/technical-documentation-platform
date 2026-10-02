@@ -53,7 +53,7 @@ The table is derived from FastAPI route decorators. It records declared routes, 
 | GET | `/api/projects/{project_id}/readiness/{document_type}` | `backend/src/tdp/modules/readiness/presentation/http/router.py:119` |
 | GET | `/api/projects/{project_id}/sources` | `backend/src/tdp/modules/sources/presentation/http/router.py:93` |
 | POST | `/api/projects/{project_id}/sources/openapi` | `backend/src/tdp/modules/sources/presentation/http/router.py:68` |
-| GET | `/api/scanner/dashboard` | `backend/src/tdp/modules/scanner/presentation/http/dashboard_router.py:53` |
+| GET | `/api/scanner/dashboard` | `backend/src/tdp/modules/scanner/presentation/http/dashboard_router.py:55` |
 | GET | `/api/scanner/documents/{doc_id}` | `backend/src/tdp/modules/scanner/presentation/http/router.py:139` |
 | POST | `/api/scanner/scan` | `backend/src/tdp/modules/scanner/presentation/http/router.py:86` |
 | GET | `/api/scanner/scans` | `backend/src/tdp/modules/scanner/presentation/http/router.py:91` |
