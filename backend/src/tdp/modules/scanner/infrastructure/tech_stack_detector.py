@@ -1,5 +1,5 @@
-from contextlib import suppress
 import os
+from contextlib import suppress
 from pathlib import Path
 
 from tdp.modules.scanner.domain.model import TechStack
