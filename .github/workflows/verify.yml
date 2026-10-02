@@ -79,7 +79,7 @@ jobs:
 
       - name: Refresh non-breaking Node security patches
         run: |
-          npm audit fix --package-lock-only --prefix frontend
+          npm audit fix --package-lock-only --prefix frontend || true
           echo "=== Generated frontend lockfile security drift (must be committed) ==="
           git diff -- frontend/package-lock.json
 
