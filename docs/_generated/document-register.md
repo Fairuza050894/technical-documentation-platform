@@ -50,6 +50,7 @@ This register inventories Markdown documentation. Formal approval must be record
 | Unassigned | ADR-028: Generate Semantic Documents from Materialized Evidence | Decisions | Accepted | `docs/decisions/ADR-028-generate-semantic-documents-from-materialized-evidence.md` (Not specified) |
 | Unassigned | Coding Standards | Engineering | Not specified | `docs/engineering/coding-standards.md` (Not specified) |
 | Unassigned | Definition of Done | Engineering | Not specified | `docs/engineering/definition-of-done.md` (Not specified) |
+| TDP-GOV-006 | Changelog and Versioning Policy | Governance | Controlled draft | `docs/governance/changelog-policy.md` (Internal project documentation) |
 | TDP-GOV-002 | Document Control | Governance | Controlled draft | `docs/governance/document-control.md` (Internal project documentation) |
 | TDP-GOV-001 | Documentation Policy | Governance | Controlled draft | `docs/governance/documentation-policy.md` (Internal project documentation) |
 | TDP-GOV-004 | External Audit Management Response — August 2026 | Governance | Controlled draft | `docs/governance/external-audit-response-2026-08.md` (Internal project documentation) |
