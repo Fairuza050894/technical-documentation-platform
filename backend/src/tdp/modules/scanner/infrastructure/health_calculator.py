@@ -89,7 +89,13 @@ def calculate_health(
             return HealthLevel.WARNING
         return HealthLevel.CRITICAL
 
-    overall = HealthLevel.GOOD if score >= 70 else HealthLevel.WARNING if score >= 40 else HealthLevel.CRITICAL
+    overall = (
+        HealthLevel.GOOD
+        if score >= 70
+        else HealthLevel.WARNING
+        if score >= 40
+        else HealthLevel.CRITICAL
+    )
 
     return ProjectHealth(
         overall=overall,

@@ -1,4 +1,3 @@
-import json
 import sqlite3
 from datetime import datetime
 
@@ -57,8 +56,11 @@ class SqliteWebhookRepository(WebhookRepository):
                     """UPDATE webhook_events SET status=?, scan_id=?, previous_scan_id=?,
                     score_delta=?, error_message=?, processed_at=? WHERE id=?""",
                     (
-                        event.status.value, event.scan_id, event.previous_scan_id,
-                        event.score_delta, event.error_message,
+                        event.status.value,
+                        event.scan_id,
+                        event.previous_scan_id,
+                        event.score_delta,
+                        event.error_message,
                         event.processed_at.isoformat() if event.processed_at else None,
                         str(event.id),
                     ),
@@ -71,11 +73,20 @@ class SqliteWebhookRepository(WebhookRepository):
                     error_message, created_at, processed_at)
                     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                     (
-                        str(event.id), event.event_type.value, event.repository_url,
-                        event.repository_name, event.branch, event.commit_sha,
-                        event.commit_message, event.sender, event.status.value,
-                        event.scan_id, event.previous_scan_id, event.score_delta,
-                        event.error_message, event.created_at.isoformat(),
+                        str(event.id),
+                        event.event_type.value,
+                        event.repository_url,
+                        event.repository_name,
+                        event.branch,
+                        event.commit_sha,
+                        event.commit_message,
+                        event.sender,
+                        event.status.value,
+                        event.scan_id,
+                        event.previous_scan_id,
+                        event.score_delta,
+                        event.error_message,
+                        event.created_at.isoformat(),
                         event.processed_at.isoformat() if event.processed_at else None,
                     ),
                 )

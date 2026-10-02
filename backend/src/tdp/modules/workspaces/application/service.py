@@ -1,4 +1,7 @@
-from tdp.modules.workspaces.application.commands import CreateWorkspaceCommand, UpdateWorkspaceCommand
+from tdp.modules.workspaces.application.commands import (
+    CreateWorkspaceCommand,
+    UpdateWorkspaceCommand,
+)
 from tdp.modules.workspaces.application.dto import WorkspaceDto
 from tdp.modules.workspaces.domain.errors import (
     WorkspaceArchivedError,
@@ -55,6 +58,7 @@ class WorkspaceApplicationService:
             workspace.description = WorkspaceDescription(command.description)
 
         from datetime import UTC, datetime
+
         workspace.updated_at = datetime.now(UTC)
 
         await self._repository.update(workspace)

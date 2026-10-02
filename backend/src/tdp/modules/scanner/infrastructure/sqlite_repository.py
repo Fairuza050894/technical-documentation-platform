@@ -3,9 +3,20 @@ import sqlite3
 from datetime import datetime
 
 from tdp.modules.scanner.domain.model import (
-    DocumentSuggestion, FileAnalysis, HealthLevel, LintResult,
-    ProjectHealth, ProjectStage, ScanId, ScanResult, ScanStatus,
-    SecurityIssue, SecurityScan, SonarQubeResult, TechStack, TestCase, TestSuite,
+    DocumentSuggestion,
+    FileAnalysis,
+    HealthLevel,
+    LintResult,
+    ProjectHealth,
+    ProjectStage,
+    ScanId,
+    ScanResult,
+    ScanStatus,
+    SecurityIssue,
+    SecurityScan,
+    SonarQubeResult,
+    TechStack,
+    TestSuite,
 )
 from tdp.modules.scanner.domain.repository import ScanRepository
 
@@ -50,7 +61,9 @@ class SqliteScanRepository(ScanRepository):
             try:
                 connection.execute("SELECT sonarqube_json FROM scan_results LIMIT 1")
             except sqlite3.OperationalError:
-                connection.execute("ALTER TABLE scan_results ADD COLUMN sonarqube_json TEXT NOT NULL DEFAULT '{}'")
+                connection.execute(
+                    "ALTER TABLE scan_results ADD COLUMN sonarqube_json TEXT NOT NULL DEFAULT '{}'"
+                )
 
     async def get(self, scan_id: ScanId) -> ScanResult | None:
         with self._connection() as connection:
@@ -72,24 +85,173 @@ class SqliteScanRepository(ScanRepository):
                 "SELECT id FROM scan_results WHERE id = ?", (str(scan.id),)
             ).fetchone()
 
-            fa = json.dumps({"total_files": scan.file_analysis.total_files, "total_lines": scan.file_analysis.total_lines, "languages": scan.file_analysis.languages, "directories": scan.file_analysis.directories, "has_readme": scan.file_analysis.has_readme, "has_license": scan.file_analysis.has_license, "has_changelog": scan.file_analysis.has_changelog, "has_dockerfile": scan.file_analysis.has_dockerfile, "has_docker_compose": scan.file_analysis.has_docker_compose, "config_files": scan.file_analysis.config_files})
-            ts = json.dumps({"languages": scan.tech_stack.languages, "frameworks": scan.tech_stack.frameworks, "databases": scan.tech_stack.databases, "tools": scan.tech_stack.tools, "package_manager": scan.tech_stack.package_manager, "has_docker": scan.tech_stack.has_docker, "has_ci_cd": scan.tech_stack.has_ci_cd, "has_tests": scan.tech_stack.has_tests, "has_linting": scan.tech_stack.has_linting, "has_type_checking": scan.tech_stack.has_type_checking})
-            tst = json.dumps([{"name": s.name, "framework": s.framework, "total": s.total, "passed": s.passed, "failed": s.failed, "skipped": s.skipped, "error_output": s.error_output} for s in scan.test_suites])
-            lt = json.dumps([{"tool": r.tool, "total_issues": r.total_issues, "errors": r.errors, "warnings": r.warnings, "issues": r.issues} for r in scan.lint_results])
-            sc = json.dumps({"tool": scan.security_scan.tool, "total_vulnerabilities": scan.security_scan.total_vulnerabilities, "critical": scan.security_scan.critical, "high": scan.security_scan.high, "medium": scan.security_scan.medium, "low": scan.security_scan.low, "issues": [{"package": i.package, "severity": i.severity, "description": i.description, "fix_version": i.fix_version} for i in scan.security_scan.issues]})
-            hl = json.dumps({"overall": scan.health.overall.value, "test_coverage": scan.health.test_coverage.value, "code_quality": scan.health.code_quality.value, "security": scan.health.security.value, "documentation": scan.health.documentation.value, "score": scan.health.score, "issues": scan.health.issues})
-            sg = json.dumps([{"template_key": s.template_key, "document_type": s.document_type, "name": s.name, "reason": s.reason, "priority": s.priority, "auto_generated": s.auto_generated, "content": s.content} for s in scan.suggestions])
-            sq = json.dumps({"project_key": scan.sonarqube.project_key, "bugs": scan.sonarqube.bugs, "vulnerabilities": scan.sonarqube.vulnerabilities, "code_smells": scan.sonarqube.code_smells, "coverage": scan.sonarqube.coverage, "duplicated_lines_density": scan.sonarqube.duplicated_lines_density, "ncloc": scan.sonarqube.ncloc, "sqale_rating": scan.sonarqube.sqale_rating, "reliability_rating": scan.sonarqube.reliability_rating, "security_rating": scan.sonarqube.security_rating, "security_hotspots": scan.sonarqube.security_hotspots, "cognitive_complexity": scan.sonarqube.cognitive_complexity, "issues_blocker": scan.sonarqube.issues_blocker, "issues_critical": scan.sonarqube.issues_critical, "issues_major": scan.sonarqube.issues_major, "issues_minor": scan.sonarqube.issues_minor, "issues_info": scan.sonarqube.issues_info, "total_score": scan.sonarqube.total_score, "security_score": scan.sonarqube.security_score, "reliability_score": scan.sonarqube.reliability_score, "maintainability_score": scan.sonarqube.maintainability_score, "coverage_score": scan.sonarqube.coverage_score, "error": scan.sonarqube.error})
+            fa = json.dumps(
+                {
+                    "total_files": scan.file_analysis.total_files,
+                    "total_lines": scan.file_analysis.total_lines,
+                    "languages": scan.file_analysis.languages,
+                    "directories": scan.file_analysis.directories,
+                    "has_readme": scan.file_analysis.has_readme,
+                    "has_license": scan.file_analysis.has_license,
+                    "has_changelog": scan.file_analysis.has_changelog,
+                    "has_dockerfile": scan.file_analysis.has_dockerfile,
+                    "has_docker_compose": scan.file_analysis.has_docker_compose,
+                    "config_files": scan.file_analysis.config_files,
+                }
+            )
+            ts = json.dumps(
+                {
+                    "languages": scan.tech_stack.languages,
+                    "frameworks": scan.tech_stack.frameworks,
+                    "databases": scan.tech_stack.databases,
+                    "tools": scan.tech_stack.tools,
+                    "package_manager": scan.tech_stack.package_manager,
+                    "has_docker": scan.tech_stack.has_docker,
+                    "has_ci_cd": scan.tech_stack.has_ci_cd,
+                    "has_tests": scan.tech_stack.has_tests,
+                    "has_linting": scan.tech_stack.has_linting,
+                    "has_type_checking": scan.tech_stack.has_type_checking,
+                }
+            )
+            tst = json.dumps(
+                [
+                    {
+                        "name": s.name,
+                        "framework": s.framework,
+                        "total": s.total,
+                        "passed": s.passed,
+                        "failed": s.failed,
+                        "skipped": s.skipped,
+                        "error_output": s.error_output,
+                    }
+                    for s in scan.test_suites
+                ]
+            )
+            lt = json.dumps(
+                [
+                    {
+                        "tool": r.tool,
+                        "total_issues": r.total_issues,
+                        "errors": r.errors,
+                        "warnings": r.warnings,
+                        "issues": r.issues,
+                    }
+                    for r in scan.lint_results
+                ]
+            )
+            sc = json.dumps(
+                {
+                    "tool": scan.security_scan.tool,
+                    "total_vulnerabilities": scan.security_scan.total_vulnerabilities,
+                    "critical": scan.security_scan.critical,
+                    "high": scan.security_scan.high,
+                    "medium": scan.security_scan.medium,
+                    "low": scan.security_scan.low,
+                    "issues": [
+                        {
+                            "package": i.package,
+                            "severity": i.severity,
+                            "description": i.description,
+                            "fix_version": i.fix_version,
+                        }
+                        for i in scan.security_scan.issues
+                    ],
+                }
+            )
+            hl = json.dumps(
+                {
+                    "overall": scan.health.overall.value,
+                    "test_coverage": scan.health.test_coverage.value,
+                    "code_quality": scan.health.code_quality.value,
+                    "security": scan.health.security.value,
+                    "documentation": scan.health.documentation.value,
+                    "score": scan.health.score,
+                    "issues": scan.health.issues,
+                }
+            )
+            sg = json.dumps(
+                [
+                    {
+                        "template_key": s.template_key,
+                        "document_type": s.document_type,
+                        "name": s.name,
+                        "reason": s.reason,
+                        "priority": s.priority,
+                        "auto_generated": s.auto_generated,
+                        "content": s.content,
+                    }
+                    for s in scan.suggestions
+                ]
+            )
+            sq = json.dumps(
+                {
+                    "project_key": scan.sonarqube.project_key,
+                    "bugs": scan.sonarqube.bugs,
+                    "vulnerabilities": scan.sonarqube.vulnerabilities,
+                    "code_smells": scan.sonarqube.code_smells,
+                    "coverage": scan.sonarqube.coverage,
+                    "duplicated_lines_density": scan.sonarqube.duplicated_lines_density,
+                    "ncloc": scan.sonarqube.ncloc,
+                    "sqale_rating": scan.sonarqube.sqale_rating,
+                    "reliability_rating": scan.sonarqube.reliability_rating,
+                    "security_rating": scan.sonarqube.security_rating,
+                    "security_hotspots": scan.sonarqube.security_hotspots,
+                    "cognitive_complexity": scan.sonarqube.cognitive_complexity,
+                    "issues_blocker": scan.sonarqube.issues_blocker,
+                    "issues_critical": scan.sonarqube.issues_critical,
+                    "issues_major": scan.sonarqube.issues_major,
+                    "issues_minor": scan.sonarqube.issues_minor,
+                    "issues_info": scan.sonarqube.issues_info,
+                    "total_score": scan.sonarqube.total_score,
+                    "security_score": scan.sonarqube.security_score,
+                    "reliability_score": scan.sonarqube.reliability_score,
+                    "maintainability_score": scan.sonarqube.maintainability_score,
+                    "coverage_score": scan.sonarqube.coverage_score,
+                    "error": scan.sonarqube.error,
+                }
+            )
 
             if existing:
                 connection.execute(
                     "UPDATE scan_results SET status=?, stage=?, file_analysis_json=?, tech_stack_json=?, test_suites_json=?, lint_results_json=?, security_scan_json=?, health_json=?, suggestions_json=?, sonarqube_json=?, error_message=?, completed_at=? WHERE id=?",
-                    (scan.status.value, scan.stage.value, fa, ts, tst, lt, sc, hl, sg, sq, scan.error_message, scan.completed_at.isoformat() if scan.completed_at else None, str(scan.id))
+                    (
+                        scan.status.value,
+                        scan.stage.value,
+                        fa,
+                        ts,
+                        tst,
+                        lt,
+                        sc,
+                        hl,
+                        sg,
+                        sq,
+                        scan.error_message,
+                        scan.completed_at.isoformat() if scan.completed_at else None,
+                        str(scan.id),
+                    ),
                 )
             else:
                 connection.execute(
                     "INSERT INTO scan_results (id, repository_url, repository_name, branch, status, stage, file_analysis_json, tech_stack_json, test_suites_json, lint_results_json, security_scan_json, health_json, suggestions_json, sonarqube_json, error_message, started_at, completed_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                    (str(scan.id), scan.repository_url, scan.repository_name, scan.branch, scan.status.value, scan.stage.value, fa, ts, tst, lt, sc, hl, sg, sq, scan.error_message, scan.started_at.isoformat(), scan.completed_at.isoformat() if scan.completed_at else None)
+                    (
+                        str(scan.id),
+                        scan.repository_url,
+                        scan.repository_name,
+                        scan.branch,
+                        scan.status.value,
+                        scan.stage.value,
+                        fa,
+                        ts,
+                        tst,
+                        lt,
+                        sc,
+                        hl,
+                        sg,
+                        sq,
+                        scan.error_message,
+                        scan.started_at.isoformat(),
+                        scan.completed_at.isoformat() if scan.completed_at else None,
+                    ),
                 )
 
     async def delete(self, scan_id: ScanId) -> None:
@@ -119,15 +281,23 @@ def _row_to_scan(row: sqlite3.Row) -> ScanResult:
         test_suites=[TestSuite(**s) for s in tst_d],
         lint_results=[LintResult(**r) for r in lt_d],
         security_scan=SecurityScan(
-            tool=sc_d["tool"], total_vulnerabilities=sc_d["total_vulnerabilities"],
-            critical=sc_d["critical"], high=sc_d["high"], medium=sc_d["medium"], low=sc_d["low"],
+            tool=sc_d["tool"],
+            total_vulnerabilities=sc_d["total_vulnerabilities"],
+            critical=sc_d["critical"],
+            high=sc_d["high"],
+            medium=sc_d["medium"],
+            low=sc_d["low"],
             issues=[SecurityIssue(**i) for i in sc_d.get("issues", [])],
             error_output=sc_d.get("error_output", ""),
         ),
         health=ProjectHealth(
-            overall=HealthLevel(hl_d["overall"]), test_coverage=HealthLevel(hl_d["test_coverage"]),
-            code_quality=HealthLevel(hl_d["code_quality"]), security=HealthLevel(hl_d["security"]),
-            documentation=HealthLevel(hl_d["documentation"]), score=hl_d["score"], issues=hl_d["issues"],
+            overall=HealthLevel(hl_d["overall"]),
+            test_coverage=HealthLevel(hl_d["test_coverage"]),
+            code_quality=HealthLevel(hl_d["code_quality"]),
+            security=HealthLevel(hl_d["security"]),
+            documentation=HealthLevel(hl_d["documentation"]),
+            score=hl_d["score"],
+            issues=hl_d["issues"],
         ),
         suggestions=[DocumentSuggestion(**s) for s in sg_d],
         sonarqube=SonarQubeResult(**sq_d),

@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from tdp.modules.scanner.domain.model import MetricDelta, ScanComparison, ScanResult
 
 
@@ -61,20 +59,24 @@ def compare_scans(before: ScanResult, after: ScanResult) -> ScanComparison:
             direction = "down" if higher_is_better else "up"
         else:
             direction = "same"
-        metrics.append(MetricDelta(
-            label=label,
-            before=str(val_before),
-            after=str(val_after),
-            direction=direction,
-            value_change=delta,
-        ))
+        metrics.append(
+            MetricDelta(
+                label=label,
+                before=str(val_before),
+                after=str(val_after),
+                direction=direction,
+                value_change=delta,
+            )
+        )
 
     add_metric("Health Score", h_before, h_after, True)
     add_metric("Total Files", f_before, f_after, True)
     add_metric("Total Lines", l_before, l_after, True)
     add_metric("Test Cases", test_total_before, test_total_after, True)
     add_metric("Tests Passed", test_passed_before, test_passed_after, True)
-    add_metric("Vulnerabilities", sec_before.total_vulnerabilities, sec_after.total_vulnerabilities, False)
+    add_metric(
+        "Vulnerabilities", sec_before.total_vulnerabilities, sec_after.total_vulnerabilities, False
+    )
     add_metric("Critical Issues", sec_before.critical, sec_after.critical, False)
     add_metric("Issues Count", len(issues_before), len(issues_after), False)
 

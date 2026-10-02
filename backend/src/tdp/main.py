@@ -2,9 +2,17 @@ from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 
+from tdp.audit.logger import StructuredAuditLogger
+from tdp.audit.middleware import AuditMiddleware
+from tdp.audit.store import AuditStore
+from tdp.authorization.errors import PermissionDeniedError, permission_denied_handler
+from tdp.authorization.policy import AuthorizationPolicy
 from tdp.config import Settings, get_settings
+from tdp.identity.jwt_service import JwtService
 from tdp.identity.model import IdentityAssurance, RequestPrincipal
+from tdp.identity.oidc import OidcDiscovery
 from tdp.identity.provider import LocalIdentityProvider
+from tdp.identity.session_store import TokenBlacklist
 from tdp.modules.catalog.application.service import CatalogApplicationService
 from tdp.modules.catalog.domain.errors import CatalogError
 from tdp.modules.catalog.infrastructure.openapi_parser import DeterministicOpenApiCatalogParser
@@ -40,23 +48,6 @@ from tdp.modules.documents.presentation.http.router import (
 )
 from tdp.modules.documents.presentation.http.router import router as documents_router
 from tdp.modules.evidence.application.service import EvidenceApplicationService
-from tdp.modules.templates.application.service import TemplateApplicationService
-from tdp.modules.scanner.application.service import ScannerApplicationService
-from tdp.modules.scanner.infrastructure.sqlite_repository import SqliteScanRepository
-from tdp.modules.scanner.infrastructure.document_builder import DocumentStore
-from tdp.modules.scanner.presentation.http.router import router as scanner_router
-from tdp.modules.scanner.presentation.http.dashboard_router import router as dashboard_router
-from tdp.modules.scanner.presentation.http.webhook_router import router as webhook_router
-from tdp.modules.scanner.presentation.http.webhook_router import webhook_signature_error_handler, webhook_not_found_handler
-from tdp.modules.scanner.application.webhook_service import WebhookApplicationService, WebhookSignatureError, WebhookEventNotFoundError
-from tdp.modules.scanner.infrastructure.webhook_repository import SqliteWebhookRepository
-from tdp.modules.scanner.presentation.http.router import scanner_error_handler
-from tdp.modules.scanner.domain.errors import ScannerError
-from tdp.modules.templates.infrastructure.sqlite_repository import SqliteTemplateRepository
-from tdp.modules.templates.infrastructure.seed import seed_builtin_templates
-from tdp.modules.templates.presentation.http.router import router as templates_router
-from tdp.modules.templates.presentation.http.router import template_error_handler
-from tdp.modules.templates.domain.errors import TemplateError
 from tdp.modules.evidence.domain.errors import EvidenceError
 from tdp.modules.evidence.infrastructure.sqlite_repository import SqliteEvidenceRepository
 from tdp.modules.evidence.presentation.http.router import (
@@ -91,6 +82,24 @@ from tdp.modules.readiness.presentation.http.router import (
 from tdp.modules.readiness.presentation.http.router import (
     router as readiness_router,
 )
+from tdp.modules.scanner.application.service import ScannerApplicationService
+from tdp.modules.scanner.application.webhook_service import (
+    WebhookApplicationService,
+    WebhookEventNotFoundError,
+    WebhookSignatureError,
+)
+from tdp.modules.scanner.domain.errors import ScannerError
+from tdp.modules.scanner.infrastructure.document_builder import DocumentStore
+from tdp.modules.scanner.infrastructure.sqlite_repository import SqliteScanRepository
+from tdp.modules.scanner.infrastructure.webhook_repository import SqliteWebhookRepository
+from tdp.modules.scanner.presentation.http.dashboard_router import router as dashboard_router
+from tdp.modules.scanner.presentation.http.router import router as scanner_router
+from tdp.modules.scanner.presentation.http.router import scanner_error_handler
+from tdp.modules.scanner.presentation.http.webhook_router import router as webhook_router
+from tdp.modules.scanner.presentation.http.webhook_router import (
+    webhook_not_found_handler,
+    webhook_signature_error_handler,
+)
 from tdp.modules.sources.application.service import SourceApplicationService
 from tdp.modules.sources.domain.errors import SourceError
 from tdp.modules.sources.infrastructure.local_artifact_store import LocalArtifactStore
@@ -98,8 +107,15 @@ from tdp.modules.sources.infrastructure.openapi_inspector import DeterministicOp
 from tdp.modules.sources.infrastructure.project_access import RepositoryBackedProjectAccess
 from tdp.modules.sources.infrastructure.sqlite_repository import SqliteSourceRepository
 from tdp.modules.sources.presentation.http.router import router as sources_router
+from tdp.modules.templates.application.service import TemplateApplicationService
+from tdp.modules.templates.domain.errors import TemplateError
+from tdp.modules.templates.infrastructure.seed import seed_builtin_templates
+from tdp.modules.templates.infrastructure.sqlite_repository import SqliteTemplateRepository
+from tdp.modules.templates.presentation.http.router import router as templates_router
+from tdp.modules.templates.presentation.http.router import template_error_handler
 from tdp.modules.workspaces.application.service import WorkspaceApplicationService
 from tdp.modules.workspaces.domain.errors import WorkspaceError
+from tdp.modules.workspaces.infrastructure.membership_repository import SqliteMembershipRepository
 from tdp.modules.workspaces.infrastructure.sqlite_repository import SqliteWorkspaceRepository
 from tdp.modules.workspaces.presentation.http.router import router as workspaces_router
 from tdp.presentation.http.errors import (
@@ -111,24 +127,15 @@ from tdp.presentation.http.errors import (
     validation_error_handler,
     workspace_error_handler,
 )
-from tdp.audit.logger import StructuredAuditLogger
-from tdp.audit.middleware import AuditMiddleware
-from tdp.audit.store import AuditStore
+from tdp.presentation.http.middleware.csrf import CsrfProtectionMiddleware
+from tdp.presentation.http.middleware.jwt_auth import JwtAuthMiddleware
 from tdp.presentation.http.middleware.rate_limiting import RateLimitMiddleware
 from tdp.presentation.http.middleware.request_id import RequestIdMiddleware
 from tdp.presentation.http.middleware.security_headers import SecurityHeadersMiddleware
-from tdp.presentation.http.middleware.csrf import CsrfProtectionMiddleware
-from tdp.presentation.http.middleware.jwt_auth import JwtAuthMiddleware
-from tdp.presentation.http.routers.health import router as health_router
-from tdp.presentation.http.routers.identity import router as identity_router
 from tdp.presentation.http.routers.audit_logs import router as audit_logs_router
 from tdp.presentation.http.routers.auth import router as auth_router
-from tdp.identity.oidc import OidcDiscovery
-from tdp.identity.jwt_service import JwtService
-from tdp.identity.session_store import TokenBlacklist
-from tdp.authorization.errors import PermissionDeniedError, permission_denied_handler
-from tdp.authorization.policy import AuthorizationPolicy
-from tdp.modules.workspaces.infrastructure.membership_repository import SqliteMembershipRepository
+from tdp.presentation.http.routers.health import router as health_router
+from tdp.presentation.http.routers.identity import router as identity_router
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -261,6 +268,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         count = await seed_builtin_templates(template_repository)
         if count > 0:
             print(f"Seeded {count} built-in document templates.")
+
     application.state.document_governance_service = DocumentGovernanceApplicationService(
         document_repository,
         project_repository,

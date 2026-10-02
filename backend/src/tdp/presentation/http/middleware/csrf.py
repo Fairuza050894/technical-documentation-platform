@@ -17,12 +17,14 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
 _WRITE_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
-_SAFE_PATHS = frozenset({
-    "/api/csrf-token",
-    "/api/health",
-    "/api/docs",
-    "/api/openapi.json",
-})
+_SAFE_PATHS = frozenset(
+    {
+        "/api/csrf-token",
+        "/api/health",
+        "/api/docs",
+        "/api/openapi.json",
+    }
+)
 
 CSRF_COOKIE_NAME = "csrftoken"
 CSRF_HEADER_NAME = "x-csrf-token"
@@ -44,9 +46,7 @@ class CsrfProtectionMiddleware(BaseHTTPMiddleware):
         self._cookie_secure = cookie_secure
         self._cookie_samesite = cookie_samesite
 
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         # ── Issue CSRF token (always active, regardless of enabled flag) ──
         if request.method == "GET" and request.url.path == "/api/csrf-token":
             token = secrets.token_hex(32)

@@ -46,7 +46,12 @@ def detect_tech_stack(analysis: FileAnalysis, repo_path: str) -> TechStack:
         if "pydantic" in py_text:
             stack.tools.append("Pydantic")
 
-    if "JavaScript" in analysis.languages or "TypeScript" in analysis.languages or "TypeScript (React)" in analysis.languages or "JavaScript (React)" in analysis.languages:
+    if (
+        "JavaScript" in analysis.languages
+        or "TypeScript" in analysis.languages
+        or "TypeScript (React)" in analysis.languages
+        or "JavaScript (React)" in analysis.languages
+    ):
         pkg_text = _get_package_json_text(root)
         if '"next"' in pkg_text:
             stack.frameworks.append("Next.js")
@@ -123,7 +128,18 @@ def detect_tech_stack(analysis: FileAnalysis, repo_path: str) -> TechStack:
 
     stack.has_ci_cd = (root / ".github" / "workflows").exists() or ".gitlab-ci.yml" in cfg
     stack.has_tests = _has_tests(root, analysis)
-    stack.has_linting = bool(cfg & {".eslintrc", ".eslintrc.js", ".eslintrc.json", "eslint.config.js", ".flake8", "ruff.toml", "mypy.ini"})
+    stack.has_linting = bool(
+        cfg
+        & {
+            ".eslintrc",
+            ".eslintrc.js",
+            ".eslintrc.json",
+            "eslint.config.js",
+            ".flake8",
+            "ruff.toml",
+            "mypy.ini",
+        }
+    )
     stack.has_type_checking = bool(cfg & {"tsconfig.json", "jsconfig.json", "mypy.ini"})
 
     return stack
@@ -133,7 +149,14 @@ def _get_python_deps_text(root: Path) -> str:
     parts = []
     search_dirs = [root, root / "backend", root / "server", root / "api", root / "src"]
     for d in search_dirs:
-        for fname in ["requirements.txt", "requirements-dev.txt", "pyproject.toml", "setup.py", "setup.cfg", "Pipfile"]:
+        for fname in [
+            "requirements.txt",
+            "requirements-dev.txt",
+            "pyproject.toml",
+            "setup.py",
+            "setup.cfg",
+            "Pipfile",
+        ]:
             try:
                 parts.append((d / fname).read_text(encoding="utf-8", errors="ignore").lower())
             except OSError:

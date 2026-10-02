@@ -76,9 +76,7 @@ class JwtService:
         claims = await self.validate_token(token)
 
         subject_id = claims.get("sub", "")
-        display_name = claims.get(
-            "name", claims.get("preferred_username", subject_id)
-        )
+        display_name = claims.get("name", claims.get("preferred_username", subject_id))
         email = claims.get("email", "")
 
         return RequestPrincipal(

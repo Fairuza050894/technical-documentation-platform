@@ -4,9 +4,9 @@ from fastapi import APIRouter, Depends, Request, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
-from tdp.modules.scanner.application.service import ScannerApplicationService, ScanDto
+from tdp.modules.scanner.application.service import ScanDto, ScannerApplicationService
+from tdp.modules.scanner.domain.errors import ScanInProgressError, ScannerError, ScanNotFoundError
 from tdp.modules.scanner.domain.model import ScanId
-from tdp.modules.scanner.domain.errors import ScannerError, ScanInProgressError, ScanNotFoundError
 from tdp.modules.scanner.infrastructure.document_builder import DocumentStore, build_document
 from tdp.modules.scanner.infrastructure.scan_comparator import compare_scans
 
@@ -112,9 +112,11 @@ async def generate_documents(
 ) -> list[GeneratedDocumentResponse]:
     scan = await service.get_scan(scan_id)
     from tdp.modules.scanner.domain.model import ScanId
+
     scan_domain = await service._repository.get(ScanId.from_string(scan_id))
     if scan_domain is None:
         from tdp.modules.scanner.domain.errors import ScanNotFoundError
+
         raise ScanNotFoundError(f"Scan {scan_id} not found.")
     results = []
     for key in payload.template_keys:
@@ -141,11 +143,14 @@ async def get_document(
     doc = doc_store.get(doc_id)
     if doc is None:
         from tdp.modules.scanner.domain.errors import ScanNotFoundError
+
         raise ScanNotFoundError(f"Document {doc_id} not found.")
     return GeneratedDocumentResponse(**doc.to_dict())
 
 
-@router.post("/scanner/scans/{scan_id}/rescan", response_model=ScanDto, status_code=status.HTTP_202_ACCEPTED)
+@router.post(
+    "/scanner/scans/{scan_id}/rescan", response_model=ScanDto, status_code=status.HTTP_202_ACCEPTED
+)
 async def rescan(scan_id: str, service: ScannerServiceDependency) -> ScanDto:
     return await service.rescan(scan_id)
 
@@ -187,10 +192,16 @@ async def compare_scans_endpoint(
         security_total_after=comparison.security_total_after,
         security_critical_before=comparison.security_critical_before,
         security_critical_after=comparison.security_critical_after,
-        metrics=[{
-            "label": m.label, "before": m.before, "after": m.after,
-            "direction": m.direction, "value_change": m.value_change,
-        } for m in comparison.metrics],
+        metrics=[
+            {
+                "label": m.label,
+                "before": m.before,
+                "after": m.after,
+                "direction": m.direction,
+                "value_change": m.value_change,
+            }
+            for m in comparison.metrics
+        ],
         is_identical=comparison.is_identical,
     )
 
@@ -199,5 +210,14 @@ async def scanner_error_handler(request: Request, exc: Exception) -> JSONRespons
     if not isinstance(exc, ScannerError):
         raise exc
     request_id = getattr(request.state, "request_id", "unknown")
-    code = 404 if isinstance(exc, ScanNotFoundError) else 409 if isinstance(exc, ScanInProgressError) else 400
-    return JSONResponse(status_code=code, content={"error": {"code": exc.code, "message": str(exc), "requestId": request_id}})
+    code = (
+        404
+        if isinstance(exc, ScanNotFoundError)
+        else 409
+        if isinstance(exc, ScanInProgressError)
+        else 400
+    )
+    return JSONResponse(
+        status_code=code,
+        content={"error": {"code": exc.code, "message": str(exc), "requestId": request_id}},
+    )

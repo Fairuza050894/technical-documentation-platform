@@ -4,8 +4,6 @@ from pydantic import BaseModel
 from tdp.modules.scanner.application.webhook_service import (
     WebhookApplicationService,
     WebhookEventDto,
-    WebhookEventNotFoundError,
-    WebhookSignatureError,
 )
 
 router = APIRouter(tags=["webhooks"])
@@ -18,6 +16,7 @@ class WebhookListResponse(BaseModel):
 
 def webhook_signature_error_handler(request, exc):
     from fastapi.responses import JSONResponse
+
     return JSONResponse(
         status_code=401,
         content={"detail": str(exc)},
@@ -26,6 +25,7 @@ def webhook_signature_error_handler(request, exc):
 
 def webhook_not_found_handler(request, exc):
     from fastapi.responses import JSONResponse
+
     return JSONResponse(
         status_code=404,
         content={"detail": str(exc)},
@@ -38,6 +38,7 @@ async def get_webhook_service(request: Request) -> WebhookApplicationService:
 
 
 from typing import Annotated
+
 from fastapi import Depends
 
 WebhookServiceDependency = Annotated[WebhookApplicationService, Depends(get_webhook_service)]

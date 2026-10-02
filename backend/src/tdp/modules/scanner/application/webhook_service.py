@@ -143,7 +143,9 @@ class WebhookApplicationService:
         events = await self._repository.list_all(limit)
         return [WebhookEventDto.from_domain(e) for e in events]
 
-    async def list_events_by_repo(self, repository_url: str, limit: int = 20) -> list[WebhookEventDto]:
+    async def list_events_by_repo(
+        self, repository_url: str, limit: int = 20
+    ) -> list[WebhookEventDto]:
         events = await self._repository.list_by_repo(repository_url, limit)
         return [WebhookEventDto.from_domain(e) for e in events]
 
@@ -157,16 +159,16 @@ class WebhookApplicationService:
             score_delta = 0
             all_scans = await self._scanner_service.list_scans()
             for scan in all_scans:
-                if (scan.repository_url == event.repository_url
-                        and scan.branch == event.branch
-                        and scan.status == "COMPLETED"):
+                if (
+                    scan.repository_url == event.repository_url
+                    and scan.branch == event.branch
+                    and scan.status == "COMPLETED"
+                ):
                     previous_scan_id = scan.id
                     break
 
             # Start new scan
-            scan_dto = await self._scanner_service.start_scan(
-                event.repository_url, event.branch
-            )
+            scan_dto = await self._scanner_service.start_scan(event.repository_url, event.branch)
 
             event.mark_completed(
                 scan_id=scan_dto.id,

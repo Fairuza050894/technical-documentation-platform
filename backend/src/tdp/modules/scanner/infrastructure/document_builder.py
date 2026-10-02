@@ -1,9 +1,6 @@
 import sqlite3
 from datetime import datetime
-from pathlib import Path
 from uuid import uuid4
-
-from tdp.modules.scanner.domain.model import ScanResult
 
 
 class GeneratedDocument:
@@ -158,9 +155,28 @@ def _test_summary(suites):
     passed_all = sum(s.passed for s in suites)
     failed_all = sum(s.failed for s in suites)
     rate = str(round(passed_all / total_all * 100, 1)) + "%" if total_all > 0 else "N/A"
-    lines.append("Total: " + str(total_all) + " tests | Passed: " + str(passed_all) + " | Failed: " + str(failed_all) + " | Pass Rate: " + rate)
+    lines.append(
+        "Total: "
+        + str(total_all)
+        + " tests | Passed: "
+        + str(passed_all)
+        + " | Failed: "
+        + str(failed_all)
+        + " | Pass Rate: "
+        + rate
+    )
     for s in suites:
-        lines.append("- " + s.name + " (" + s.framework + "): " + str(s.passed) + "/" + str(total_all) + " passed")
+        lines.append(
+            "- "
+            + s.name
+            + " ("
+            + s.framework
+            + "): "
+            + str(s.passed)
+            + "/"
+            + str(total_all)
+            + " passed"
+        )
     return "\n".join(lines)
 
 
@@ -171,11 +187,43 @@ def _mermaid_architecture(c):
     langs = c.get("languages_dict", {})
     fws = c["frameworks_list"]
     has_backend = any(l in langs for l in ["Python", "Java", "Go", "Rust", "Ruby", "PHP", "C#"])
-    has_frontend = any(l in langs for l in ["JavaScript", "TypeScript", "TypeScript (React)", "JavaScript (React)"])
-    has_react = "React" in fws or "Next.js" in fws or "Vue.js" in fws or any("react" in d for d in dirs) or any("components" in d for d in dirs)
-    has_api = any(fw in fws for fw in ["FastAPI", "Flask", "Django", "Express.js", "NestJS", "Spring Boot", "Gin", "Echo"])
-    has_backend_dir = any(d.startswith("backend") or d.startswith("src/tdp") or d.startswith("server") or d.startswith("api") for d in dirs)
-    has_frontend_dir = any(d.startswith("frontend") or d.startswith("src/modules") or d.startswith("client") or d.startswith("web") for d in dirs)
+    has_frontend = any(
+        l in langs for l in ["JavaScript", "TypeScript", "TypeScript (React)", "JavaScript (React)"]
+    )
+    has_react = (
+        "React" in fws
+        or "Next.js" in fws
+        or "Vue.js" in fws
+        or any("react" in d for d in dirs)
+        or any("components" in d for d in dirs)
+    )
+    has_api = any(
+        fw in fws
+        for fw in [
+            "FastAPI",
+            "Flask",
+            "Django",
+            "Express.js",
+            "NestJS",
+            "Spring Boot",
+            "Gin",
+            "Echo",
+        ]
+    )
+    has_backend_dir = any(
+        d.startswith("backend")
+        or d.startswith("src/tdp")
+        or d.startswith("server")
+        or d.startswith("api")
+        for d in dirs
+    )
+    has_frontend_dir = any(
+        d.startswith("frontend")
+        or d.startswith("src/modules")
+        or d.startswith("client")
+        or d.startswith("web")
+        for d in dirs
+    )
     is_monorepo = has_backend_dir and has_frontend_dir
 
     nodes.append('    User["End User"]')
@@ -184,31 +232,31 @@ def _mermaid_architecture(c):
         if has_react or has_frontend:
             nodes.append('    FE["Frontend Application"]')
             nodes.append('    subgraph FE_STACK ["Frontend Stack"]')
-            nodes.append('        FE')
-            nodes.append('    end')
-            edges.append('    User --> FE')
+            nodes.append("        FE")
+            nodes.append("    end")
+            edges.append("    User --> FE")
         if has_api:
             fw_name = fws[0] if fws else "Backend API"
             nodes.append('    API["' + fw_name + ' API"]')
             nodes.append('    subgraph BE_STACK ["Backend Stack"]')
-            nodes.append('        API')
-            nodes.append('    end')
+            nodes.append("        API")
+            nodes.append("    end")
             if has_react or has_frontend:
                 edges.append('    FE -->|"REST/GraphQL"| API')
             else:
-                edges.append('    User --> API')
+                edges.append("    User --> API")
         else:
             nodes.append('    API["Backend API Server"]')
             nodes.append('    subgraph BE_STACK ["Backend Stack"]')
-            nodes.append('        API')
-            nodes.append('    end')
+            nodes.append("        API")
+            nodes.append("    end")
             if has_react or has_frontend:
                 edges.append('    FE -->|"HTTP"| API')
             else:
-                edges.append('    User --> API')
+                edges.append("    User --> API")
     elif has_react or has_frontend:
         nodes.append('    FE["' + (fws[0] if fws else "Frontend") + ' Application"]')
-        edges.append('    User --> FE')
+        edges.append("    User --> FE")
         if has_api:
             nodes.append('    API["API Server"]')
             edges.append('    FE -->|"REST"| API')
@@ -218,17 +266,23 @@ def _mermaid_architecture(c):
         edges.append('    User -->|"HTTP"| API')
     elif has_backend:
         nodes.append('    APP["Application Server"]')
-        edges.append('    User --> APP')
+        edges.append("    User --> APP")
     else:
         nodes.append('    APP["Application"]')
-        edges.append('    User --> APP')
+        edges.append("    User --> APP")
 
-    api_target = "API" if any("API[" in n for n in nodes) else "APP" if any("APP[" in n for n in nodes) else "FE"
+    api_target = (
+        "API"
+        if any("API[" in n for n in nodes)
+        else "APP"
+        if any("APP[" in n for n in nodes)
+        else "FE"
+    )
 
     for db in c["databases_list"]:
         db_id = db.replace(" ", "_").replace("/", "_")
-        nodes.append('    ' + db_id + '["' + db + '"]')
-        edges.append('    ' + api_target + ' --> ' + db_id)
+        nodes.append("    " + db_id + '["' + db + '"]')
+        edges.append("    " + api_target + " --> " + db_id)
 
     if c["has_docker"] == "Yes":
         nodes.append('    Docker["Docker"]')
@@ -487,7 +541,11 @@ def _build_arch(scan):
         "| Languages | " + c["languages"] + " |",
         "| Frameworks | " + c["frameworks"] + " |",
         "| Databases | " + c["databases"] + " |",
-        "| Infrastructure | " + ("Docker" if c["has_docker"] == "Yes" else "N/A") + ", " + ("CI/CD" if c["has_ci_cd"] == "Yes" else "No CI/CD") + " |",
+        "| Infrastructure | "
+        + ("Docker" if c["has_docker"] == "Yes" else "N/A")
+        + ", "
+        + ("CI/CD" if c["has_ci_cd"] == "Yes" else "No CI/CD")
+        + " |",
         "| Tooling | " + c["tools"] + " |",
         "",
         "## 3. System Architecture Diagram",
@@ -508,7 +566,11 @@ def _build_arch(scan):
         "",
         "## 7. Directory Structure",
         "",
-        "The project contains **" + c["total_files"] + " files** across **" + str(len(c["directories"])) + " directories**.",
+        "The project contains **"
+        + c["total_files"]
+        + " files** across **"
+        + str(len(c["directories"]))
+        + " directories**.",
         "",
         "```",
         _dir_tree(c["directories"]),
@@ -667,60 +729,90 @@ def _build_test_report(scan):
     tests_rows = []
     for suite in c["test_suites"]:
         rate = str(round(suite.passed / suite.total * 100, 1)) + "%" if suite.total > 0 else "N/A"
-        tests_rows.append("| " + suite.name + " | " + suite.framework + " | " + str(suite.total) + " | " + str(suite.passed) + " | " + str(suite.failed) + " | " + rate + " |")
+        tests_rows.append(
+            "| "
+            + suite.name
+            + " | "
+            + suite.framework
+            + " | "
+            + str(suite.total)
+            + " | "
+            + str(suite.passed)
+            + " | "
+            + str(suite.failed)
+            + " | "
+            + rate
+            + " |"
+        )
     lint_rows = []
     for lint in c["lint_results"]:
-        lint_rows.append("| " + lint.tool + " | " + str(lint.total_issues) + " | " + str(lint.errors) + " | " + str(lint.warnings) + " |")
+        lint_rows.append(
+            "| "
+            + lint.tool
+            + " | "
+            + str(lint.total_issues)
+            + " | "
+            + str(lint.errors)
+            + " | "
+            + str(lint.warnings)
+            + " |"
+        )
     if not lint_rows:
         lint_rows.append("| N/A | - | - | - |")
     sec = c["security_scan"]
-    lines = [
-        "# Test Report",
-        "",
-        "> **Project:** " + c["repo_name"] + "  ",
-        "> **Generated:** " + c["date"] + "  ",
-        "> **Health Score:** " + c["health_score"] + "/100",
-        "",
-        "---",
-        "",
-        "## 1. Summary",
-        "",
-        "| Metric | Value |",
-        "|--------|-------|",
-        "| Overall Health | " + c["health_overall"] + " |",
-        "| Test Coverage | " + c["test_coverage"] + " |",
-        "| Code Quality | " + c["code_quality"] + " |",
-        "| Security | " + c["security"] + " |",
-        "",
-        "## 2. Test Results",
-        "",
-        "| Suite | Framework | Total | Passed | Failed | Pass Rate |",
-        "|-------|-----------|-------|--------|--------|-----------|",
-    ] + tests_rows + [
-        "",
-        "## 3. Code Quality",
-        "",
-        "| Tool | Issues | Errors | Warnings |",
-        "|------|--------|--------|----------|",
-    ] + lint_rows + [
-        "",
-        "## 4. Security Scan",
-        "",
-        "| Severity | Count |",
-        "|----------|-------|",
-        "| Critical | " + str(sec.critical) + " |",
-        "| High | " + str(sec.high) + " |",
-        "| Medium | " + str(sec.medium) + " |",
-        "| Low | " + str(sec.low) + " |",
-        "| **Total** | **" + str(sec.total_vulnerabilities) + "** |",
-        "",
-        "## 5. Issues",
-        "",
-        _issues_section(c["issues"]),
-        "",
-        "---",
-        "*Auto-generated on " + c["date"] + "*",
-    ]
+    lines = (
+        [
+            "# Test Report",
+            "",
+            "> **Project:** " + c["repo_name"] + "  ",
+            "> **Generated:** " + c["date"] + "  ",
+            "> **Health Score:** " + c["health_score"] + "/100",
+            "",
+            "---",
+            "",
+            "## 1. Summary",
+            "",
+            "| Metric | Value |",
+            "|--------|-------|",
+            "| Overall Health | " + c["health_overall"] + " |",
+            "| Test Coverage | " + c["test_coverage"] + " |",
+            "| Code Quality | " + c["code_quality"] + " |",
+            "| Security | " + c["security"] + " |",
+            "",
+            "## 2. Test Results",
+            "",
+            "| Suite | Framework | Total | Passed | Failed | Pass Rate |",
+            "|-------|-----------|-------|--------|--------|-----------|",
+        ]
+        + tests_rows
+        + [
+            "",
+            "## 3. Code Quality",
+            "",
+            "| Tool | Issues | Errors | Warnings |",
+            "|------|--------|--------|----------|",
+        ]
+        + lint_rows
+        + [
+            "",
+            "## 4. Security Scan",
+            "",
+            "| Severity | Count |",
+            "|----------|-------|",
+            "| Critical | " + str(sec.critical) + " |",
+            "| High | " + str(sec.high) + " |",
+            "| Medium | " + str(sec.medium) + " |",
+            "| Low | " + str(sec.low) + " |",
+            "| **Total** | **" + str(sec.total_vulnerabilities) + "** |",
+            "",
+            "## 5. Issues",
+            "",
+            _issues_section(c["issues"]),
+            "",
+            "---",
+            "*Auto-generated on " + c["date"] + "*",
+        ]
+    )
     return "\n".join(lines)
 
 
@@ -818,12 +910,18 @@ def _build_install_guide(scan):
     c = _ctx(scan)
     setup_cmd = "<!-- TODO -->"
     pm = c["package_manager"]
-    if pm == "pip": setup_cmd = "pip install -r requirements.txt"
-    elif pm == "npm": setup_cmd = "npm install"
-    elif pm == "yarn": setup_cmd = "yarn install"
-    elif pm == "pnpm": setup_cmd = "pnpm install"
-    elif pm == "go modules": setup_cmd = "go mod download"
-    elif pm == "cargo": setup_cmd = "cargo build"
+    if pm == "pip":
+        setup_cmd = "pip install -r requirements.txt"
+    elif pm == "npm":
+        setup_cmd = "npm install"
+    elif pm == "yarn":
+        setup_cmd = "yarn install"
+    elif pm == "pnpm":
+        setup_cmd = "pnpm install"
+    elif pm == "go modules":
+        setup_cmd = "go mod download"
+    elif pm == "cargo":
+        setup_cmd = "cargo build"
     lines = [
         "# Installation Guide",
         "",
@@ -1070,7 +1168,17 @@ class DocumentStore:
                 "SELECT * FROM scanner_generated_docs WHERE scan_id = ? ORDER BY created_at DESC",
                 (scan_id,),
             ).fetchall()
-            return [GeneratedDocument(row["id"], row["scan_id"], row["template_key"], row["name"], row["content"], row["created_at"]) for row in rows]
+            return [
+                GeneratedDocument(
+                    row["id"],
+                    row["scan_id"],
+                    row["template_key"],
+                    row["name"],
+                    row["content"],
+                    row["created_at"],
+                )
+                for row in rows
+            ]
 
     def get(self, doc_id):
         with self._connection() as conn:
@@ -1078,7 +1186,14 @@ class DocumentStore:
                 "SELECT * FROM scanner_generated_docs WHERE id = ?", (doc_id,)
             ).fetchone()
             if row:
-                return GeneratedDocument(row["id"], row["scan_id"], row["template_key"], row["name"], row["content"], row["created_at"])
+                return GeneratedDocument(
+                    row["id"],
+                    row["scan_id"],
+                    row["template_key"],
+                    row["name"],
+                    row["content"],
+                    row["created_at"],
+                )
             return None
 
     def delete_by_scan(self, scan_id):
