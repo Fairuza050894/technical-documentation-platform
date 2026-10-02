@@ -11,6 +11,7 @@ Usage::
     ) -> ...:
         ...
 """
+
 from __future__ import annotations
 
 from fastapi import Depends, Request
@@ -29,9 +30,7 @@ def require_workspace_permission(
     async def _guard(request: Request) -> None:
         policy: AuthorizationPolicy = request.app.state.authorization_policy
         principal = getattr(request.state, "principal", None)
-        principal_id = (
-            getattr(principal, "subject_id", "anonymous") if principal else "anonymous"
-        )
+        principal_id = getattr(principal, "subject_id", "anonymous") if principal else "anonymous"
         workspace_id: str = request.path_params.get(workspace_id_param, "")
 
         if not policy.has_permission(principal_id, workspace_id, permission):

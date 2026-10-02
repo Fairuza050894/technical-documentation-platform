@@ -1,11 +1,9 @@
-import asyncio
-
 import pytest
 
 from tdp.modules.scanner.application.service import (
-    ScannerApplicationService,
     ScanDto,
     ScanInProgressError,
+    ScannerApplicationService,
     ScanNotFoundError,
 )
 from tdp.modules.scanner.domain.model import (
@@ -13,7 +11,6 @@ from tdp.modules.scanner.domain.model import (
     ScanResult,
     ScanStatus,
 )
-from tdp.modules.scanner.domain.repository import ScanRepository
 
 
 class InMemoryScanRepository:

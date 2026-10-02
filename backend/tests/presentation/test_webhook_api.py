@@ -22,7 +22,10 @@ def _push_payload(branch="main", sha="abc123"):
         "ref": f"refs/heads/{branch}",
         "after": sha,
         "head_commit": {"id": sha, "message": "test commit"},
-        "repository": {"clone_url": "https://github.com/octocat/Hello-World.git", "name": "Hello-World"},
+        "repository": {
+            "clone_url": "https://github.com/octocat/Hello-World.git",
+            "name": "Hello-World",
+        },
         "sender": {"login": "testuser"},
     }
 
@@ -34,7 +37,10 @@ def _pr_payload(action="opened", branch="feature"):
             "title": "Add feature",
             "head": {"ref": branch, "sha": "def456"},
         },
-        "repository": {"clone_url": "https://github.com/octocat/Hello-World.git", "name": "Hello-World"},
+        "repository": {
+            "clone_url": "https://github.com/octocat/Hello-World.git",
+            "name": "Hello-World",
+        },
         "sender": {"login": "devuser"},
     }
 

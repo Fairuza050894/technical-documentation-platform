@@ -7,8 +7,7 @@ from tdp.modules.scanner.application.webhook_service import (
     WebhookSignatureError,
 )
 from tdp.modules.scanner.domain.model import ScanResult
-from tdp.modules.scanner.domain.webhook import WebhookEvent, WebhookEventType, WebhookStatus
-from tdp.modules.scanner.domain.webhook_repository import WebhookRepository
+from tdp.modules.scanner.domain.webhook import WebhookEvent, WebhookEventType
 
 
 class InMemoryWebhookRepository:
@@ -29,10 +28,7 @@ class InMemoryWebhookRepository:
         )[:limit]
 
     async def list_by_repo(self, repository_url: str, limit: int = 20) -> list[WebhookEvent]:
-        return [
-            e for e in self._events.values()
-            if e.repository_url == repository_url
-        ][:limit]
+        return [e for e in self._events.values() if e.repository_url == repository_url][:limit]
 
 
 class InMemoryScanRepository:
@@ -218,6 +214,4 @@ class TestWebhookSignature:
         )
 
         with pytest.raises(WebhookSignatureError):
-            await service.process_github_push(
-                _make_push_payload(), signature="sha256=invalid"
-            )
+            await service.process_github_push(_make_push_payload(), signature="sha256=invalid")

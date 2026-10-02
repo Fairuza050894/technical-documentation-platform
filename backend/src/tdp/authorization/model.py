@@ -4,6 +4,7 @@ Reference: ISO/IEC 27001:2022 A.5.15 (Access control)
 Defines roles, permissions, and the role-permission mapping
 that governs workspace-level authorization decisions.
 """
+
 from __future__ import annotations
 
 from enum import StrEnum
@@ -43,26 +44,30 @@ class Permission(StrEnum):
     MEMBER_WRITE = "member:write"
 
 
-_READ: frozenset[Permission] = frozenset({
-    Permission.WORKSPACE_READ,
-    Permission.PROJECT_READ,
-    Permission.DOCUMENT_READ,
-    Permission.SOURCE_READ,
-    Permission.EVIDENCE_READ,
-    Permission.FEATURE_READ,
-    Permission.CATALOG_READ,
-    Permission.MEMBER_READ,
-})
+_READ: frozenset[Permission] = frozenset(
+    {
+        Permission.WORKSPACE_READ,
+        Permission.PROJECT_READ,
+        Permission.DOCUMENT_READ,
+        Permission.SOURCE_READ,
+        Permission.EVIDENCE_READ,
+        Permission.FEATURE_READ,
+        Permission.CATALOG_READ,
+        Permission.MEMBER_READ,
+    }
+)
 
-_WRITE: frozenset[Permission] = frozenset({
-    Permission.WORKSPACE_WRITE,
-    Permission.PROJECT_WRITE,
-    Permission.DOCUMENT_WRITE,
-    Permission.SOURCE_WRITE,
-    Permission.EVIDENCE_WRITE,
-    Permission.FEATURE_WRITE,
-    Permission.MEMBER_WRITE,
-})
+_WRITE: frozenset[Permission] = frozenset(
+    {
+        Permission.WORKSPACE_WRITE,
+        Permission.PROJECT_WRITE,
+        Permission.DOCUMENT_WRITE,
+        Permission.SOURCE_WRITE,
+        Permission.EVIDENCE_WRITE,
+        Permission.FEATURE_WRITE,
+        Permission.MEMBER_WRITE,
+    }
+)
 
 ROLE_PERMISSIONS: dict[Role, frozenset[Permission]] = {
     Role.ADMIN: frozenset(Permission),

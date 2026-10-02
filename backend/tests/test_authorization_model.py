@@ -1,4 +1,5 @@
 """Tests for authorization model."""
+
 from __future__ import annotations
 
 from tdp.authorization.model import ROLE_PERMISSIONS, Permission, Role

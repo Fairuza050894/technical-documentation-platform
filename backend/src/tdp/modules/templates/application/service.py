@@ -49,7 +49,8 @@ class TemplateApplicationService:
         if document_type is not None:
             normalized = document_type.strip().upper()
             templates = [
-                t for t in templates
+                t
+                for t in templates
                 if t.document_type is not None and t.document_type.upper() == normalized
             ]
 
@@ -68,9 +69,7 @@ class TemplateApplicationService:
         normalized_key = key.strip().upper()
         existing = await self._repository.get_by_key(normalized_key)
         if existing is not None:
-            raise TemplateKeyConflictError(
-                f"Template with key '{normalized_key}' already exists."
-            )
+            raise TemplateKeyConflictError(f"Template with key '{normalized_key}' already exists.")
         try:
             cat = TemplateCategory(category.strip().upper())
         except ValueError as exc:
@@ -135,9 +134,7 @@ class TemplateApplicationService:
         normalized_key = new_key.strip().upper()
         existing = await self._repository.get_by_key(normalized_key)
         if existing is not None:
-            raise TemplateKeyConflictError(
-                f"Template with key '{normalized_key}' already exists."
-            )
+            raise TemplateKeyConflictError(f"Template with key '{normalized_key}' already exists.")
         copy = DocumentTemplate.create(
             key=normalized_key,
             name=f"{source.name} (Copy)",

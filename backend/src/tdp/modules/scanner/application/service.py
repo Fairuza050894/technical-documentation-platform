@@ -2,16 +2,19 @@ import asyncio
 from dataclasses import dataclass
 
 from tdp.modules.scanner.domain.errors import ScanInProgressError, ScanNotFoundError
-from tdp.modules.scanner.domain.model import ScanId, ScanResult, ScanStatus
+from tdp.modules.scanner.domain.model import ScanId, ScanResult, ScanStatus, SonarQubeResult
 from tdp.modules.scanner.infrastructure.document_generator import suggest_documents
 from tdp.modules.scanner.infrastructure.file_analyzer import analyze_files
 from tdp.modules.scanner.infrastructure.git_operations import cleanup_temp_dir, clone_repository
 from tdp.modules.scanner.infrastructure.health_calculator import calculate_health
+from tdp.modules.scanner.infrastructure.sonarqube_client import (
+    SonarQubeClient,
+    SonarQubeConfig,
+    map_sonarqube_to_health,
+)
 from tdp.modules.scanner.infrastructure.sqlite_repository import SqliteScanRepository
 from tdp.modules.scanner.infrastructure.tech_stack_detector import detect_tech_stack
 from tdp.modules.scanner.infrastructure.test_runner import run_lint, run_security_scan, run_tests
-from tdp.modules.scanner.domain.model import SonarQubeResult
-from tdp.modules.scanner.infrastructure.sonarqube_client import SonarQubeClient, SonarQubeConfig, map_sonarqube_to_health
 
 
 @dataclass(frozen=True, slots=True)
@@ -67,15 +70,27 @@ class ScanDto:
                 "has_linting": scan.tech_stack.has_linting,
                 "has_type_checking": scan.tech_stack.has_type_checking,
             },
-            test_suites=[{
-                "name": s.name, "framework": s.framework, "total": s.total,
-                "passed": s.passed, "failed": s.failed, "skipped": s.skipped,
-                "error_output": s.error_output,
-            } for s in scan.test_suites],
-            lint_results=[{
-                "tool": r.tool, "total_issues": r.total_issues,
-                "errors": r.errors, "warnings": r.warnings,
-            } for r in scan.lint_results],
+            test_suites=[
+                {
+                    "name": s.name,
+                    "framework": s.framework,
+                    "total": s.total,
+                    "passed": s.passed,
+                    "failed": s.failed,
+                    "skipped": s.skipped,
+                    "error_output": s.error_output,
+                }
+                for s in scan.test_suites
+            ],
+            lint_results=[
+                {
+                    "tool": r.tool,
+                    "total_issues": r.total_issues,
+                    "errors": r.errors,
+                    "warnings": r.warnings,
+                }
+                for r in scan.lint_results
+            ],
             security_scan={
                 "tool": scan.security_scan.tool,
                 "total_vulnerabilities": scan.security_scan.total_vulnerabilities,
@@ -83,7 +98,15 @@ class ScanDto:
                 "high": scan.security_scan.high,
                 "medium": scan.security_scan.medium,
                 "low": scan.security_scan.low,
-                "issues": [{"package": i.package, "severity": i.severity, "description": i.description, "fix_version": i.fix_version} for i in scan.security_scan.issues],
+                "issues": [
+                    {
+                        "package": i.package,
+                        "severity": i.severity,
+                        "description": i.description,
+                        "fix_version": i.fix_version,
+                    }
+                    for i in scan.security_scan.issues
+                ],
             },
             health={
                 "overall": scan.health.overall.value,
@@ -119,11 +142,17 @@ class ScanDto:
                 "coverage_score": scan.sonarqube.coverage_score,
                 "error": scan.sonarqube.error,
             },
-            suggestions=[{
-                "template_key": s.template_key, "document_type": s.document_type,
-                "name": s.name, "reason": s.reason, "priority": s.priority,
-                "auto_generated": s.auto_generated,
-            } for s in scan.suggestions],
+            suggestions=[
+                {
+                    "template_key": s.template_key,
+                    "document_type": s.document_type,
+                    "name": s.name,
+                    "reason": s.reason,
+                    "priority": s.priority,
+                    "auto_generated": s.auto_generated,
+                }
+                for s in scan.suggestions
+            ],
             error_message=scan.error_message,
             started_at=scan.started_at.isoformat(),
             completed_at=scan.completed_at.isoformat() if scan.completed_at else None,
@@ -162,7 +191,12 @@ class ScannerApplicationService:
         existing = await self._repository.get(ScanId.from_string(scan_id))
         if existing is None:
             raise ScanNotFoundError(f"Scan {scan_id} not found.")
-        if existing.status in (ScanStatus.CLONING, ScanStatus.ANALYZING, ScanStatus.TESTING, ScanStatus.GENERATING):
+        if existing.status in (
+            ScanStatus.CLONING,
+            ScanStatus.ANALYZING,
+            ScanStatus.TESTING,
+            ScanStatus.GENERATING,
+        ):
             raise ScanInProgressError("Cannot re-scan while scan is in progress.")
         # Create a fresh scan for the same repo
         new_scan = ScanResult.create(existing.repository_url, existing.branch)
@@ -197,6 +231,7 @@ class ScannerApplicationService:
             sonarqube_project = ""
             try:
                 import os
+
                 sonarqube_url = os.environ.get("SONARQUBE_URL", "")
                 sonarqube_token = os.environ.get("SONARQUBE_TOKEN", "")
                 sonarqube_project = os.environ.get("SONARQUBE_PROJECT_KEY", "")
@@ -205,7 +240,9 @@ class ScannerApplicationService:
 
             if sonarqube_url and sonarqube_token and sonarqube_project:
                 try:
-                    sq_config = SonarQubeConfig(url=sonarqube_url, token=sonarqube_token, project_key=sonarqube_project)
+                    sq_config = SonarQubeConfig(
+                        url=sonarqube_url, token=sonarqube_token, project_key=sonarqube_project
+                    )
                     sq_client = SonarQubeClient(sq_config)
                     sq_metrics = sq_client.fetch_metrics()
                     sq_health = map_sonarqube_to_health(sq_metrics)
@@ -239,7 +276,13 @@ class ScannerApplicationService:
 
             scan.status = ScanStatus.GENERATING
             await self._repository.save(scan)
-            scan.health = calculate_health(scan.tech_stack, scan.file_analysis, scan.test_suites, scan.lint_results, scan.security_scan)
+            scan.health = calculate_health(
+                scan.tech_stack,
+                scan.file_analysis,
+                scan.test_suites,
+                scan.lint_results,
+                scan.security_scan,
+            )
             scan.suggestions = suggest_documents(scan.tech_stack, scan.file_analysis, scan.stage)
 
             scan.mark_completed()
@@ -251,17 +294,22 @@ class ScannerApplicationService:
             if temp_path:
                 cleanup_temp_dir(temp_path)
 
-    async def generate_documents(self, scan_id: str, template_keys: list[str] | None = None) -> list[dict]:
+    async def generate_documents(
+        self, scan_id: str, template_keys: list[str] | None = None
+    ) -> list[dict]:
         scan = await self._repository.get(ScanId.from_string(scan_id))
         if scan is None:
             raise ScanNotFoundError(f"Scan {scan_id} not found.")
         if scan.status != ScanStatus.COMPLETED:
             raise ScanInProgressError(f"Scan {scan_id} is not completed yet.")
 
-        from tdp.modules.scanner.infrastructure.document_builder import DocumentStore, build_document
+        from tdp.modules.scanner.infrastructure.document_builder import (
+            DocumentStore,
+            build_document,
+        )
         from tdp.modules.scanner.infrastructure.document_generator import suggest_documents
 
-        db_path = getattr(self._repository, '_database_path', ':memory:')
+        db_path = getattr(self._repository, "_database_path", ":memory:")
         store = DocumentStore(str(db_path))
         suggestions = suggest_documents(scan.tech_stack, scan.file_analysis, scan.stage)
 
@@ -281,7 +329,8 @@ class ScannerApplicationService:
             raise ScanNotFoundError(f"Scan {scan_id} not found.")
 
         from tdp.modules.scanner.infrastructure.document_builder import DocumentStore
-        db_path = getattr(self._repository, '_database_path', ':memory:')
+
+        db_path = getattr(self._repository, "_database_path", ":memory:")
         store = DocumentStore(str(db_path))
         docs = store.get_by_scan(scan_id)
 

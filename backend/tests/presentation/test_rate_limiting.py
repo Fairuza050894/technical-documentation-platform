@@ -1,4 +1,5 @@
 """Tests for rate limiting middleware."""
+
 from __future__ import annotations
 
 from tdp.presentation.http.middleware.rate_limiting import SlidingWindowRateLimiter

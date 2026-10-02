@@ -3,11 +3,12 @@
 Evaluates whether a principal has a specific permission in a workspace
 by combining workspace membership roles with the role-permission mapping.
 """
+
 from __future__ import annotations
 
 from typing import Protocol
 
-from tdp.authorization.model import Permission, Role, ROLE_PERMISSIONS
+from tdp.authorization.model import ROLE_PERMISSIONS, Permission, Role
 
 
 class MembershipLookup(Protocol):
@@ -40,9 +41,7 @@ class AuthorizationPolicy:
         if subject_id in self._admin_subjects:
             return True
         roles = self._membership.get_roles(subject_id, workspace_id)
-        return any(
-            permission in ROLE_PERMISSIONS.get(role, frozenset()) for role in roles
-        )
+        return any(permission in ROLE_PERMISSIONS.get(role, frozenset()) for role in roles)
 
     def get_effective_permissions(
         self,
@@ -65,10 +64,12 @@ class SeparationOfDutiesPolicy:
     Reference: ISO/IEC 27001:2022 A.5.3 (Segregation of duties)
     """
 
-    _RESTRICTED: frozenset[Permission] = frozenset({
-        Permission.DOCUMENT_APPROVE,
-        Permission.DOCUMENT_REVIEW,
-    })
+    _RESTRICTED: frozenset[Permission] = frozenset(
+        {
+            Permission.DOCUMENT_APPROVE,
+            Permission.DOCUMENT_REVIEW,
+        }
+    )
 
     @staticmethod
     def can_act_on_document(
