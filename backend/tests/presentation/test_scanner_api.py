@@ -121,3 +121,12 @@ class TestScannerRescanEndpoint:
         client = build_client(tmp_path / "test.sqlite3")
         response = client.post("/api/scanner/scans/00000000-0000-0000-0000-000000000000/rescan")
         assert response.status_code == 404
+
+
+class TestScannerDocumentsEndpoint:
+    def test_list_documents_for_unknown_scan_returns_404(self, tmp_path: Path) -> None:
+        client = build_client(tmp_path / "test.sqlite3")
+        response = client.get(
+            "/api/scanner/scans/00000000-0000-0000-0000-000000000000/documents"
+        )
+        assert response.status_code == 404
