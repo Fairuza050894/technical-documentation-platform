@@ -186,7 +186,9 @@ def _mermaid_architecture(c):
     dirs = [d.lower() for d in c.get("directories", [])]
     langs = c.get("languages_dict", {})
     fws = c["frameworks_list"]
-    has_backend = any(language in langs for language in ["Python", "Java", "Go", "Rust", "Ruby", "PHP", "C#"])
+    has_backend = any(
+        language in langs for language in ["Python", "Java", "Go", "Rust", "Ruby", "PHP", "C#"]
+    )
     has_frontend = any(
         language in langs
         for language in ["JavaScript", "TypeScript", "TypeScript (React)", "JavaScript (React)"]

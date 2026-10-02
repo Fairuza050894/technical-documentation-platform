@@ -63,9 +63,9 @@ The table is derived from FastAPI route decorators. It records declared routes, 
 | GET | `/api/scanner/scans/{scan_id}/documents` | `backend/src/tdp/modules/scanner/presentation/http/router.py:130` |
 | POST | `/api/scanner/scans/{scan_id}/generate` | `backend/src/tdp/modules/scanner/presentation/http/router.py:107` |
 | POST | `/api/scanner/scans/{scan_id}/rescan` | `backend/src/tdp/modules/scanner/presentation/http/router.py:154` |
-| GET | `/api/scanner/webhooks/events` | `backend/src/tdp/modules/scanner/presentation/http/webhook_router.py:72` |
-| GET | `/api/scanner/webhooks/events/{event_id}` | `backend/src/tdp/modules/scanner/presentation/http/webhook_router.py:81` |
-| POST | `/api/scanner/webhooks/github` | `backend/src/tdp/modules/scanner/presentation/http/webhook_router.py:52` |
+| GET | `/api/scanner/webhooks/events` | `backend/src/tdp/modules/scanner/presentation/http/webhook_router.py:70` |
+| GET | `/api/scanner/webhooks/events/{event_id}` | `backend/src/tdp/modules/scanner/presentation/http/webhook_router.py:79` |
+| POST | `/api/scanner/webhooks/github` | `backend/src/tdp/modules/scanner/presentation/http/webhook_router.py:50` |
 | GET | `/api/sources/{source_id}` | `backend/src/tdp/modules/sources/presentation/http/router.py:103` |
 | POST | `/api/sources/{source_id}/archive` | `backend/src/tdp/modules/sources/presentation/http/router.py:111` |
 | GET | `/api/sources/{source_id}/synchronizations` | `backend/src/tdp/modules/catalog/presentation/http/router.py:155` |
