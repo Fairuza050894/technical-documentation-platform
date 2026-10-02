@@ -592,3 +592,30 @@
 .finding__remediation {
   color: var(--color-text-muted);
 }
+
+/* Document tab visibility is owned by the documents module. */
+
+/* Tab visibility */
+[data-active-tab="generate"] .document-section--history,
+[data-active-tab="generate"] .document-section--detail,
+[data-active-tab="generate"] .document-section--comparison {
+  display: none;
+}
+
+[data-active-tab="versions"] .document-section--generate,
+[data-active-tab="versions"] .document-section--comparison {
+  display: none;
+}
+
+[data-active-tab="compare"] .document-section--generate,
+[data-active-tab="compare"] .document-section--history,
+[data-active-tab="compare"] .document-section--detail {
+  display: none;
+}
+
+@media print {
+  .document-preview {
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+  }
+}
