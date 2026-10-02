@@ -1,0 +1,51 @@
+name: Apply safe Ruff baseline fixes
+
+on:
+  push:
+    branches:
+      - fix/source-backed-ui-integrity-v2
+    paths:
+      - .github/workflows/ruff-safe-fix.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v6
+        with:
+          ref: fix/source-backed-ui-integrity-v2
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/pyproject.toml
+
+      - name: Install backend dependencies
+        run: uv sync --project backend --dev
+
+      - name: Apply safe Ruff fixes and formatting
+        run: |
+          uv run --project backend ruff check backend --fix
+          uv run --project backend ruff format backend
+
+      - name: Commit mechanical fixes
+        run: |
+          if git diff --quiet -- backend; then
+            echo "No backend changes required."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add backend
+          git commit -m "chore: apply safe Ruff baseline fixes"
+          git push origin HEAD:fix/source-backed-ui-integrity-v2
