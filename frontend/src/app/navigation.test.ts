@@ -25,6 +25,11 @@ describe("application navigation composition", () => {
       .flatMap((group) => group.items)
       .find((item) => item.id === "Knowledge Map");
     expect(knowledgeMap?.badge).toBeUndefined();
+
+    const intelligence = groups
+      .flatMap((group) => group.items)
+      .find((item) => item.id === "Intelligence");
+    expect(intelligence).toBeUndefined();
   });
 
   it("maps project routes to the Projects navigation item", () => {
