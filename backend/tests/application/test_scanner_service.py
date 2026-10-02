@@ -39,7 +39,7 @@ class InMemoryScanRepository:
 
 
 class TestScannerServiceGetScan:
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_get_existing_scan(self) -> None:
         repo = InMemoryScanRepository()
         service = ScannerApplicationService(repo)
@@ -49,7 +49,7 @@ class TestScannerServiceGetScan:
         result = await service.get_scan(str(scan.id))
         assert result.id == str(scan.id)
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_get_nonexistent_scan_raises(self) -> None:
         repo = InMemoryScanRepository()
         service = ScannerApplicationService(repo)
@@ -59,7 +59,7 @@ class TestScannerServiceGetScan:
 
 
 class TestScannerServiceListScans:
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_list_empty(self) -> None:
         repo = InMemoryScanRepository()
         service = ScannerApplicationService(repo)
@@ -67,7 +67,7 @@ class TestScannerServiceListScans:
         result = await service.list_scans()
         assert result == []
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_list_returns_all_scans(self) -> None:
         repo = InMemoryScanRepository()
         service = ScannerApplicationService(repo)
@@ -81,7 +81,7 @@ class TestScannerServiceListScans:
 
 
 class TestScannerServiceDeleteScan:
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_delete_existing_scan(self) -> None:
         repo = InMemoryScanRepository()
         service = ScannerApplicationService(repo)
@@ -92,7 +92,7 @@ class TestScannerServiceDeleteScan:
         result = await service.list_scans()
         assert len(result) == 0
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_delete_nonexistent_raises(self) -> None:
         repo = InMemoryScanRepository()
         service = ScannerApplicationService(repo)
@@ -102,7 +102,7 @@ class TestScannerServiceDeleteScan:
 
 
 class TestScannerServiceStartScan:
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_start_scan_creates_new_scan(self) -> None:
         repo = InMemoryScanRepository()
         service = ScannerApplicationService(repo)
@@ -116,7 +116,7 @@ class TestScannerServiceStartScan:
 
 
 class TestScannerServiceRescan:
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_rescan_creates_new_scan_for_same_repo(self) -> None:
         repo = InMemoryScanRepository()
         service = ScannerApplicationService(repo)
@@ -132,7 +132,7 @@ class TestScannerServiceRescan:
         scans = await service.list_scans()
         assert len(scans) == 2
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_rescan_nonexistent_raises(self) -> None:
         repo = InMemoryScanRepository()
         service = ScannerApplicationService(repo)
@@ -140,7 +140,7 @@ class TestScannerServiceRescan:
         with pytest.raises(ScanNotFoundError):
             await service.rescan("00000000-0000-0000-0000-000000000000")
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_rescan_in_progress_raises(self) -> None:
         repo = InMemoryScanRepository()
         service = ScannerApplicationService(repo)
@@ -153,7 +153,7 @@ class TestScannerServiceRescan:
 
 
 class TestScanDto:
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_dto_from_domain(self) -> None:
         scan = ScanResult.create("https://github.com/org/repo.git", "main")
         dto = ScanDto.from_domain(scan)
