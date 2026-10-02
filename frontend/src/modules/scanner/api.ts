@@ -1,5 +1,5 @@
 import { requestJson } from "../../shared/api/client";
-import type { DashboardResponse, ScanCollection, ScanResult, WebhookEvent, WebhookEventCollection } from "./types";
+import type { DashboardResponse, ScanCollection, ScanComparison, ScanResult, WebhookEvent, WebhookEventCollection } from "./types";
 
 export function startScan(repositoryUrl: string, branch = "main"): Promise<ScanResult> {
   return requestJson<ScanResult>("/scanner/scan", {
@@ -44,7 +44,6 @@ export function getDocument(docId: string): Promise<GeneratedDocument> {
   return requestJson<GeneratedDocument>(`/scanner/documents/${docId}`);
 }
 
-import type { ScanComparison } from "./types";
 
 export function rescanScan(scanId: string): Promise<ScanResult> {
   return requestJson<ScanResult>(`/scanner/scans/${scanId}/rescan`, {
@@ -57,12 +56,13 @@ export function compareScans(scanId: string, otherId: string): Promise<ScanCompa
 }
 
 export function listWebhookEvents(signal?: AbortSignal): Promise<WebhookEventCollection> {
-  return requestJson<WebhookEventCollection>('/scanner/webhooks/events', { signal });
+  return requestJson<WebhookEventCollection>("/scanner/webhooks/events", { signal });
 }
 
 export function getWebhookEvent(eventId: string): Promise<WebhookEvent> {
-  return requestJson<WebhookEvent>("/scanner/webhooks/events/${eventId}");
+  return requestJson<WebhookEvent>(`/scanner/webhooks/events/${encodeURIComponent(eventId)}`);
 }
+
 export function getDashboard(signal?: AbortSignal): Promise<DashboardResponse> {
   return requestJson<DashboardResponse>("/scanner/dashboard", { signal });
 }
