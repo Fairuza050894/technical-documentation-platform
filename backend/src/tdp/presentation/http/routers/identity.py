@@ -36,9 +36,12 @@ def _resolve_role(request: Request, principal: RequestPrincipal) -> str:
     settings = getattr(request.app.state, "settings", None)
 
     # Check default admin subjects from settings
-    if settings and hasattr(settings, "default_admin_subjects"):
-        if principal.subject_id in settings.default_admin_subjects:
-            return "admin"
+    if (
+        settings
+        and hasattr(settings, "default_admin_subjects")
+        and principal.subject_id in settings.default_admin_subjects
+    ):
+        return "admin"
 
     # Fallback: check authorization policy if available
     policy = getattr(request.app.state, "authorization_policy", None)
@@ -51,9 +54,8 @@ def _resolve_role(request: Request, principal: RequestPrincipal) -> str:
             elif hasattr(policy, "has_role"):
                 if policy.has_role(principal.subject_id, "admin"):
                     return "admin"
-            elif hasattr(policy, "check_admin"):
-                if policy.check_admin(principal.subject_id):
-                    return "admin"
+            elif hasattr(policy, "check_admin") and policy.check_admin(principal.subject_id):
+                return "admin"
         except Exception:
             pass
 
