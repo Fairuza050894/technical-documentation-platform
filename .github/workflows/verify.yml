@@ -131,10 +131,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: security-scan
+    permissions:
+      contents: write
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
+        with:
+          ref: ${{ github.head_ref }}
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v6
@@ -179,13 +183,17 @@ jobs:
             cp "$path" "/tmp/tdp-autofix/files/$path"
           done < /tmp/tdp-autofix/manifest.txt
 
-      - name: Upload safe autofix evidence
-        uses: actions/upload-artifact@v4
-        with:
-          name: tdp-safe-autofix
-          path: /tmp/tdp-autofix
-          if-no-files-found: error
-          retention-days: 1
+      - name: Commit deterministic normalization
+        run: |
+          if git diff --quiet -- backend docs/_generated; then
+            echo "No deterministic normalization changes to commit."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add backend docs/_generated
+            git commit -m "chore: apply deterministic docs and lint normalization"
+            git push origin "HEAD:${GITHUB_HEAD_REF}"
+          fi
 
       - name: Run repository quality gate
         env:
