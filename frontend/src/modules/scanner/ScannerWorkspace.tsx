@@ -6,8 +6,8 @@ import { MarkdownPreview } from "./MarkdownPreview";
 import { ScanComparisonView } from "./ScanComparisonView";
 import { SonarQubeComparison } from "./SonarQubeComparison";
 import { WebhookEventsPanel } from "./WebhookEventsPanel";
-import type { DashboardResponse, HealthLevel, RepoSummary, ScanResult, SonarQubeResult } from "./types";
-import { HEALTH_COLORS, PRIORITY_LABELS, STATUS_LABELS, STATUS_STEPS, DOCUMENT_TYPE_LABELS, TEMPLATE_KEY_LABELS } from "./types";
+import type { DashboardResponse, ScanResult } from "./types";
+import { DOCUMENT_TYPE_LABELS, PRIORITY_LABELS, STATUS_LABELS, TEMPLATE_KEY_LABELS } from "./types";
 
 interface ScannerWorkspaceProps {
   embedded?: boolean;
@@ -67,18 +67,20 @@ export function ScannerWorkspace({ embedded = false }: ScannerWorkspaceProps) {
 
   useEffect(() => {
     if (selectedScan && (selectedScan.status === "PENDING" || selectedScan.status === "CLONING" || selectedScan.status === "ANALYZING" || selectedScan.status === "TESTING" || selectedScan.status === "GENERATING")) {
-      pollRef.current = setInterval(async () => {
-        try {
-          const updated = await getScan(selectedScan.id);
-          setSelectedScan(updated);
-          void loadScans();
-          void loadDashboard();
-          if (updated.status === "COMPLETED" || updated.status === "FAILED") {
+      pollRef.current = setInterval(() => {
+        void (async () => {
+          try {
+            const updated = await getScan(selectedScan.id);
+            setSelectedScan(updated);
+            void loadScans();
+            void loadDashboard();
+            if (updated.status === "COMPLETED" || updated.status === "FAILED") {
+              if (pollRef.current) clearInterval(pollRef.current);
+            }
+          } catch {
             if (pollRef.current) clearInterval(pollRef.current);
           }
-        } catch {
-          if (pollRef.current) clearInterval(pollRef.current);
-        }
+        })();
       }, 3000);
     }
     return () => {
@@ -199,7 +201,7 @@ export function ScannerWorkspace({ embedded = false }: ScannerWorkspaceProps) {
   };
 
   return (
-    <div className="scanner-unified">
+    <div className={embedded ? "scanner-unified scanner-unified--embedded" : "scanner-unified"}>
       {/* Summary Header */}
       <div className="scanner-header">
         <div className="scanner-header__title">
@@ -246,7 +248,7 @@ export function ScannerWorkspace({ embedded = false }: ScannerWorkspaceProps) {
               value={branch}
               onChange={(e) => setBranch(e.target.value)}
             />
-            <button type="button" className="scanner-scan-form__btn" disabled={isBusy || !repoUrl.trim()} onClick={handleStartScan}>
+            <button type="button" className="scanner-scan-form__btn" disabled={isBusy || !repoUrl.trim()} onClick={() => { void handleStartScan(); }}>
               {isBusy ? "Scanning..." : "Start Scan"}
             </button>
           </div>
@@ -344,7 +346,7 @@ export function ScannerWorkspace({ embedded = false }: ScannerWorkspaceProps) {
                   <h2>{selectedScan.repository_name}</h2>
                   <span className="scanner-content__branch">{selectedScan.branch}</span>
                   <span className={`scanner-content__status scanner-content__status--${selectedScan.status.toLowerCase()}`}>
-                    {STATUS_LABELS[selectedScan.status as keyof typeof STATUS_LABELS] ?? selectedScan.status}
+                    {STATUS_LABELS[selectedScan.status] ?? selectedScan.status}
                   </span>
                 </div>
                 <div className="scanner-content__actions">
@@ -429,10 +431,10 @@ export function ScannerWorkspace({ embedded = false }: ScannerWorkspaceProps) {
                         </span>
                         <span className="scanner-overview__score-label">Health</span>
                       </div>
-                      {selectedScan.sonarqube && selectedScan.sonarqube && typeof selectedScan.sonarqube === "object" && "total_score" in (selectedScan.sonarqube as unknown as unknown as Record<string, unknown>) && (selectedScan.sonarqube as unknown as Record<string, unknown>).total_score as number > 0 && (
-                        <div className="scanner-overview__score-ring" style={{ borderColor: getScoreColor((selectedScan.sonarqube as unknown as Record<string, unknown>).total_score as number) }}>
-                          <span className="scanner-overview__score-value" style={{ color: getScoreColor((selectedScan.sonarqube as unknown as Record<string, unknown>).total_score as number) }}>
-                            {(selectedScan.sonarqube as unknown as Record<string, unknown>).total_score as number}
+                      {selectedScan.sonarqube.total_score > 0 && (
+                        <div className="scanner-overview__score-ring" style={{ borderColor: getScoreColor(selectedScan.sonarqube.total_score) }}>
+                          <span className="scanner-overview__score-value" style={{ color: getScoreColor(selectedScan.sonarqube.total_score) }}>
+                            {selectedScan.sonarqube.total_score}
                           </span>
                           <span className="scanner-overview__score-label">SonarQube</span>
                         </div>
@@ -652,10 +654,10 @@ export function ScannerWorkspace({ embedded = false }: ScannerWorkspaceProps) {
                 {/* SonarQube Tab */}
                 {activeTab === "sonarqube" && (
                   <div className="scanner-sonarqube">
-                    {selectedScan.sonarqube && (selectedScan.sonarqube as SonarQubeResult).project_key ? (
+                    {selectedScan.sonarqube.project_key ? (
                       <SonarQubeComparison
                         internalScore={selectedScan.health.score}
-                        sonarqube={selectedScan.sonarqube as SonarQubeResult}
+                        sonarqube={selectedScan.sonarqube}
                       />
                     ) : (
                       <div className="scanner-sonarqube__empty">
@@ -698,18 +700,20 @@ export function ScannerWorkspace({ embedded = false }: ScannerWorkspaceProps) {
                               type="button"
                               className="scanner-documents__generate-btn"
                               disabled={selectedSuggestions.size === 0 || isBusy}
-                              onClick={async () => {
-                                setIsBusy(true);
-                                try {
-                                  await generateDocuments(selectedScan.id, Array.from(selectedSuggestions));
-                                  const docs = await listGeneratedDocuments(selectedScan.id);
-                                  setGeneratedDocs(docs);
-                                  setSelectedSuggestions(new Set());
-                                } catch (err) {
-                                  console.error(err);
-                                } finally {
-                                  setIsBusy(false);
-                                }
+                              onClick={() => {
+                                void (async () => {
+                                  setIsBusy(true);
+                                  try {
+                                    await generateDocuments(selectedScan.id, Array.from(selectedSuggestions));
+                                    const docs = await listGeneratedDocuments(selectedScan.id);
+                                    setGeneratedDocs(docs);
+                                    setSelectedSuggestions(new Set());
+                                  } catch (err) {
+                                    console.error(err);
+                                  } finally {
+                                    setIsBusy(false);
+                                  }
+                                })();
                               }}
                             >
                               {isBusy ? "Generating..." : selectedSuggestions.size === 0 ? "Select documents to generate" : `Generate ${selectedSuggestions.size} Document${selectedSuggestions.size !== 1 ? "s" : ""}`}
@@ -742,7 +746,7 @@ export function ScannerWorkspace({ embedded = false }: ScannerWorkspaceProps) {
                                 <span className="scanner-suggestion__name">{sug.name}</span>
                                 <span className="scanner-suggestion__type">{DOCUMENT_TYPE_LABELS[sug.document_type] ?? sug.document_type}</span>
                                 <span className={`scanner-suggestion__priority scanner-suggestion__priority--${sug.priority}`}>
-                                  {PRIORITY_LABELS[sug.priority as keyof typeof PRIORITY_LABELS] ?? sug.priority}
+                                  {PRIORITY_LABELS[sug.priority] ?? sug.priority}
                                 </span>
                                 {isGenerated && <span className="scanner-suggestion__done">Generated</span>}
                               </label>
