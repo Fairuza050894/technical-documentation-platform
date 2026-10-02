@@ -194,7 +194,7 @@ class AuditStore:
 
             rows = conn.execute(
                 f"SELECT * FROM audit_logs {where} ORDER BY {col} {direction} LIMIT ? OFFSET ?",
-                params + [safe_size, offset],
+                [*params, safe_size, offset],
             ).fetchall()
 
         logs = []

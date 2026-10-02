@@ -127,7 +127,7 @@ def _row_to_template(row: sqlite3.Row) -> DocumentTemplate:
         category=TemplateCategory(row["category"]),
         standard=TemplateStandard(row["standard"]),
         content=row["content"],
-        document_type=row["document_type"] if "document_type" in row.keys() else None,
+        document_type=row["document_type"] if "document_type" in row else None,
         is_builtin=bool(row["is_builtin"]),
         version=row["version"],
         created_at=datetime.fromisoformat(row["created_at"]),

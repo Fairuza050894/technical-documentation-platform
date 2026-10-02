@@ -15,11 +15,10 @@ def run_tests(repo_path: str) -> list[TestSuite]:
         if suite:
             suites.append(suite)
 
-    if "package.json" in cfg_files:
-        if _file_contains(root / "package.json", "jest"):
-            suite = _run_jest(repo_path)
-            if suite:
-                suites.append(suite)
+    if "package.json" in cfg_files and _file_contains(root / "package.json", "jest"):
+        suite = _run_jest(repo_path)
+        if suite:
+            suites.append(suite)
 
     if "go.mod" in cfg_files:
         suite = _run_go_test(repo_path)
