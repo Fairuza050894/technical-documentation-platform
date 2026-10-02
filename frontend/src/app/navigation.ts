@@ -89,7 +89,6 @@ export function buildNavigationGroups(activeWorkspaceId: string | null): readonl
           label: "Knowledge Map",
           icon: "overview",
           route: { name: "knowledge-map" },
-          badge: 3,
         },
         {
           id: "System status",
