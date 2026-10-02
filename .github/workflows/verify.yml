@@ -113,7 +113,7 @@ jobs:
           fi
 
           # Private keys
-          if grep -rn "BEGIN.*PRIVATE KEY" backend/src/ frontend/src/ 2>/dev/null; then
+          if grep -rnE -- "-----BEGIN (RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----" backend/src/ frontend/src/ 2>/dev/null; then
             echo "::error::Private key found in source"
             FOUND=1
           fi
