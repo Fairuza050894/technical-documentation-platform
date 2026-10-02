@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Changelog Policy** - Formalized changelog and versioning policy (TDP-GOV-003) following Keep a Changelog and Semantic Versioning standards
 
 ### Changed
+- **Source-backed UI integrity** - Knowledge Map no longer presents demo fixtures as repository facts by default; demo rendering requires `VITE_KNOWLEDGE_MAP_DEMO=true`
+- **Scanner webhook routing** - Fixed webhook event detail URL interpolation and URL encoding
+- **Frontend routing cleanup** - Removed duplicate Intelligence route handling, unsupported Intelligence primary navigation, hard-coded Knowledge Map badge, and duplicate HTTP 204 handling
 - **Header button alignment** - Re-scan and Delete buttons now consistently align to the right regardless of repository name length (PR #16)
 - **Header layout** - Title row and actions use flexbox with space-between for consistent positioning
 - **Scanner workspace consolidation** - Scanner workspace now serves as the single entry point for all scanner features (PR #14)
