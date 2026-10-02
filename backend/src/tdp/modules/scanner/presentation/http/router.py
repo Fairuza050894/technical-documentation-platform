@@ -5,7 +5,6 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from tdp.modules.scanner.application.service import ScannerApplicationService, ScanDto
-from tdp.modules.scanner.domain.model import ScanId
 from tdp.modules.scanner.domain.errors import ScannerError, ScanInProgressError, ScanNotFoundError
 from tdp.modules.scanner.infrastructure.document_builder import DocumentStore, build_document
 from tdp.modules.scanner.infrastructure.scan_comparator import compare_scans
@@ -110,12 +109,7 @@ async def generate_documents(
     service: ScannerServiceDependency,
     doc_store: DocumentStoreDependency,
 ) -> list[GeneratedDocumentResponse]:
-    scan = await service.get_scan(scan_id)
-    from tdp.modules.scanner.domain.model import ScanId
-    scan_domain = await service._repository.get(ScanId.from_string(scan_id))
-    if scan_domain is None:
-        from tdp.modules.scanner.domain.errors import ScanNotFoundError
-        raise ScanNotFoundError(f"Scan {scan_id} not found.")
+    scan_domain = await service.require_completed_scan_result(scan_id)
     results = []
     for key in payload.template_keys:
         doc = build_document(scan_domain, key)
@@ -127,8 +121,10 @@ async def generate_documents(
 @router.get("/scanner/scans/{scan_id}/documents", response_model=list[GeneratedDocumentResponse])
 async def list_generated_documents(
     scan_id: str,
+    service: ScannerServiceDependency,
     doc_store: DocumentStoreDependency,
 ) -> list[GeneratedDocumentResponse]:
+    await service.get_scan_result(scan_id)
     docs = doc_store.get_by_scan(scan_id)
     return [GeneratedDocumentResponse(**d.to_dict()) for d in docs]
 
@@ -140,7 +136,6 @@ async def get_document(
 ) -> GeneratedDocumentResponse:
     doc = doc_store.get(doc_id)
     if doc is None:
-        from tdp.modules.scanner.domain.errors import ScanNotFoundError
         raise ScanNotFoundError(f"Document {doc_id} not found.")
     return GeneratedDocumentResponse(**doc.to_dict())
 
@@ -156,10 +151,8 @@ async def compare_scans_endpoint(
     other_id: str,
     service: ScannerServiceDependency,
 ) -> ScanComparisonResponse:
-    scan_before = await service._repository.get(ScanId.from_string(other_id))
-    scan_after = await service._repository.get(ScanId.from_string(scan_id))
-    if scan_before is None or scan_after is None:
-        raise ScanNotFoundError("One or both scans not found.")
+    scan_before = await service.get_scan_result(other_id)
+    scan_after = await service.get_scan_result(scan_id)
     comparison = compare_scans(scan_before, scan_after)
     return ScanComparisonResponse(
         scan_before_id=comparison.scan_before_id,
