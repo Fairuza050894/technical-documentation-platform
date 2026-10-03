@@ -1,8 +1,9 @@
 from tdp.modules.catalog.domain.model import SynchronizationId, SynchronizationStatus
 from tdp.modules.catalog.domain.repository import CatalogRepository
-from tdp.modules.changes.application.dto import ComparisonDto
+from tdp.modules.changes.application.dto import ComparisonDto, ImpactAssessmentDto
 from tdp.modules.changes.domain.errors import ComparisonRunNotFoundError, InvalidComparisonError
-from tdp.modules.changes.domain.model import DeterministicCatalogComparator
+from tdp.modules.changes.domain.impact import DeterministicImpactPolicy
+from tdp.modules.changes.domain.model import Comparison, DeterministicCatalogComparator
 
 
 class ChangeDetectionApplicationService:
@@ -10,9 +11,11 @@ class ChangeDetectionApplicationService:
         self,
         repository: CatalogRepository,
         comparator: DeterministicCatalogComparator,
+        impact_policy: DeterministicImpactPolicy | None = None,
     ) -> None:
         self._repository = repository
         self._comparator = comparator
+        self._impact_policy = impact_policy or DeterministicImpactPolicy()
 
     async def compare(
         self,
@@ -20,6 +23,24 @@ class ChangeDetectionApplicationService:
         baseline_run_id: str,
         target_run_id: str,
     ) -> ComparisonDto:
+        comparison = await self._comparison(project_id, baseline_run_id, target_run_id)
+        return ComparisonDto.from_domain(comparison)
+
+    async def assess_impact(
+        self,
+        project_id: str,
+        baseline_run_id: str,
+        target_run_id: str,
+    ) -> ImpactAssessmentDto:
+        comparison = await self._comparison(project_id, baseline_run_id, target_run_id)
+        return ImpactAssessmentDto.from_domain(self._impact_policy.assess(comparison))
+
+    async def _comparison(
+        self,
+        project_id: str,
+        baseline_run_id: str,
+        target_run_id: str,
+    ) -> Comparison:
         if baseline_run_id == target_run_id:
             raise InvalidComparisonError("Baseline and target synchronization must be different.")
 
@@ -35,7 +56,7 @@ class ChangeDetectionApplicationService:
         ):
             raise InvalidComparisonError("Only completed synchronization runs can be compared.")
 
-        comparison = self._comparator.compare(
+        return self._comparator.compare(
             project_id=project_id,
             baseline_run_id=baseline_run_id,
             target_run_id=target_run_id,
@@ -44,4 +65,3 @@ class ChangeDetectionApplicationService:
             baseline_schemas=await self._repository.list_schemas_by_run(baseline.id),
             target_schemas=await self._repository.list_schemas_by_run(target.id),
         )
-        return ComparisonDto.from_domain(comparison)
