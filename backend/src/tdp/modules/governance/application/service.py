@@ -95,7 +95,9 @@ class GovernanceApplicationService:
         await self._project_service.get(project_id)
         requirement = self._repository.latest_requirement(requirement_id)
         if requirement is None or requirement.project_id != project_id:
-            raise LookupError(f"Requirement {requirement_id} was not found in project {project_id}.")
+            raise LookupError(
+                f"Requirement {requirement_id} was not found in project {project_id}."
+            )
         link = TraceLink.create(
             project_id=project_id,
             requirement_id=requirement_id,
