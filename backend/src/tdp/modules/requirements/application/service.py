@@ -74,8 +74,9 @@ class RequirementApplicationService:
             changed_by=command.actor,
             change_reason=command.change_reason,
         )
-        await self._repository.add_revision(revision)
-        return RequirementDto.from_domain(revision, [])
+        feature_links = self._feature_trace_links(revision, command.actor)
+        await self._repository.add_revision(revision, feature_links)
+        return RequirementDto.from_domain(revision, list(feature_links))
 
     async def list_requirements(
         self,
@@ -125,8 +126,9 @@ class RequirementApplicationService:
             changed_by=command.actor,
             change_reason=command.change_reason,
         )
-        await self._repository.add_revision(revision)
-        return RequirementDto.from_domain(revision, [])
+        feature_links = self._feature_trace_links(revision, command.actor)
+        await self._repository.add_revision(revision, feature_links)
+        return RequirementDto.from_domain(revision, list(feature_links))
 
     async def retire(self, command: RetireRequirementCommand) -> RequirementDto:
         await self._require_project(command.workspace_id, command.project_id, writable=True)
@@ -230,6 +232,25 @@ class RequirementApplicationService:
                 f"Feature {feature_id} was not found for project {project_id}."
             )
 
+    @staticmethod
+    def _feature_trace_links(
+        revision: RequirementRevision,
+        actor: str,
+    ) -> tuple[TraceLink, ...]:
+        if revision.feature_id is None:
+            return ()
+        return (
+            TraceLink.create(
+                project_id=revision.project_id,
+                requirement_revision_id=revision.revision_id,
+                target_type=TraceTargetType.FEATURE,
+                relation=TraceRelation.IMPLEMENTED_BY,
+                target_reference=revision.feature_id,
+                verified=True,
+                created_by=actor,
+            ),
+        )
+
     async def _verify_trace_target(
         self,
         project_id: str,
@@ -252,7 +273,9 @@ class RequirementApplicationService:
                     f"Evidence {target_reference} was not found for project {project_id}."
                 )
             return
-        series = await self._document_repository.get_series(DocumentId.from_string(target_reference))
+        series = await self._document_repository.get_series(
+            DocumentId.from_string(target_reference)
+        )
         if series is None or series.project_id != project_id:
             raise TraceTargetNotFoundError(
                 f"Document {target_reference} was not found for project {project_id}."
