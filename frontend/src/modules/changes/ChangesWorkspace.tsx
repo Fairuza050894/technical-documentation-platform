@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { requestJson } from "../../shared/api/client";
+import { listSynchronizations } from "../catalog/api";
+import type { SynchronizationRun } from "../catalog/types";
 import type { ProjectCollection } from "../projects/types";
 import { listSources } from "../sources/api";
 import type { TechnicalSource } from "../sources/types";
-import { listSynchronizations } from "../catalog/api";
-import type { SynchronizationRun } from "../catalog/types";
-import { compareSnapshots } from "./api";
-import type { ComparisonResult } from "./types";
+import { assessChangeImpact, compareSnapshots } from "./api";
+import type { ComparisonResult, ImpactAssessment } from "./types";
 
 interface SnapshotOption {
   run: SynchronizationRun;
@@ -19,10 +19,7 @@ interface ChangesWorkspaceProps {
   embedded?: boolean;
 }
 
-export function ChangesWorkspace({
-  project,
-  embedded = false,
-}: ChangesWorkspaceProps = {}) {
+export function ChangesWorkspace({ project, embedded = false }: ChangesWorkspaceProps = {}) {
   const [projects, setProjects] = useState<ProjectCollection>(
     project ? { items: [project], total: 1 } : { items: [], total: 0 },
   );
@@ -31,6 +28,7 @@ export function ChangesWorkspace({
   const [baselineId, setBaselineId] = useState("");
   const [targetId, setTargetId] = useState("");
   const [result, setResult] = useState<ComparisonResult | null>(null);
+  const [impact, setImpact] = useState<ImpactAssessment | null>(null);
   const [message, setMessage] = useState("Select two completed snapshots.");
 
   useEffect(() => {
@@ -67,6 +65,7 @@ export function ChangesWorkspace({
       setBaselineId(options.at(-1)?.run.id ?? "");
       setTargetId(options[0]?.run.id ?? "");
       setResult(null);
+      setImpact(null);
     });
   }, [projectId]);
 
@@ -82,12 +81,22 @@ export function ChangesWorkspace({
 
   async function compare(): Promise<void> {
     if (!canCompare) return;
-    setMessage("Comparing snapshots…");
+    setMessage("Comparing snapshots and calculating impact…");
     try {
-      const comparison = await compareSnapshots(projectId, baselineId, targetId);
+      const [comparison, assessment] = await Promise.all([
+        compareSnapshots(projectId, baselineId, targetId),
+        assessChangeImpact(projectId, baselineId, targetId),
+      ]);
       setResult(comparison);
-      setMessage(comparison.total === 0 ? "No deterministic changes detected." : "Comparison completed.");
+      setImpact(assessment);
+      setMessage(
+        comparison.total === 0
+          ? "No deterministic changes detected."
+          : "Comparison and impact assessment completed.",
+      );
     } catch (error: unknown) {
+      setResult(null);
+      setImpact(null);
       setMessage(error instanceof Error ? error.message : "Comparison failed.");
     }
   }
@@ -97,10 +106,10 @@ export function ChangesWorkspace({
       {!embedded && (
         <header className="topbar">
           <div>
-            <p className="eyebrow">Deterministic comparison</p>
+            <p className="eyebrow">Deterministic impact analysis</p>
             <h1>Changes</h1>
           </div>
-          <span className="environment-badge">Snapshot evidence</span>
+          <span className="environment-badge">Source-backed policy</span>
         </header>
       )}
 
@@ -108,7 +117,10 @@ export function ChangesWorkspace({
         <div className="section-heading">
           <div>
             <h2 id="comparison-title">Compare synchronization snapshots</h2>
-            <p>Compare normalized operations and schemas without AI-generated facts.</p>
+            <p>
+              Compare normalized operations and schemas, then calculate downstream review
+              obligations without AI-generated facts.
+            </p>
           </div>
         </div>
 
@@ -130,17 +142,72 @@ export function ChangesWorkspace({
                 </select>
               </div>
             )}
-            <SnapshotSelect id="baseline-snapshot" label="Baseline" value={baselineId} options={snapshots} onChange={setBaselineId} />
-            <SnapshotSelect id="target-snapshot" label="Target" value={targetId} options={snapshots} onChange={setTargetId} />
+            <SnapshotSelect
+              id="baseline-snapshot"
+              label="Baseline"
+              value={baselineId}
+              options={snapshots}
+              onChange={setBaselineId}
+            />
+            <SnapshotSelect
+              id="target-snapshot"
+              label="Target"
+              value={targetId}
+              options={snapshots}
+              onChange={setTargetId}
+            />
           </div>
           <div className="form-actions">
-            <button className="button button--primary" type="button" disabled={!canCompare} onClick={() => void compare()}>
-              Compare snapshots
+            <button
+              className="button button--primary"
+              type="button"
+              disabled={!canCompare}
+              onClick={() => void compare()}
+            >
+              Compare &amp; assess impact
             </button>
           </div>
         </div>
         <p className="loading-state" role="status">{message}</p>
       </section>
+
+      {impact !== null && (
+        <section className="content-section changes-results" aria-labelledby="impact-title">
+          <div className="section-heading section-heading--split">
+            <div>
+              <p className="section-kicker">Policy result</p>
+              <h2 id="impact-title">Change impact</h2>
+              <p>
+                These obligations are calculated by the backend impact policy and are not
+                editable presentation labels.
+              </p>
+            </div>
+            <span className="environment-badge">{impact.level} impact</span>
+          </div>
+          <div className="status-grid" aria-label="Impact obligations">
+            <article className="status-card">
+              <span className="status-label">Requirement review</span>
+              <strong>{impact.requirement_review_required ? "Required" : "Not required"}</strong>
+            </article>
+            <article className="status-card">
+              <span className="status-label">Test execution</span>
+              <strong>{impact.test_execution_required ? "Required" : "Not required"}</strong>
+            </article>
+            <article className="status-card">
+              <span className="status-label">Documents to review</span>
+              <strong>{impact.required_document_types.length}</strong>
+            </article>
+          </div>
+          <div className="form-panel">
+            <strong>Required document review</strong>
+            <p>
+              {impact.required_document_types.length > 0
+                ? impact.required_document_types.join(" · ")
+                : "No additional document profile required by the current policy."}
+            </p>
+          </div>
+        </section>
+      )}
 
       {result !== null && summary !== null && (
         <section className="content-section changes-results" aria-labelledby="change-results-title">
@@ -157,20 +224,36 @@ export function ChangesWorkspace({
             <article className="status-card"><span className="status-label">Removed</span><strong>{summary.removed}</strong></article>
           </div>
           <div className="catalog-list">
-            {result.changes.map((change) => (
-              <article className="catalog-card" key={`${change.entity_type}-${change.entity_key}-${change.kind}`}>
-                <div className="catalog-card__heading">
-                  <div><span className="method-badge">{change.entity_type}</span><strong>{change.entity_key}</strong></div>
-                  <span className="status-indicator status-indicator--neutral">{change.severity}</span>
-                </div>
-                <p>{change.summary}</p>
-                <dl className="detail-list">
-                  <div><dt>Change</dt><dd>{change.kind}</dd></div>
-                  <div><dt>Before evidence</dt><dd><code>{change.before_pointer || "Not applicable"}</code></dd></div>
-                  <div><dt>After evidence</dt><dd><code>{change.after_pointer || "Not applicable"}</code></dd></div>
-                </dl>
-              </article>
-            ))}
+            {result.changes.map((change) => {
+              const changeImpact = impact?.impacts.find(
+                (item) => item.entity_type === change.entity_type && item.entity_key === change.entity_key,
+              );
+              return (
+                <article
+                  className="catalog-card"
+                  key={`${change.entity_type}-${change.entity_key}-${change.kind}`}
+                >
+                  <div className="catalog-card__heading">
+                    <div><span className="method-badge">{change.entity_type}</span><strong>{change.entity_key}</strong></div>
+                    <span className="status-indicator status-indicator--neutral">
+                      {changeImpact?.level ?? change.severity}
+                    </span>
+                  </div>
+                  <p>{change.summary}</p>
+                  <dl className="detail-list">
+                    <div><dt>Change</dt><dd>{change.kind}</dd></div>
+                    <div><dt>Before evidence</dt><dd><code>{change.before_pointer || "Not applicable"}</code></dd></div>
+                    <div><dt>After evidence</dt><dd><code>{change.after_pointer || "Not applicable"}</code></dd></div>
+                  </dl>
+                  {changeImpact && (
+                    <div className="form-panel">
+                      <strong>Why this matters</strong>
+                      <p>{changeImpact.rationale.join(" ")}</p>
+                    </div>
+                  )}
+                </article>
+              );
+            })}
           </div>
         </section>
       )}
@@ -178,7 +261,13 @@ export function ChangesWorkspace({
   );
 }
 
-function SnapshotSelect({ id, label, value, options, onChange }: {
+function SnapshotSelect({
+  id,
+  label,
+  value,
+  options,
+  onChange,
+}: {
   id: string;
   label: string;
   value: string;
