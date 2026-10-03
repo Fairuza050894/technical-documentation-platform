@@ -8,9 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Enterprise Governance Core** - Added immutable Requirement Revisions, explicit requirement trace links, deterministic change-impact assessments, and human-governed impact workflow events for project-scoped governance
+- **Governance API** - Added project-scoped APIs for requirement creation/revision, traceability, impact evaluation, workflow transitions, and workflow history
+- **Governance quality coverage** - Added domain, application, clean-architecture, persistence-composition, and end-to-end HTTP workflow coverage
 - **Changelog Policy** - Formalized changelog and versioning policy (TDP-GOV-003) following Keep a Changelog and Semantic Versioning standards
 
 ### Changed
+- **Product truth baseline** - Reconciled PRD, roadmap, user flows, and domain model with implemented Evidence, Scanner, Template, Requirement, Traceability, Impact, and workflow capabilities
 - **Source-backed UI integrity** - Knowledge Map no longer presents demo fixtures as repository facts by default; demo rendering requires `VITE_KNOWLEDGE_MAP_DEMO=true`
 - **Scanner webhook routing** - Fixed webhook event detail URL interpolation and URL encoding
 - **Frontend routing cleanup** - Removed duplicate Intelligence route handling, unsupported Intelligence primary navigation, hard-coded Knowledge Map badge, and duplicate HTTP 204 handling
