@@ -8,9 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Enterprise foundation phases 1-5** - Consolidated the project workbench flow from feature intent through requirements, evidence, deterministic change impact, and governed document review/approval (PR #23)
+- **Requirement Registry** - Added immutable requirement revisions, acceptance criteria, ownership, revision reasons, retirement, and verified traceability to existing Feature, Evidence, and Document records
+- **Deterministic change impact** - Added source-backed API catalog impact policy that calculates requirement-review, testing, architecture, documentation, and release obligations without AI inference
+- **Approval separation of duties** - Added verified-identity policy preventing an author from approving the same document version
 - **Changelog Policy** - Formalized changelog and versioning policy (TDP-GOV-003) following Keep a Changelog and Semantic Versioning standards
 
 ### Changed
+- **Product truth and information architecture** - Reconciled README, product vision, PRD, project stages, generated API surface, and repository indexes with implemented enterprise-foundation capabilities
 - **Source-backed UI integrity** - Knowledge Map no longer presents demo fixtures as repository facts by default; demo rendering requires `VITE_KNOWLEDGE_MAP_DEMO=true`
 - **Scanner webhook routing** - Fixed webhook event detail URL interpolation and URL encoding
 - **Frontend routing cleanup** - Removed duplicate Intelligence route handling, unsupported Intelligence primary navigation, hard-coded Knowledge Map badge, and duplicate HTTP 204 handling
