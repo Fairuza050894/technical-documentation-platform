@@ -4,6 +4,7 @@ import {
   parseRoute,
   projectStagePath,
   routePath,
+  workspaceGovernancePath,
   workspaceHomePath,
   workspaceProjectStagePath,
   workspaceProjectsPath,
@@ -16,6 +17,7 @@ describe("workspace and project routing", () => {
   it("parses global and workspace routes", () => {
     expect(parseRoute("/")).toEqual({ name: "home", workspaceId: null });
     expect(parseRoute("/projects/")).toEqual({ name: "projects", workspaceId: null });
+    expect(parseRoute("/governance")).toEqual({ name: "governance", workspaceId: null });
     expect(parseRoute("/workspaces")).toEqual({ name: "workspaces" });
     expect(parseRoute("/workspaces/workspace-1")).toEqual({
       name: "home",
@@ -23,6 +25,10 @@ describe("workspace and project routing", () => {
     });
     expect(parseRoute("/workspaces/workspace-1/projects")).toEqual({
       name: "projects",
+      workspaceId: "workspace-1",
+    });
+    expect(parseRoute("/workspaces/workspace-1/governance")).toEqual({
+      name: "governance",
       workspaceId: "workspace-1",
     });
     expect(parseRoute("/system")).toEqual({ name: "system" });
@@ -46,11 +52,13 @@ describe("workspace and project routing", () => {
     expect(workspaceProjectsPath(workspaceId)).toBe(
       "/workspaces/workspace%201/projects",
     );
+    expect(workspaceGovernancePath(workspaceId)).toBe(
+      "/workspaces/workspace%201/governance",
+    );
     expect(workspaceProjectStagePath(workspaceId, projectId, "sources")).toBe(
       "/workspaces/workspace%201/projects/project%201/workbench/sources",
     );
   });
-
 
   it("parses and builds feature-scoped documentation map routes", () => {
     const route = parseRoute(
