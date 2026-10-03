@@ -93,3 +93,12 @@ The table is derived from FastAPI route decorators. It records declared routes, 
 | GET | `/api/workspaces/{workspace_id}/projects/{project_id}/features/{feature_id}` | `backend/src/tdp/modules/features/presentation/http/router.py:167` |
 | POST | `/api/workspaces/{workspace_id}/projects/{project_id}/features/{feature_id}/archive` | `backend/src/tdp/modules/features/presentation/http/router.py:177` |
 | GET | `/api/workspaces/{workspace_id}/projects/{project_id}/features/{feature_id}/documentation-map` | `backend/src/tdp/modules/features/presentation/http/router.py:187` |
+| GET | `/api/workspaces/{workspace_id}/projects/{project_id}/governance/impacts` | `backend/src/tdp/modules/governance/presentation/http/router.py:341` |
+| POST | `/api/workspaces/{workspace_id}/projects/{project_id}/governance/impacts/evaluate` | `backend/src/tdp/modules/governance/presentation/http/router.py:322` |
+| GET | `/api/workspaces/{workspace_id}/projects/{project_id}/governance/impacts/{assessment_id}/events` | `backend/src/tdp/modules/governance/presentation/http/router.py:381` |
+| POST | `/api/workspaces/{workspace_id}/projects/{project_id}/governance/impacts/{assessment_id}/transitions` | `backend/src/tdp/modules/governance/presentation/http/router.py:355` |
+| GET | `/api/workspaces/{workspace_id}/projects/{project_id}/governance/requirements` | `backend/src/tdp/modules/governance/presentation/http/router.py:245` |
+| POST | `/api/workspaces/{workspace_id}/projects/{project_id}/governance/requirements` | `backend/src/tdp/modules/governance/presentation/http/router.py:223` |
+| POST | `/api/workspaces/{workspace_id}/projects/{project_id}/governance/requirements/{key}/revisions` | `backend/src/tdp/modules/governance/presentation/http/router.py:260` |
+| GET | `/api/workspaces/{workspace_id}/projects/{project_id}/governance/trace-links` | `backend/src/tdp/modules/governance/presentation/http/router.py:307` |
+| POST | `/api/workspaces/{workspace_id}/projects/{project_id}/governance/trace-links` | `backend/src/tdp/modules/governance/presentation/http/router.py:286` |
