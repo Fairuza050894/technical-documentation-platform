@@ -1,5 +1,4 @@
 from collections.abc import Mapping
-from dataclasses import asdict
 from typing import Annotated, cast
 
 from fastapi import APIRouter, Depends, Request, status
@@ -387,11 +386,6 @@ async def requirement_error_handler(request: Request, exc: Exception) -> JSONRes
                 "code": exc.code,
                 "message": str(exc),
                 "requestId": request_id,
-                "context": asdict(_ErrorContext(project="requirements")),
             }
         },
     )
-
-
-class _ErrorContext(BaseModel):
-    project: str
