@@ -1,0 +1,26 @@
+from typing import Protocol
+
+from tdp.modules.requirements.domain.model import (
+    Requirement,
+    RequirementId,
+    RequirementRevision,
+    TraceabilityLink,
+)
+
+
+class RequirementRepository(Protocol):
+    async def add(self, requirement: Requirement, revision: RequirementRevision) -> None: ...
+
+    async def update(self, requirement: Requirement, revision: RequirementRevision) -> None: ...
+
+    async def get(self, requirement_id: RequirementId) -> Requirement | None: ...
+
+    async def get_by_project_key(self, project_id: str, key: str) -> Requirement | None: ...
+
+    async def list_by_project(self, project_id: str) -> list[Requirement]: ...
+
+    async def list_revisions(self, requirement_id: RequirementId) -> list[RequirementRevision]: ...
+
+    async def add_link(self, link: TraceabilityLink) -> None: ...
+
+    async def list_links(self, requirement_id: RequirementId) -> list[TraceabilityLink]: ...
