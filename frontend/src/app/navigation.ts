@@ -27,6 +27,7 @@ export interface PageContext {
 const projectStageLabels: Record<ProjectStage, string> = {
   overview: "Overview",
   features: "Features",
+  requirements: "Requirements",
   sources: "Sources",
   catalog: "API Catalog",
   changes: "Changes",
@@ -37,6 +38,7 @@ const projectStageLabels: Record<ProjectStage, string> = {
 const projectStageIcons: Record<ProjectStage, IconName> = {
   overview: "overview",
   features: "projects",
+  requirements: "documents",
   sources: "source",
   catalog: "catalog",
   changes: "changes",
