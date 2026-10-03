@@ -4,7 +4,7 @@ from typing import Annotated, Any, cast
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 
-from tdp.modules.changes.application.dto import ComparisonDto
+from tdp.modules.changes.application.dto import ComparisonDto, ImpactAssessmentDto
 from tdp.modules.changes.application.service import ChangeDetectionApplicationService
 
 router = APIRouter(tags=["changes"])
@@ -28,6 +28,21 @@ class ComparisonResponse(BaseModel):
         return cls.model_validate(asdict(comparison))
 
 
+class ImpactAssessmentResponse(BaseModel):
+    project_id: str
+    baseline_run_id: str
+    target_run_id: str
+    policy_key: str
+    approval_required: bool
+    requirement_revalidation_required: bool
+    highest_priority: str
+    items: list[dict[str, Any]]
+
+    @classmethod
+    def from_dto(cls, assessment: ImpactAssessmentDto) -> "ImpactAssessmentResponse":
+        return cls.model_validate(asdict(assessment))
+
+
 def get_service(request: Request) -> ChangeDetectionApplicationService:
     return cast(ChangeDetectionApplicationService, request.app.state.change_detection_service)
 
@@ -43,4 +58,19 @@ async def compare_snapshots(
 ) -> ComparisonResponse:
     return ComparisonResponse.from_dto(
         await service.compare(project_id, payload.baseline_run_id, payload.target_run_id)
+    )
+
+
+@router.post("/projects/{project_id}/impact-assessments", response_model=ImpactAssessmentResponse)
+async def assess_change_impact(
+    project_id: str,
+    payload: CompareRequest,
+    service: ServiceDependency,
+) -> ImpactAssessmentResponse:
+    return ImpactAssessmentResponse.from_dto(
+        await service.assess_impact(
+            project_id,
+            payload.baseline_run_id,
+            payload.target_run_id,
+        )
     )
