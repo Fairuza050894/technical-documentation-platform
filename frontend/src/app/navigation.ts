@@ -3,7 +3,7 @@ import type { Workspace } from "../modules/workspaces/types";
 import type { IconName } from "../shared/ui/Icon";
 import type { AppRoute, ProjectStage } from "./router";
 
-export type GlobalNavigation = "Home" | "Projects" | "Templates" | "Scanner" | "Intelligence" | "Knowledge Map" | "System status" | "Audit trail";
+export type GlobalNavigation = "Home" | "Projects" | "Governance" | "Templates" | "Scanner" | "Intelligence" | "Knowledge Map" | "System status" | "Audit trail";
 
 export interface NavigationItem {
   id: GlobalNavigation;
@@ -61,6 +61,12 @@ export function buildNavigationGroups(activeWorkspaceId: string | null): readonl
           icon: "projects",
           route: { name: "projects", workspaceId: activeWorkspaceId },
         },
+        {
+          id: "Governance",
+          label: "Governance",
+          icon: "changes",
+          route: { name: "governance", workspaceId: activeWorkspaceId },
+        },
       ],
     },
     {
@@ -109,6 +115,8 @@ export function resolveGlobalNavigation(route: AppRoute): GlobalNavigation | nul
     case "projects":
     case "project":
       return "Projects";
+    case "governance":
+      return "Governance";
     case "workspaces":
       return null;
     case "templates":
@@ -143,6 +151,8 @@ export function resolvePageContext(
       return { breadcrumb: [workspaceLabel, "Home"], icon: "overview" };
     case "projects":
       return { breadcrumb: [workspaceLabel, "Projects"], icon: "projects" };
+    case "governance":
+      return { breadcrumb: [workspaceLabel, "Governance"], icon: "changes" };
     case "workspaces":
       return { breadcrumb: ["Platform", "Workspaces"], icon: "folder" };
     case "system":
