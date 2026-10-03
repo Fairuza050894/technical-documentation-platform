@@ -19,6 +19,14 @@ class RegisterSnapshotEvidenceCommand:
 
 
 @dataclass(frozen=True, slots=True)
+class RegisterScannerEvidenceCommand:
+    project_id: str
+    scan_id: str
+    feature_id: str | None
+    principal: RequestPrincipal
+
+
+@dataclass(frozen=True, slots=True)
 class RegisterReferencedEvidenceCommand:
     project_id: str
     kind: str
