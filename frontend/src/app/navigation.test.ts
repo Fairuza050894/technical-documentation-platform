@@ -20,6 +20,10 @@ describe("application navigation composition", () => {
       name: "projects",
       workspaceId: "workspace-1",
     });
+    expect(groups[0]?.items[2]?.route).toEqual({
+      name: "governance",
+      workspaceId: "workspace-1",
+    });
 
     const platformItems = groups[1]?.items ?? [];
     expect(platformItems.some((item) => item.id === "Intelligence")).toBe(false);
@@ -27,15 +31,20 @@ describe("application navigation composition", () => {
     expect(knowledgeMap?.badge).toBeUndefined();
   });
 
-  it("maps project routes to the Projects navigation item", () => {
-    const route: AppRoute = {
+  it("maps project and governance routes to their workspace navigation items", () => {
+    const projectRoute: AppRoute = {
       name: "project",
       workspaceId: "workspace-1",
       projectId: "project-1",
       stage: "documents",
     };
+    const governanceRoute: AppRoute = {
+      name: "governance",
+      workspaceId: "workspace-1",
+    };
 
-    expect(resolveGlobalNavigation(route)).toBe("Projects");
+    expect(resolveGlobalNavigation(projectRoute)).toBe("Projects");
+    expect(resolveGlobalNavigation(governanceRoute)).toBe("Governance");
   });
 
   it("builds project breadcrumbs from stable route context", () => {
