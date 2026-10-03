@@ -17,6 +17,7 @@
 |---|---|
 | workspaceHomePattern | `/^\/workspaces\/([^/]+)\/?$/` |
 | workspaceProjectsPattern | `/^\/workspaces\/([^/]+)\/projects\/?$/` |
+| workspaceGovernancePattern | `/^\/workspaces\/([^/]+)\/governance\/?$/` |
 | workspaceProjectPattern | `/^\/workspaces\/([^/]+)\/projects\/([^/]+)\/workbench(?:\/([^/]+))?(?:\/([^/]+))?\/?$/` |
 | legacyProjectPattern | `/^\/projects\/([^/]+)\/workbench(?:\/([^/]+))?(?:\/([^/]+))?\/?$/` |
 
@@ -24,6 +25,7 @@
 
 - `/`
 - `/audit`
+- `/governance`
 - `/home`
 - `/intelligence`
 - `/knowledge-map`
