@@ -10,7 +10,11 @@ from tdp.modules.requirements.domain.model import (
 
 
 class RequirementRepository(Protocol):
-    async def add_revision(self, revision: RequirementRevision) -> None: ...
+    async def add_revision(
+        self,
+        revision: RequirementRevision,
+        trace_links: tuple[TraceLink, ...] = (),
+    ) -> None: ...
 
     async def get_latest(
         self,
