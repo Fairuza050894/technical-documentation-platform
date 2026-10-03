@@ -1,3 +1,4 @@
+import sqlite3
 from pathlib import Path
 
 import pytest
@@ -13,12 +14,22 @@ from tdp.modules.requirements.infrastructure.sqlite_repository import (
     SqliteRequirementRepository,
 )
 
+_PROJECT_ID = "11111111-1111-4111-8111-111111111111"
+
+
+def _prepare_project_table(database_path: Path) -> None:
+    with sqlite3.connect(database_path) as connection:
+        connection.execute("CREATE TABLE projects (id TEXT PRIMARY KEY)")
+        connection.execute("INSERT INTO projects (id) VALUES (?)", (_PROJECT_ID,))
+
 
 @pytest.mark.anyio
 async def test_repository_returns_latest_revision_and_history(tmp_path: Path) -> None:
-    repository = SqliteRequirementRepository(tmp_path / "tdp.db")
+    database_path = tmp_path / "tdp.db"
+    _prepare_project_table(database_path)
+    repository = SqliteRequirementRepository(database_path)
     original = RequirementRevision.create(
-        project_id="11111111-1111-4111-8111-111111111111",
+        project_id=_PROJECT_ID,
         key="REQ-001",
         requirement_type=RequirementType.SYSTEM,
         title="Validate request",
@@ -47,9 +58,11 @@ async def test_repository_returns_latest_revision_and_history(tmp_path: Path) ->
 
 @pytest.mark.anyio
 async def test_repository_persists_trace_links_per_revision(tmp_path: Path) -> None:
-    repository = SqliteRequirementRepository(tmp_path / "tdp.db")
+    database_path = tmp_path / "tdp.db"
+    _prepare_project_table(database_path)
+    repository = SqliteRequirementRepository(database_path)
     revision = RequirementRevision.create(
-        project_id="11111111-1111-4111-8111-111111111111",
+        project_id=_PROJECT_ID,
         key="REQ-002",
         requirement_type=RequirementType.BUSINESS,
         title="Approve allowance",
