@@ -9,6 +9,7 @@
 | backend/tests/application/test_enterprise_generation_service.py | 3 |
 | backend/tests/application/test_feature_service.py | 2 |
 | backend/tests/application/test_project_service.py | 2 |
+| backend/tests/application/test_requirement_service.py | 1 |
 | backend/tests/application/test_scanner_service.py | 11 |
 | backend/tests/application/test_source_service.py | 3 |
 | backend/tests/application/test_webhook_service.py | 9 |
@@ -90,7 +91,7 @@
 | backend/tests/test_workspace_architecture.py | 2 |
 | backend/tests/test_workspace_membership.py | 9 |
 
-Backend total: **356** tests.
+Backend total: **357** tests.
 
 ## Frontend
 
