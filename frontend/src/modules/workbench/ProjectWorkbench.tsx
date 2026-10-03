@@ -12,6 +12,7 @@ import { listSynchronizations } from "../catalog/api";
 import type { SynchronizationRun } from "../catalog/types";
 import { ChangesWorkspace } from "../changes/ChangesWorkspace";
 import { FeatureWorkspace } from "../features/FeatureWorkspace";
+import { RequirementsWorkspace } from "../requirements/RequirementsWorkspace";
 import { listFeatures } from "../features/api";
 import type { Feature } from "../features/types";
 import { DocumentsWorkspace } from "../documents/DocumentsWorkspace";
@@ -52,6 +53,7 @@ const stageItems: ReadonlyArray<{
 }> = [
   { id: "overview", label: "Overview", icon: "overview", description: "Project readiness" },
   { id: "features", label: "Features", icon: "projects", description: "Capability map" },
+  { id: "requirements", label: "Requirements", icon: "documents", description: "Intent & traceability" },
   { id: "sources", label: "Sources", icon: "source", description: "Technical intake" },
   { id: "catalog", label: "API Catalog", icon: "catalog", description: "Normalized snapshot" },
   { id: "changes", label: "Changes", icon: "changes", description: "Deterministic comparison" },
@@ -340,6 +342,12 @@ export function ProjectWorkbench({
             selectedFeatureId={featureId}
             onOpenFeature={(selectedId) => onNavigateFeature(selectedId)}
             onCloseFeature={() => onNavigateFeature(null)}
+          />
+        )}
+        {stage === "requirements" && (project.workspace_id ?? workspaceId) !== null && (
+          <RequirementsWorkspace
+            workspaceId={(project.workspace_id ?? workspaceId) as string}
+            project={project}
           />
         )}
         {stage === "sources" && <SourceWorkspace project={project} embedded />}
