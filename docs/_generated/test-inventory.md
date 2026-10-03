@@ -53,6 +53,7 @@
 | backend/tests/presentation/test_enterprise_generation_api.py | 9 |
 | backend/tests/presentation/test_evidence_api.py | 11 |
 | backend/tests/presentation/test_features_api.py | 3 |
+| backend/tests/presentation/test_governance_api.py | 2 |
 | backend/tests/presentation/test_identity_api.py | 1 |
 | backend/tests/presentation/test_projects_api.py | 3 |
 | backend/tests/presentation/test_rate_limiting.py | 5 |
@@ -88,7 +89,7 @@
 | backend/tests/test_workspace_architecture.py | 2 |
 | backend/tests/test_workspace_membership.py | 9 |
 
-Backend total: **351** tests.
+Backend total: **353** tests.
 
 ## Frontend
 
