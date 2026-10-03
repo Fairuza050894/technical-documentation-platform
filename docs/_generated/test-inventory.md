@@ -43,6 +43,8 @@
 | backend/tests/infrastructure/test_sqlite_project_repository.py | 1 |
 | backend/tests/infrastructure/test_sqlite_source_repository.py | 1 |
 | backend/tests/infrastructure/test_sqlite_workspace_repository.py | 1 |
+| backend/tests/modules/governance/test_model.py | 3 |
+| backend/tests/modules/governance/test_repository.py | 2 |
 | backend/tests/presentation/test_api_catalog.py | 1 |
 | backend/tests/presentation/test_document_governance_api.py | 3 |
 | backend/tests/presentation/test_document_lifecycle_api.py | 5 |
@@ -85,7 +87,7 @@
 | backend/tests/test_workspace_architecture.py | 2 |
 | backend/tests/test_workspace_membership.py | 9 |
 
-Backend total: **343** tests.
+Backend total: **348** tests.
 
 ## Frontend
 
