@@ -71,9 +71,13 @@ class SqliteRequirementRepository:
         self._database_path.parent.mkdir(parents=True, exist_ok=True)
         self._initialize()
 
-    async def add_revision(self, revision: RequirementRevision) -> None:
+    async def add_revision(
+        self,
+        revision: RequirementRevision,
+        trace_links: tuple[TraceLink, ...] = (),
+    ) -> None:
         try:
-            await asyncio.to_thread(self._add_revision, revision)
+            await asyncio.to_thread(self._add_revision, revision, trace_links)
         except sqlite3.IntegrityError as exc:
             raise RequirementKeyAlreadyExistsError(
                 f"Requirement revision {revision.key} r{revision.revision} already exists."
@@ -128,7 +132,11 @@ class SqliteRequirementRepository:
             connection.execute("PRAGMA journal_mode = WAL")
             connection.executescript(_SCHEMA)
 
-    def _add_revision(self, revision: RequirementRevision) -> None:
+    def _add_revision(
+        self,
+        revision: RequirementRevision,
+        trace_links: tuple[TraceLink, ...],
+    ) -> None:
         with self._connect() as connection:
             connection.execute(
                 """
@@ -156,6 +164,8 @@ class SqliteRequirementRepository:
                     revision.created_at.isoformat(),
                 ),
             )
+            for link in trace_links:
+                self._insert_trace_link(connection, link)
 
     def _get_latest(
         self,
@@ -230,25 +240,29 @@ class SqliteRequirementRepository:
 
     def _add_trace_link(self, link: TraceLink) -> None:
         with self._connect() as connection:
-            connection.execute(
-                """
-                INSERT INTO requirement_trace_links (
-                    id, project_id, requirement_revision_id, target_type, relation,
-                    target_reference, verified, created_by, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    str(link.id),
-                    link.project_id,
-                    str(link.requirement_revision_id),
-                    link.target_type.value,
-                    link.relation.value,
-                    link.target_reference,
-                    int(link.verified),
-                    link.created_by,
-                    link.created_at.isoformat(),
-                ),
-            )
+            self._insert_trace_link(connection, link)
+
+    @staticmethod
+    def _insert_trace_link(connection: sqlite3.Connection, link: TraceLink) -> None:
+        connection.execute(
+            """
+            INSERT INTO requirement_trace_links (
+                id, project_id, requirement_revision_id, target_type, relation,
+                target_reference, verified, created_by, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                str(link.id),
+                link.project_id,
+                str(link.requirement_revision_id),
+                link.target_type.value,
+                link.relation.value,
+                link.target_reference,
+                int(link.verified),
+                link.created_by,
+                link.created_at.isoformat(),
+            ),
+        )
 
     def _list_trace_links(
         self,
