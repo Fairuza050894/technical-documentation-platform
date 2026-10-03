@@ -325,9 +325,7 @@ class SqliteGovernanceRepository:
     @staticmethod
     def _impact_from_row(row: sqlite3.Row) -> ImpactAssessment:
         targets = tuple(
-            ImpactTarget(value)
-            for value in str(row["affected_targets"]).split(",")
-            if value
+            ImpactTarget(value) for value in str(row["affected_targets"]).split(",") if value
         )
         return ImpactAssessment(
             id=row["id"],
@@ -359,7 +357,9 @@ def requirement_coverage(
     trace_links: Iterable[TraceLink],
 ) -> tuple[int, int, int]:
     requirement_ids = {item.requirement_id for item in requirements}
-    linked_ids = {item.requirement_id for item in trace_links if item.requirement_id in requirement_ids}
+    linked_ids = {
+        item.requirement_id for item in trace_links if item.requirement_id in requirement_ids
+    }
     total = len(requirement_ids)
     linked = len(linked_ids)
     coverage = round((linked / total) * 100) if total else 0
