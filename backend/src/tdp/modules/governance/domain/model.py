@@ -57,9 +57,7 @@ _ALLOWED_WORKFLOW_TRANSITIONS: dict[WorkflowState, frozenset[WorkflowState]] = {
     WorkflowState.ANALYSIS: frozenset(
         {WorkflowState.UPDATE_REQUIRED, WorkflowState.APPROVED, WorkflowState.REJECTED}
     ),
-    WorkflowState.UPDATE_REQUIRED: frozenset(
-        {WorkflowState.IN_REVIEW, WorkflowState.REJECTED}
-    ),
+    WorkflowState.UPDATE_REQUIRED: frozenset({WorkflowState.IN_REVIEW, WorkflowState.REJECTED}),
     WorkflowState.IN_REVIEW: frozenset(
         {WorkflowState.APPROVED, WorkflowState.UPDATE_REQUIRED, WorkflowState.REJECTED}
     ),
