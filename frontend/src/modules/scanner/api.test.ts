@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const requestJson = vi.fn();
+const { requestJson } = vi.hoisted(() => ({
+  requestJson: vi.fn(),
+}));
 
 vi.mock("../../shared/api/client", () => ({
   requestJson,
