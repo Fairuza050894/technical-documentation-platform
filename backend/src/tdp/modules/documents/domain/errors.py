@@ -39,6 +39,10 @@ class InvalidDocumentWorkflowTransitionError(DocumentError):
     code = "INVALID_DOCUMENT_WORKFLOW_TRANSITION"
 
 
+class DocumentSeparationOfDutiesError(DocumentError):
+    code = "DOCUMENT_SEPARATION_OF_DUTIES"
+
+
 class DocumentProjectNotFoundError(DocumentError):
     code = "DOCUMENT_PROJECT_NOT_FOUND"
 
