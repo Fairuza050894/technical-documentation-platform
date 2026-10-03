@@ -1,0 +1,35 @@
+name: Fix enterprise foundation main imports
+
+on:
+  push:
+    branches:
+      - phase/enterprise-foundation-1-5
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v6
+        with:
+          ref: phase/enterprise-foundation-1-5
+          fetch-depth: 0
+      - name: Install uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7
+      - name: Apply Ruff import fix
+        run: uvx ruff@0.16.0 check backend/src/tdp/main.py --select I --fix
+      - name: Commit import normalization
+        run: |
+          if git diff --quiet -- backend/src/tdp/main.py; then
+            echo "main.py imports are already normalized."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add backend/src/tdp/main.py
+          git commit -m "style: normalize enterprise foundation imports"
+          git push origin HEAD:phase/enterprise-foundation-1-5
