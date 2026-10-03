@@ -13,6 +13,7 @@ export type ProjectStage = (typeof projectStages)[number];
 export type AppRoute =
   | { name: "home"; workspaceId: string | null }
   | { name: "projects"; workspaceId: string | null }
+  | { name: "governance"; workspaceId: string | null }
   | { name: "workspaces" }
   | { name: "system" }
   | { name: "templates" }
@@ -32,6 +33,7 @@ export type AppRoute =
 
 const workspaceHomePattern = /^\/workspaces\/([^/]+)\/?$/;
 const workspaceProjectsPattern = /^\/workspaces\/([^/]+)\/projects\/?$/;
+const workspaceGovernancePattern = /^\/workspaces\/([^/]+)\/governance\/?$/;
 const workspaceProjectPattern =
   /^\/workspaces\/([^/]+)\/projects\/([^/]+)\/workbench(?:\/([^/]+))?(?:\/([^/]+))?\/?$/;
 const legacyProjectPattern =
@@ -45,6 +47,9 @@ export function parseRoute(pathname: string): AppRoute {
   }
   if (normalized === "/projects") {
     return { name: "projects", workspaceId: null };
+  }
+  if (normalized === "/governance") {
+    return { name: "governance", workspaceId: null };
   }
   if (normalized === "/workspaces") {
     return { name: "workspaces" };
@@ -86,6 +91,14 @@ export function parseRoute(pathname: string): AppRoute {
       return featureId === null
         ? { name: "project", workspaceId, projectId, stage }
         : { name: "project", workspaceId, projectId, stage, featureId };
+    }
+  }
+
+  const workspaceGovernanceMatch = normalized.match(workspaceGovernancePattern);
+  if (workspaceGovernanceMatch) {
+    const workspaceId = safeDecode(workspaceGovernanceMatch[1]);
+    if (workspaceId !== null) {
+      return { name: "governance", workspaceId };
     }
   }
 
@@ -134,6 +147,10 @@ export function routePath(route: AppRoute): string {
       return route.workspaceId === null
         ? "/projects"
         : workspaceProjectsPath(route.workspaceId);
+    case "governance":
+      return route.workspaceId === null
+        ? "/governance"
+        : workspaceGovernancePath(route.workspaceId);
     case "workspaces":
       return "/workspaces";
     case "system":
@@ -172,6 +189,10 @@ export function workspaceProjectsPath(workspaceId: string): string {
   return `${workspaceHomePath(workspaceId)}/projects`;
 }
 
+export function workspaceGovernancePath(workspaceId: string): string {
+  return `${workspaceHomePath(workspaceId)}/governance`;
+}
+
 export function workspaceProjectStagePath(
   workspaceId: string,
   projectId: string,
@@ -199,6 +220,7 @@ export function routeWorkspaceId(route: AppRoute): string | null {
   switch (route.name) {
     case "home":
     case "projects":
+    case "governance":
     case "project":
       return route.workspaceId;
     case "workspaces":
