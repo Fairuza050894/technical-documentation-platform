@@ -20,3 +20,22 @@ export interface ComparisonResult {
   breaking_total: number;
   changes: ChangeItem[];
 }
+
+export interface ImpactItem {
+  document_type: string;
+  action: "UPDATE_REQUIRED" | "REVIEW_REQUIRED" | "APPROVAL_REQUIRED";
+  priority: "P0" | "P1" | "P2" | "P3";
+  reason: string;
+  source_changes: string[];
+}
+
+export interface ImpactAssessment {
+  project_id: string;
+  baseline_run_id: string;
+  target_run_id: string;
+  policy_key: string;
+  approval_required: boolean;
+  requirement_revalidation_required: boolean;
+  highest_priority: "P0" | "P1" | "P2" | "P3";
+  items: ImpactItem[];
+}
