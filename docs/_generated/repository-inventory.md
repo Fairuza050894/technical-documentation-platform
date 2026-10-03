@@ -10,6 +10,7 @@ This inventory is derived from the repository tree and is checked by `make docs-
 - `documents`
 - `evidence`
 - `features`
+- `governance`
 - `projects`
 - `readiness`
 - `scanner`
@@ -25,6 +26,7 @@ This inventory is derived from the repository tree and is checked by `make docs-
 - `documents`
 - `evidence`
 - `features`
+- `governance`
 - `intelligence`
 - `knowledge-map`
 - `overview`
@@ -39,9 +41,9 @@ This inventory is derived from the repository tree and is checked by `make docs-
 
 | Item | Count |
 |---|---|
-| Backend Python files | 216 |
-| Backend test files | 79 |
-| Frontend TypeScript files | 49 |
-| Frontend TSX files | 61 |
+| Backend Python files | 226 |
+| Backend test files | 81 |
+| Frontend TypeScript files | 51 |
+| Frontend TSX files | 63 |
 | Frontend test files | 16 |
 | Controlled Markdown files | 110 |
