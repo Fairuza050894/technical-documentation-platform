@@ -9,15 +9,18 @@
 | backend/tests/application/test_enterprise_generation_service.py | 3 |
 | backend/tests/application/test_feature_service.py | 2 |
 | backend/tests/application/test_project_service.py | 2 |
+| backend/tests/application/test_requirement_service.py | 1 |
 | backend/tests/application/test_scanner_service.py | 11 |
 | backend/tests/application/test_source_service.py | 3 |
 | backend/tests/application/test_webhook_service.py | 9 |
 | backend/tests/application/test_workspace_service.py | 1 |
 | backend/tests/domain/test_change_detection.py | 1 |
+| backend/tests/domain/test_change_impact.py | 2 |
 | backend/tests/domain/test_document_governance.py | 3 |
 | backend/tests/domain/test_document_lifecycle.py | 3 |
 | backend/tests/domain/test_document_provenance.py | 2 |
 | backend/tests/domain/test_document_version_comparison.py | 2 |
+| backend/tests/domain/test_document_workflow_policy.py | 3 |
 | backend/tests/domain/test_enterprise_generation_profile.py | 2 |
 | backend/tests/domain/test_evidence_claims.py | 6 |
 | backend/tests/domain/test_evidence_materialization.py | 4 |
@@ -25,6 +28,7 @@
 | backend/tests/domain/test_identity.py | 2 |
 | backend/tests/domain/test_project.py | 4 |
 | backend/tests/domain/test_readiness_policy.py | 7 |
+| backend/tests/domain/test_requirements.py | 4 |
 | backend/tests/domain/test_scanner.py | 26 |
 | backend/tests/domain/test_semantic_generation_profiles.py | 1 |
 | backend/tests/domain/test_source.py | 3 |
@@ -37,6 +41,7 @@
 | backend/tests/infrastructure/test_openapi_catalog_parser.py | 1 |
 | backend/tests/infrastructure/test_openapi_inspector.py | 4 |
 | backend/tests/infrastructure/test_project_workspace_migration.py | 1 |
+| backend/tests/infrastructure/test_requirement_repository.py | 2 |
 | backend/tests/infrastructure/test_scan_comparator.py | 19 |
 | backend/tests/infrastructure/test_sqlite_evidence_repository.py | 4 |
 | backend/tests/infrastructure/test_sqlite_feature_repository.py | 1 |
@@ -82,10 +87,11 @@
 | backend/tests/test_health.py | 4 |
 | backend/tests/test_readiness_architecture.py | 3 |
 | backend/tests/test_repository_documentation.py | 1 |
+| backend/tests/test_requirement_architecture.py | 2 |
 | backend/tests/test_workspace_architecture.py | 2 |
 | backend/tests/test_workspace_membership.py | 9 |
 
-Backend total: **343** tests.
+Backend total: **357** tests.
 
 ## Frontend
 
@@ -103,11 +109,11 @@ Backend total: **343** tests.
 | frontend/src/modules/scanner/api.test.ts | 1 |
 | frontend/src/modules/sources/SourceWorkspace.test.tsx | 2 |
 | frontend/src/modules/workbench/ProjectDocumentationOverview.test.tsx | 4 |
-| frontend/src/modules/workbench/ProjectWorkbench.test.tsx | 6 |
+| frontend/src/modules/workbench/ProjectWorkbench.test.tsx | 7 |
 | frontend/src/modules/workspaces/WorkspaceRegistry.test.tsx | 2 |
 | frontend/src/modules/workspaces/WorkspaceSwitcher.test.tsx | 5 |
 | frontend/src/shared/api/config.test.ts | 3 |
 
-Frontend total: **57** tests.
+Frontend total: **58** tests.
 
 Counts are structural and do not replace execution evidence from `make verify`.

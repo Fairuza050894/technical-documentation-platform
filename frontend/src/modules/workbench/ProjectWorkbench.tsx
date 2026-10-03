@@ -1,28 +1,34 @@
 import { useEffect, useMemo, useState } from "react";
 
 import type { ProjectStage } from "../../app/router";
-import { StageDependencyBadge, type StageDependencyData } from "../../shared/search/StageDependencyIndicator";
 import { ApiClientError } from "../../shared/api/client";
+import {
+  StageDependencyBadge,
+  type StageDependencyData,
+} from "../../shared/search/StageDependencyIndicator";
 import { Icon, type IconName } from "../../shared/ui/Icon";
-import { ProjectDocumentationOverview } from "./ProjectDocumentationOverview";
-import { getProjectDocumentationContext } from "./governanceApi";
-import type { ProjectDocumentationContext, ProjectReadiness } from "./governanceTypes";
 import { ApiCatalogWorkspace } from "../catalog/ApiCatalogWorkspace";
 import { listSynchronizations } from "../catalog/api";
 import type { SynchronizationRun } from "../catalog/types";
 import { ChangesWorkspace } from "../changes/ChangesWorkspace";
+import { DocumentsWorkspace } from "../documents/DocumentsWorkspace";
+import { listGeneratedDocuments } from "../documents/api";
+import type { GeneratedDocumentSummary } from "../documents/types";
+import { EvidenceWorkspace } from "../evidence/EvidenceWorkspace";
 import { FeatureWorkspace } from "../features/FeatureWorkspace";
 import { listFeatures } from "../features/api";
 import type { Feature } from "../features/types";
-import { DocumentsWorkspace } from "../documents/DocumentsWorkspace";
-import { EvidenceWorkspace } from "../evidence/EvidenceWorkspace";
-import { listGeneratedDocuments } from "../documents/api";
-import type { GeneratedDocumentSummary } from "../documents/types";
 import { getProject } from "../projects/api";
 import type { Project } from "../projects/types";
+import { RequirementsWorkspace } from "../requirements/RequirementsWorkspace";
+import { listRequirements } from "../requirements/api";
+import type { Requirement } from "../requirements/types";
 import { SourceWorkspace } from "../sources/SourceWorkspace";
 import { listSources } from "../sources/api";
 import type { TechnicalSource } from "../sources/types";
+import { ProjectDocumentationOverview } from "./ProjectDocumentationOverview";
+import { getProjectDocumentationContext } from "./governanceApi";
+import type { ProjectDocumentationContext, ProjectReadiness } from "./governanceTypes";
 
 interface ProjectWorkbenchProps {
   workspaceId: string | null;
@@ -40,9 +46,18 @@ interface ProjectSummary {
   runs: SynchronizationRun[];
   documents: GeneratedDocumentSummary[];
   features: Feature[];
+  requirements: Requirement[];
 }
 
 type LoadState = "loading" | "ready" | "not-found" | "error";
+
+const emptySummary: ProjectSummary = {
+  sources: [],
+  runs: [],
+  documents: [],
+  features: [],
+  requirements: [],
+};
 
 const stageItems: ReadonlyArray<{
   id: ProjectStage;
@@ -52,11 +67,17 @@ const stageItems: ReadonlyArray<{
 }> = [
   { id: "overview", label: "Overview", icon: "overview", description: "Project readiness" },
   { id: "features", label: "Features", icon: "projects", description: "Capability map" },
+  {
+    id: "requirements",
+    label: "Requirements",
+    icon: "documents",
+    description: "Intent & traceability",
+  },
   { id: "sources", label: "Sources", icon: "source", description: "Technical intake" },
   { id: "catalog", label: "API Catalog", icon: "catalog", description: "Normalized snapshot" },
-  { id: "changes", label: "Changes", icon: "changes", description: "Deterministic comparison" },
-  { id: "documents", label: "Documents", icon: "documents", description: "Version lifecycle" },
   { id: "evidence", label: "Evidence", icon: "documents", description: "Provenance and claims" },
+  { id: "changes", label: "Changes", icon: "changes", description: "Impact assessment" },
+  { id: "documents", label: "Documents", icon: "documents", description: "Governed lifecycle" },
 ];
 
 export function ProjectWorkbench({
@@ -70,12 +91,7 @@ export function ProjectWorkbench({
   onProjectResolved,
 }: ProjectWorkbenchProps) {
   const [project, setProject] = useState<Project | null>(null);
-  const [summary, setSummary] = useState<ProjectSummary>({
-    sources: [],
-    runs: [],
-    documents: [],
-    features: [],
-  });
+  const [summary, setSummary] = useState<ProjectSummary>(emptySummary);
   const [loadState, setLoadState] = useState<LoadState>("loading");
   const [loadError, setLoadError] = useState("");
   const [summaryError, setSummaryError] = useState("");
@@ -89,7 +105,7 @@ export function ProjectWorkbench({
     let active = true;
     onProjectResolved(null);
     setProject(null);
-    setSummary({ sources: [], runs: [], documents: [], features: [] });
+    setSummary(emptySummary);
     setLoadState("loading");
     setLoadError("");
     setSummaryError("");
@@ -100,9 +116,7 @@ export function ProjectWorkbench({
     async function loadProject(): Promise<void> {
       try {
         const resolved = await getProject(projectId);
-        if (!active) {
-          return;
-        }
+        if (!active) return;
         if (
           workspaceId !== null &&
           resolved.workspace_id !== undefined &&
@@ -118,57 +132,50 @@ export function ProjectWorkbench({
 
         try {
           const sourceCollection = await listSources(resolved.id);
-          const readySources = sourceCollection.items.filter(
-            (source) => source.status === "READY",
-          );
+          const readySources = sourceCollection.items.filter((source) => source.status === "READY");
           const resolvedWorkspaceId = resolved.workspace_id ?? workspaceId;
-          const [runCollections, documentCollection, featureCollection] = await Promise.all([
-            Promise.all(readySources.map((source) => listSynchronizations(source.id))),
-            listGeneratedDocuments(resolved.id),
-            resolvedWorkspaceId === null
-              ? Promise.resolve({ items: [], total: 0 })
-              : listFeatures(resolvedWorkspaceId, resolved.id),
-          ]);
-          if (!active) {
-            return;
-          }
+          const [runCollections, documentCollection, featureCollection, requirementCollection] =
+            await Promise.all([
+              Promise.all(readySources.map((source) => listSynchronizations(source.id))),
+              listGeneratedDocuments(resolved.id),
+              resolvedWorkspaceId === null
+                ? Promise.resolve({ items: [], total: 0 })
+                : listFeatures(resolvedWorkspaceId, resolved.id),
+              resolvedWorkspaceId === null
+                ? Promise.resolve({ items: [], total: 0 })
+                : listRequirements(resolvedWorkspaceId, resolved.id),
+            ]);
+          if (!active) return;
           setSummary({
             sources: sourceCollection.items,
             runs: runCollections.flatMap((collectionItem) => collectionItem.items),
             documents: documentCollection.items,
             features: featureCollection.items,
+            requirements: requirementCollection.items,
           });
         } catch (error: unknown) {
           if (active) {
             setSummaryError(
-              error instanceof Error
-                ? error.message
-                : "Project readiness could not be calculated.",
+              error instanceof Error ? error.message : "Project readiness could not be calculated.",
             );
           }
         }
 
         try {
           const context = await getProjectDocumentationContext(resolved.id);
-          if (!active) {
-            return;
-          }
+          if (!active) return;
           setDocumentationContext(context);
           setDocumentationLoadState("ready");
         } catch (error: unknown) {
           if (active) {
             setDocumentationLoadState("error");
             setDocumentationError(
-              error instanceof Error
-                ? error.message
-                : "Document governance could not be loaded.",
+              error instanceof Error ? error.message : "Document governance could not be loaded.",
             );
           }
         }
       } catch (error: unknown) {
-        if (!active) {
-          return;
-        }
+        if (!active) return;
         if (error instanceof ApiClientError && error.status === 404) {
           setLoadState("not-found");
           return;
@@ -189,12 +196,13 @@ export function ProjectWorkbench({
   const dependencyData: StageDependencyData = useMemo(
     () => ({
       features: summary.features,
+      requirements: summary.requirements,
       sources: summary.sources,
       runs: summary.runs,
       documents: summary.documents,
       readiness: documentationContext?.readiness ?? null,
     }),
-    [summary, documentationContext],
+    [documentationContext, summary],
   );
 
   const nextAction = useMemo(
@@ -243,6 +251,8 @@ export function ProjectWorkbench({
       </section>
     );
   }
+
+  const resolvedWorkspaceId = project.workspace_id ?? workspaceId;
 
   return (
     <div className="project-workbench">
@@ -298,9 +308,7 @@ export function ProjectWorkbench({
             <li key={item.id}>
               <button
                 type="button"
-                className={
-                  item.id === stage ? "project-stage-button is-active" : "project-stage-button"
-                }
+                className={item.id === stage ? "project-stage-button is-active" : "project-stage-button"}
                 aria-current={item.id === stage ? "step" : undefined}
                 onClick={() => onNavigateStage(item.id)}
               >
@@ -333,20 +341,23 @@ export function ProjectWorkbench({
       )}
 
       <div className="embedded-workspace">
-        {stage === "features" && (project.workspace_id ?? workspaceId) !== null && (
+        {stage === "features" && resolvedWorkspaceId !== null && (
           <FeatureWorkspace
-            workspaceId={(project.workspace_id ?? workspaceId) as string}
+            workspaceId={resolvedWorkspaceId}
             project={project}
             selectedFeatureId={featureId}
             onOpenFeature={(selectedId) => onNavigateFeature(selectedId)}
             onCloseFeature={() => onNavigateFeature(null)}
           />
         )}
+        {stage === "requirements" && resolvedWorkspaceId !== null && (
+          <RequirementsWorkspace workspaceId={resolvedWorkspaceId} project={project} />
+        )}
         {stage === "sources" && <SourceWorkspace project={project} embedded />}
         {stage === "catalog" && <ApiCatalogWorkspace project={project} embedded />}
+        {stage === "evidence" && <EvidenceWorkspace project={project} embedded />}
         {stage === "changes" && <ChangesWorkspace project={project} embedded />}
         {stage === "documents" && <DocumentsWorkspace project={project} embedded />}
-        {stage === "evidence" && <EvidenceWorkspace project={project} embedded />}
       </div>
     </div>
   );
@@ -373,6 +384,7 @@ function ProjectOverview({
 }) {
   const readySources = summary.sources.filter((source) => source.status === "READY");
   const completedRuns = summary.runs.filter((run) => run.status === "COMPLETED");
+  const activeRequirements = summary.requirements.filter((item) => item.status === "ACTIVE");
   const openReviews = summary.documents.filter((document) =>
     ["IN_REVIEW", "CHANGES_REQUESTED"].includes(document.status),
   );
@@ -422,6 +434,13 @@ function ProjectOverview({
           onClick={() => onNavigateStage("features")}
         />
         <SummaryCard
+          icon="documents"
+          label="Active requirements"
+          value={activeRequirements.length}
+          detail={`${summary.requirements.length} governed requirement records`}
+          onClick={() => onNavigateStage("requirements")}
+        />
+        <SummaryCard
           icon="source"
           label="Ready sources"
           value={readySources.length}
@@ -448,7 +467,7 @@ function ProjectOverview({
           value={completedRuns.length >= 2 ? 1 : 0}
           detail={
             completedRuns.length >= 2
-              ? "Snapshot comparison is available"
+              ? "Snapshot comparison and impact assessment are available"
               : "Two completed snapshots are required"
           }
           onClick={() => onNavigateStage("changes")}
@@ -458,17 +477,18 @@ function ProjectOverview({
       <section className="content-section project-workflow-map" aria-labelledby="project-workflow-title">
         <div className="section-heading">
           <div>
-            <h2 id="project-workflow-title">Documentation workflow</h2>
-            <p>Current project context persists while you move between technical stages.</p>
+            <h2 id="project-workflow-title">Evidence-to-release workflow</h2>
+            <p>Product intent, technical evidence, impact, and approval stay inside one project context.</p>
           </div>
         </div>
         <ol>
           <WorkflowStep label="Capability map" state={summary.features.length > 0 ? "complete" : "current"} />
-          <WorkflowStep label="Source intake" state={readySources.length > 0 ? "complete" : summary.features.length > 0 ? "current" : "pending"} />
-          <WorkflowStep label="Synchronization" state={completedRuns.length > 0 ? "complete" : readySources.length > 0 ? "current" : "pending"} />
-          <WorkflowStep label="Change analysis" state={completedRuns.length >= 2 ? "available" : "pending"} />
+          <WorkflowStep label="Requirement baseline" state={activeRequirements.length > 0 ? "complete" : summary.features.length > 0 ? "current" : "pending"} />
+          <WorkflowStep label="Source intake" state={readySources.length > 0 ? "complete" : activeRequirements.length > 0 ? "current" : "pending"} />
+          <WorkflowStep label="Evidence snapshot" state={completedRuns.length > 0 ? "complete" : readySources.length > 0 ? "current" : "pending"} />
+          <WorkflowStep label="Change impact" state={completedRuns.length >= 2 ? "available" : "pending"} />
           <WorkflowStep label="Document lifecycle" state={summary.documents.length > 0 ? "complete" : completedRuns.length > 0 ? "current" : "pending"} />
-          <WorkflowStep label="Review and release" state="planned" />
+          <WorkflowStep label="Independent approval" state={openReviews.length > 0 ? "current" : "available"} />
         </ol>
       </section>
     </div>
@@ -508,6 +528,17 @@ function resolveNextAction(
     };
   }
 
+  const activeRequirements = summary.requirements.filter((item) => item.status === "ACTIVE");
+  if (activeRequirements.length === 0) {
+    return {
+      stage: "requirements",
+      icon: "documents",
+      title: "Establish the requirement baseline",
+      detail: "Record governed product intent before technical evidence is treated as implementation proof.",
+      actionLabel: "Open requirement registry",
+    };
+  }
+
   const readySources = summary.sources.filter((source) => source.status === "READY");
   if (readySources.length === 0) {
     return {
@@ -531,9 +562,7 @@ function resolveNextAction(
   }
 
   const readinessAction = resolveReadinessNextAction(readiness);
-  if (readinessAction !== null) {
-    return readinessAction;
-  }
+  if (readinessAction !== null) return readinessAction;
 
   if (summary.documents.length === 0) {
     return {
@@ -562,9 +591,9 @@ function resolveNextAction(
     return {
       stage: "changes",
       icon: "changes",
-      title: "Review source changes",
-      detail: "Multiple completed snapshots are available for deterministic comparison.",
-      actionLabel: "Compare snapshots",
+      title: "Review change impact",
+      detail: "Multiple snapshots are available for deterministic comparison and impact assessment.",
+      actionLabel: "Assess changes",
     };
   }
 
@@ -578,14 +607,10 @@ function resolveNextAction(
 }
 
 function resolveReadinessNextAction(readiness: ProjectReadiness | null): NextAction | null {
-  if (readiness === null) {
-    return null;
-  }
+  if (readiness === null) return null;
 
   for (const item of readiness.items) {
-    if (item.requirement !== "REQUIRED" || item.readiness_state !== "NOT_READY") {
-      continue;
-    }
+    if (item.requirement !== "REQUIRED" || item.readiness_state !== "NOT_READY") continue;
     for (const finding of item.findings) {
       if (finding.missing_input === "technical-evidence") {
         return {

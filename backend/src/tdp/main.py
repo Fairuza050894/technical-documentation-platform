@@ -50,38 +50,29 @@ from tdp.modules.documents.presentation.http.router import router as documents_r
 from tdp.modules.evidence.application.service import EvidenceApplicationService
 from tdp.modules.evidence.domain.errors import EvidenceError
 from tdp.modules.evidence.infrastructure.sqlite_repository import SqliteEvidenceRepository
-from tdp.modules.evidence.presentation.http.router import (
-    evidence_error_handler,
-)
-from tdp.modules.evidence.presentation.http.router import (
-    router as evidence_router,
-)
+from tdp.modules.evidence.presentation.http.router import evidence_error_handler
+from tdp.modules.evidence.presentation.http.router import router as evidence_router
 from tdp.modules.features.application.service import FeatureApplicationService
 from tdp.modules.features.domain.errors import FeatureError
 from tdp.modules.features.infrastructure.sqlite_repository import SqliteFeatureRepository
-from tdp.modules.features.presentation.http.router import (
-    feature_error_handler,
-)
-from tdp.modules.features.presentation.http.router import (
-    router as features_router,
-)
+from tdp.modules.features.presentation.http.router import feature_error_handler
+from tdp.modules.features.presentation.http.router import router as features_router
 from tdp.modules.projects.application.service import ProjectApplicationService
 from tdp.modules.projects.domain.errors import ProjectError
 from tdp.modules.projects.infrastructure.sqlite_repository import SqliteProjectRepository
-from tdp.modules.projects.presentation.http.router import (
-    router as projects_router,
-)
-from tdp.modules.projects.presentation.http.router import (
-    workspace_projects_router,
-)
+from tdp.modules.projects.presentation.http.router import router as projects_router
+from tdp.modules.projects.presentation.http.router import workspace_projects_router
 from tdp.modules.readiness.application.service import ReadinessApplicationService
 from tdp.modules.readiness.domain.errors import ReadinessError
-from tdp.modules.readiness.presentation.http.router import (
-    readiness_error_handler,
+from tdp.modules.readiness.presentation.http.router import readiness_error_handler
+from tdp.modules.readiness.presentation.http.router import router as readiness_router
+from tdp.modules.requirements.application.service import RequirementApplicationService
+from tdp.modules.requirements.domain.errors import RequirementError
+from tdp.modules.requirements.infrastructure.sqlite_repository import (
+    SqliteRequirementRepository,
 )
-from tdp.modules.readiness.presentation.http.router import (
-    router as readiness_router,
-)
+from tdp.modules.requirements.presentation.http.router import requirement_error_handler
+from tdp.modules.requirements.presentation.http.router import router as requirements_router
 from tdp.modules.scanner.application.service import ScannerApplicationService
 from tdp.modules.scanner.application.webhook_service import (
     WebhookApplicationService,
@@ -143,7 +134,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     runtime_settings.database_path.parent.mkdir(parents=True, exist_ok=True)
     runtime_settings.artifact_root_path.mkdir(parents=True, exist_ok=True)
 
-    # ═══ Identity Provider ═══
     identity_provider = LocalIdentityProvider(
         RequestPrincipal(
             subject_id=runtime_settings.local_identity_subject,
@@ -154,7 +144,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         )
     )
 
-    # ═══ OIDC + JWT (only when auth_mode == "oidc") ═══
     oidc_discovery: OidcDiscovery | None = None
     jwt_service: JwtService | None = None
 
@@ -169,10 +158,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             audience=runtime_settings.oidc_audience or None,
         )
 
-    # ═══ Token blacklist ═══
     token_blacklist = TokenBlacklist(runtime_settings.database_path)
 
-    # ═══ Repositories ═══
     workspace_repository = SqliteWorkspaceRepository(runtime_settings.database_path)
     project_repository = SqliteProjectRepository(runtime_settings.database_path)
     source_repository = SqliteSourceRepository(runtime_settings.database_path)
@@ -180,6 +167,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     document_repository = SqliteDocumentRepository(runtime_settings.database_path)
     feature_repository = SqliteFeatureRepository(runtime_settings.database_path)
     evidence_repository = SqliteEvidenceRepository(runtime_settings.database_path)
+    requirement_repository = SqliteRequirementRepository(runtime_settings.database_path)
     template_repository = SqliteTemplateRepository(str(runtime_settings.database_path))
     scan_repository = SqliteScanRepository(str(runtime_settings.database_path))
     project_access = RepositoryBackedProjectAccess(
@@ -188,7 +176,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     artifact_store = LocalArtifactStore(runtime_settings.artifact_root_path)
 
-    # ═══ Application ═══
     application = FastAPI(
         title=runtime_settings.app_name,
         version=runtime_settings.app_version,
@@ -236,6 +223,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         feature_repository,
         source_repository,
         catalog_repository,
+    )
+    application.state.requirement_service = RequirementApplicationService(
+        requirement_repository,
+        project_repository,
+        workspace_repository,
+        feature_repository,
+        evidence_repository,
+        document_repository,
     )
     readiness_service = ReadinessApplicationService(
         project_repository,
@@ -285,7 +280,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         workspace_repository,
     )
 
-    # --- Authorization (WS 1.2) ---
     membership_repository = SqliteMembershipRepository(runtime_settings.database_path)
     authorization_policy = AuthorizationPolicy(
         membership_lookup=membership_repository,
@@ -294,7 +288,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.state.membership_repository = membership_repository
     application.state.authorization_policy = authorization_policy
 
-    # --- Audit ---
     audit_store = AuditStore(runtime_settings.database_path)
     application.state.audit_store = audit_store
 
@@ -304,9 +297,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     application.state.audit_logger = audit_logger
 
-    # ═══ Middleware (last added = runs first on request) ═══
-
-    # Security headers + HSTS + CSP (outermost)
     application.add_middleware(
         SecurityHeadersMiddleware,
         environment=runtime_settings.environment,
@@ -314,11 +304,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         hsts_include_subdomains=runtime_settings.hsts_include_subdomains,
         hsts_preload=runtime_settings.hsts_preload,
     )
-
-    # Audit logging
     application.add_middleware(AuditMiddleware, audit_logger=audit_logger)
-
-    # CSRF protection
     application.add_middleware(
         CsrfProtectionMiddleware,
         enabled=runtime_settings.csrf_enabled,
@@ -326,7 +312,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         cookie_samesite=runtime_settings.csrf_cookie_samesite,
     )
 
-    # JWT authentication (OIDC mode only)
     if runtime_settings.auth_mode == "oidc" and jwt_service is not None:
         application.add_middleware(
             JwtAuthMiddleware,
@@ -335,17 +320,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             auth_mode=runtime_settings.auth_mode,
         )
 
-    # Rate limiting
     if runtime_settings.rate_limit_enabled:
         application.add_middleware(
             RateLimitMiddleware,
             requests_per_minute=runtime_settings.rate_limit_requests_per_minute,
         )
 
-    # Request ID
     application.add_middleware(RequestIdMiddleware)
 
-    # CORS (innermost)
     cors_allow_credentials = runtime_settings.csrf_enabled or runtime_settings.auth_mode == "oidc"
     cors_allow_headers = ["Content-Type", "X-Request-ID"]
     if runtime_settings.csrf_enabled:
@@ -361,7 +343,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_headers=cors_allow_headers,
     )
 
-    # ═══ Exception handlers ═══
     application.add_exception_handler(CatalogError, catalog_error_handler)
     application.add_exception_handler(ChangeDetectionError, change_detection_error_handler)
     application.add_exception_handler(DocumentError, document_error_handler)
@@ -370,6 +351,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         enterprise_generation_blocked_handler,
     )
     application.add_exception_handler(EvidenceError, evidence_error_handler)
+    application.add_exception_handler(RequirementError, requirement_error_handler)
     application.add_exception_handler(TemplateError, template_error_handler)
     application.add_exception_handler(ScannerError, scanner_error_handler)
     application.add_exception_handler(WebhookSignatureError, webhook_signature_error_handler)
@@ -382,7 +364,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.add_exception_handler(RequestValidationError, validation_error_handler)
     application.add_exception_handler(PermissionDeniedError, permission_denied_handler)
 
-    # ═══ Routers ═══
     application.include_router(health_router, prefix=runtime_settings.api_prefix)
     application.include_router(identity_router, prefix=runtime_settings.api_prefix)
     application.include_router(auth_router, prefix=runtime_settings.api_prefix)
@@ -391,6 +372,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.include_router(readiness_router, prefix=runtime_settings.api_prefix)
     application.include_router(workspace_projects_router, prefix=runtime_settings.api_prefix)
     application.include_router(features_router, prefix=runtime_settings.api_prefix)
+    application.include_router(requirements_router, prefix=runtime_settings.api_prefix)
     application.include_router(sources_router, prefix=runtime_settings.api_prefix)
     application.include_router(catalog_router, prefix=runtime_settings.api_prefix)
     application.include_router(changes_router, prefix=runtime_settings.api_prefix)

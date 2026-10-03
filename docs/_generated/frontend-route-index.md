@@ -5,6 +5,7 @@
 
 - `overview`
 - `features`
+- `requirements`
 - `sources`
 - `catalog`
 - `changes`

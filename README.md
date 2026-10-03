@@ -1,53 +1,55 @@
 # Technical Documentation Platform
 
-A source-backed platform for creating, reviewing, versioning, and releasing technical documentation from verifiable engineering evidence.
+A source-backed engineering documentation control plane for governing product intent, technical evidence, deterministic change impact, document versions, and review decisions.
 
-> **Current status:** MVP 1 product hardening + Repository Scanner with SonarQube integration. The repository is suitable for controlled local development and evaluation. It is not approved for public internet exposure or enterprise production use.
+> **Current status:** enterprise-foundation MVP for controlled local development and evaluation. The repository includes governed requirements, canonical evidence primitives, repository analysis, deterministic API change impact, document lifecycle controls, and quality/security gates. It is not yet approved for public internet exposure or enterprise production use.
 
 ## Product principles
 
 - Facts in generated documents must be traceable to source evidence.
-- Deterministic logic, not AI inference, controls factual generation and version decisions.
+- Business intent is revisioned; prior requirement revisions are never overwritten.
+- Deterministic logic, not AI inference, controls factual generation and impact decisions.
 - Missing information is reported as missing; it is never invented.
 - Document content is immutable once versioned.
+- Verified approvals honor separation of duties.
 - Review and approval actions use a server-resolved identity boundary.
-- Architecture, requirements, quality evidence, and release decisions are maintained as code.
+- Architecture, requirements, quality evidence, policies, and release decisions are maintained as code.
 
-## Implemented capabilities
+## Canonical project workflow
 
 ```text
 Workspace
-├── Project
-│   ├── Feature / Module Registry
-│   ├── OpenAPI Source Management
-│   ├── API Catalog Synchronization
-│   ├── Deterministic Change Detection
-│   └── Document Lifecycle
-│       ├── Generation
-│       ├── Version History
-│       ├── Review
-│       ├── Approval
-│       └── Version Comparison
-└── Repository Scanner
-    ├── Git Clone & Analysis
-    ├── Tech Stack Detection
-    ├── Real Test Execution (pytest, jest, go test)
-    ├── Real Linting (flake8, eslint)
-    ├── Real Security Scanning (pip-audit, npm audit)
-    ├── Health Score Calculation
-    ├── SonarQube Integration (dual scoring)
-    ├── Scan Comparison (delta analysis)
-    ├── Document Suggestions
-    └── Document Generation
+└── Project
+    ├── Feature / Module Registry
+    ├── Requirement Registry
+    │   ├── Immutable revisions
+    │   └── Verified Feature / Evidence / Document trace links
+    ├── Source Intake
+    ├── Evidence
+    │   ├── Source provenance
+    │   ├── Checksums
+    │   ├── Materializations
+    │   └── Claims
+    ├── API Catalog Synchronization
+    ├── Deterministic Change Detection
+    ├── Deterministic Impact Assessment
+    │   ├── Requirement review obligation
+    │   ├── Test execution obligation
+    │   └── Document review obligation
+    └── Document Lifecycle
+        ├── Generation
+        ├── Version History
+        ├── Review
+        ├── Independent Approval for verified identities
+        ├── Supersession
+        └── Version Comparison
 ```
 
-The current generated document profile is **Technical Source Overview** from normalized OpenAPI evidence. Broader evidence types and document profiles remain roadmap items.
-
-The **Repository Scanner** clones repositories, analyzes code structure, runs real tests/linters/security scanners, integrates with SonarQube for dual scoring, and generates document suggestions based on detected tech stack and project stage.
+The strongest deterministic technical profile remains normalized OpenAPI/API catalog evidence. Broader repository, database, CI/CD, IaC, environment, and runtime evidence profiles remain controlled extensions.
 
 ## Repository Scanner
 
-The scanner module analyzes repositories and provides health scoring with optional SonarQube integration.
+The Repository Scanner is an analysis subsystem that clones repositories, detects technology, executes real tests/linters/security scans, integrates with SonarQube, compares scans, and recommends documentation work. Scanner findings are advisory until promoted into canonical evidence through a governed adapter; they are not silently treated as official facts.
 
 ### Scan a repository
 
@@ -59,13 +61,9 @@ curl -X POST http://localhost:8000/api/scanner/scan \
 
 ### SonarQube integration
 
-Start SonarQube locally:
-
 ```bash
 docker compose -f docker-compose.sonarqube.yml up -d
 ```
-
-Start the backend with SonarQube environment variables:
 
 ```bash
 SONARQUBE_URL=http://localhost:9000 \
@@ -74,22 +72,24 @@ SONARQUBE_PROJECT_KEY=<your-project-key> \
 PYTHONPATH=src uvicorn tdp.main:app --reload --port 8000
 ```
 
-The scanner will automatically fetch SonarQube metrics and display a dual scoring comparison (Internal Score vs SonarQube Score) in the UI.
+## Key governed APIs
 
-### API endpoints
+| Method | Path | Purpose |
+|---|---|---|
+| POST | `/api/workspaces/{workspace_id}/projects/{project_id}/requirements` | Create requirement revision 1 |
+| GET | `/api/workspaces/{workspace_id}/projects/{project_id}/requirements` | List latest requirement revisions |
+| POST | `/api/workspaces/{workspace_id}/projects/{project_id}/requirements/{id}/revisions` | Create a new immutable requirement revision |
+| POST | `/api/workspaces/{workspace_id}/projects/{project_id}/requirements/{id}/trace-links` | Create a verified trace link to an existing project target |
+| GET | `/api/workspaces/{workspace_id}/projects/{project_id}/requirements/traceability/coverage` | Calculate verified traceability coverage |
+| POST | `/api/projects/{project_id}/comparisons` | Compare normalized API snapshots |
+| POST | `/api/projects/{project_id}/comparisons/impact` | Calculate deterministic impact obligations |
+| POST | `/api/scanner/scan` | Start repository analysis |
+| GET | `/api/scanner/scans` | List repository scans |
+| POST | `/api/scanner/scans/{id}/rescan` | Re-run analysis |
+| GET | `/api/scanner/scans/{id}/compare/{other_id}` | Compare scan results |
+| GET | `/api/scanner/dashboard` | Scanner operational overview |
 
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/api/scanner/scan` | Start a new scan |
-| GET | `/api/scanner/scans` | List all scans |
-| GET | `/api/scanner/scans/{id}` | Get scan by ID |
-| DELETE | `/api/scanner/scans/{id}` | Delete a scan |
-| POST | `/api/scanner/scans/{id}/rescan` | Re-scan a repository |
-| GET | `/api/scanner/scans/{id}/compare/{other_id}` | Compare two scans |
-| POST | `/api/scanner/scans/{id}/generate` | Generate documents |
-| GET | `/api/scanner/dashboard` | Dashboard overview with alerts |
-| POST | `/api/scanner/webhooks/github` | GitHub webhook receiver |
-| GET | `/api/scanner/webhooks/events` | List webhook events |
+The OpenAPI document at `/api/openapi.json` is the canonical HTTP contract for the complete API surface.
 
 ## Quick start
 
@@ -101,8 +101,6 @@ Prerequisites:
 - `uv`;
 - npm;
 - macOS or a compatible Unix-like environment.
-
-Install dependencies:
 
 ```bash
 make bootstrap
@@ -131,7 +129,7 @@ make verify
 make audit-docs
 ```
 
-`make docs` regenerates repository-derived documentation. Review and commit the generated diff together with the related code or controlled-document change. CI runs `make verify`, which rejects stale documentation.
+`make verify` is the merge gate. It validates generated documentation, backend lint/format/type checks, backend tests, frontend lint/tests/build, and other repository quality controls. Security scanning runs separately in CI.
 
 ## Documentation portal
 
@@ -167,13 +165,15 @@ fixtures/       Non-sensitive test evidence
 
 The following remain required before shared production use:
 
-- OIDC and role-based authorization;
-- formal workspace membership and separation of duties;
-- PostgreSQL and versioned database migrations;
+- production OIDC configuration, role-based authorization, and workspace membership administration;
+- PostgreSQL and explicit versioned database migrations;
 - reproducible deployment packaging;
-- approved backup, recovery, retention, and monitoring controls;
+- approved backup, recovery, retention, and observability controls;
+- complete release/export governance;
 - authorized intellectual-property and licensing decision;
-- formal security and compliance assessment.
+- formal accessibility, security, and compliance assessment.
+
+The verified-identity approval policy already blocks author self-approval, but that control does not replace complete production RBAC and organizational separation-of-duties governance.
 
 Repository documents may state alignment with standards, but they do not constitute certification or regulatory approval.
 

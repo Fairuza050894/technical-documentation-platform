@@ -39,7 +39,8 @@ The table is derived from FastAPI route decorators. It records declared routes, 
 | POST | `/api/projects/{project_id}/archive` | `backend/src/tdp/modules/projects/presentation/http/router.py:126` |
 | GET | `/api/projects/{project_id}/claims` | `backend/src/tdp/modules/evidence/presentation/http/router.py:313` |
 | POST | `/api/projects/{project_id}/claims` | `backend/src/tdp/modules/evidence/presentation/http/router.py:288` |
-| POST | `/api/projects/{project_id}/comparisons` | `backend/src/tdp/modules/changes/presentation/http/router.py:39` |
+| POST | `/api/projects/{project_id}/comparisons` | `backend/src/tdp/modules/changes/presentation/http/router.py:54` |
+| POST | `/api/projects/{project_id}/comparisons/impact` | `backend/src/tdp/modules/changes/presentation/http/router.py:68` |
 | GET | `/api/projects/{project_id}/documentation-checklist` | `backend/src/tdp/modules/documents/presentation/http/router.py:277` |
 | GET | `/api/projects/{project_id}/documents` | `backend/src/tdp/modules/documents/presentation/http/router.py:335` |
 | POST | `/api/projects/{project_id}/documents/technical-source-overview` | `backend/src/tdp/modules/documents/presentation/http/router.py:313` |
@@ -93,3 +94,11 @@ The table is derived from FastAPI route decorators. It records declared routes, 
 | GET | `/api/workspaces/{workspace_id}/projects/{project_id}/features/{feature_id}` | `backend/src/tdp/modules/features/presentation/http/router.py:167` |
 | POST | `/api/workspaces/{workspace_id}/projects/{project_id}/features/{feature_id}/archive` | `backend/src/tdp/modules/features/presentation/http/router.py:177` |
 | GET | `/api/workspaces/{workspace_id}/projects/{project_id}/features/{feature_id}/documentation-map` | `backend/src/tdp/modules/features/presentation/http/router.py:187` |
+| GET | `/api/workspaces/{workspace_id}/projects/{project_id}/requirements` | `backend/src/tdp/modules/requirements/presentation/http/router.py:188` |
+| POST | `/api/workspaces/{workspace_id}/projects/{project_id}/requirements` | `backend/src/tdp/modules/requirements/presentation/http/router.py:162` |
+| GET | `/api/workspaces/{workspace_id}/projects/{project_id}/requirements/traceability/coverage` | `backend/src/tdp/modules/requirements/presentation/http/router.py:199` |
+| GET | `/api/workspaces/{workspace_id}/projects/{project_id}/requirements/{requirement_id}` | `backend/src/tdp/modules/requirements/presentation/http/router.py:208` |
+| POST | `/api/workspaces/{workspace_id}/projects/{project_id}/requirements/{requirement_id}/retire` | `backend/src/tdp/modules/requirements/presentation/http/router.py:257` |
+| GET | `/api/workspaces/{workspace_id}/projects/{project_id}/requirements/{requirement_id}/revisions` | `backend/src/tdp/modules/requirements/presentation/http/router.py:218` |
+| POST | `/api/workspaces/{workspace_id}/projects/{project_id}/requirements/{requirement_id}/revisions` | `backend/src/tdp/modules/requirements/presentation/http/router.py:230` |
+| POST | `/api/workspaces/{workspace_id}/projects/{project_id}/requirements/{requirement_id}/trace-links` | `backend/src/tdp/modules/requirements/presentation/http/router.py:278` |

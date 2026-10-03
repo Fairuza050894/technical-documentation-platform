@@ -1,13 +1,15 @@
 import type { ProjectStage } from "../../app/router";
-import type { ProjectReadiness } from "../../modules/workbench/governanceTypes";
+import type { SynchronizationRun } from "../../modules/catalog/types";
 import type { GeneratedDocumentSummary } from "../../modules/documents/types";
 import type { Feature } from "../../modules/features/types";
+import type { Requirement } from "../../modules/requirements/types";
 import type { TechnicalSource } from "../../modules/sources/types";
-import type { SynchronizationRun } from "../../modules/catalog/types";
+import type { ProjectReadiness } from "../../modules/workbench/governanceTypes";
 import { Icon } from "../ui/Icon";
 
 export interface StageDependencyData {
   features: Feature[];
+  requirements: Requirement[];
   sources: TechnicalSource[];
   runs: SynchronizationRun[];
   documents: GeneratedDocumentSummary[];
@@ -35,33 +37,39 @@ export function resolveStageStatus(
       return { state: "ready", message: "Project overview" };
 
     case "features": {
-      const active = data.features.filter(
-        (feature) => feature.status === "ACTIVE",
-      ).length;
+      const active = data.features.filter((feature) => feature.status === "ACTIVE").length;
       if (active === 0) {
+        return { state: "warning", message: "No active features defined", count: 0 };
+      }
+      return { state: "ready", message: `${active} active features`, count: active };
+    }
+
+    case "requirements": {
+      const active = data.requirements.filter((item) => item.status === "ACTIVE").length;
+      if (data.features.filter((feature) => feature.status === "ACTIVE").length === 0) {
         return {
-          state: "warning",
-          message: "No active features defined",
+          state: "blocked",
+          message: "Define a capability boundary first",
           count: 0,
         };
       }
-      return {
-        state: "ready",
-        message: `${active} active features`,
-        count: active,
-      };
+      if (active === 0) {
+        return { state: "warning", message: "No active requirements defined", count: 0 };
+      }
+      return { state: "ready", message: `${active} active requirements`, count: active };
     }
 
     case "sources": {
-      const ready = data.sources.filter(
-        (source) => source.status === "READY",
-      ).length;
-      if (data.sources.length === 0) {
+      const ready = data.sources.filter((source) => source.status === "READY").length;
+      if (data.requirements.filter((item) => item.status === "ACTIVE").length === 0) {
         return {
-          state: "empty",
-          message: "No sources imported",
+          state: "blocked",
+          message: "Establish a requirement baseline first",
           count: 0,
         };
+      }
+      if (data.sources.length === 0) {
+        return { state: "empty", message: "No sources imported", count: 0 };
       }
       if (ready === 0) {
         return {
@@ -70,69 +78,58 @@ export function resolveStageStatus(
           count: data.sources.length,
         };
       }
-      return {
-        state: "ready",
-        message: `${ready} ready sources`,
-        count: ready,
-      };
+      return { state: "ready", message: `${ready} ready sources`, count: ready };
     }
 
     case "catalog": {
-      const completed = data.runs.filter(
-        (run) => run.status === "COMPLETED",
-      ).length;
-      const readySources = data.sources.filter(
-        (source) => source.status === "READY",
-      );
+      const completed = data.runs.filter((run) => run.status === "COMPLETED").length;
+      const readySources = data.sources.filter((source) => source.status === "READY");
       if (readySources.length === 0) {
-        return {
-          state: "blocked",
-          message: "Requires a ready source first",
-          count: 0,
-        };
+        return { state: "blocked", message: "Requires a ready source first", count: 0 };
       }
       if (completed === 0) {
-        return {
-          state: "warning",
-          message: "No completed snapshots",
-          count: 0,
-        };
+        return { state: "warning", message: "No completed snapshots", count: 0 };
+      }
+      return { state: "ready", message: `${completed} snapshots`, count: completed };
+    }
+
+    case "evidence": {
+      const evidenceCount =
+        data.readiness?.items.reduce((sum, item) => sum + item.evidence_count, 0) ?? 0;
+      if (evidenceCount === 0) {
+        return { state: "empty", message: "No evidence registered", count: 0 };
       }
       return {
         state: "ready",
-        message: `${completed} snapshots`,
-        count: completed,
+        message: `${evidenceCount} evidence artifacts`,
+        count: evidenceCount,
       };
     }
 
     case "changes": {
-      const completed = data.runs.filter(
-        (run) => run.status === "COMPLETED",
-      ).length;
+      const completed = data.runs.filter((run) => run.status === "COMPLETED").length;
       if (completed < 2) {
         return {
           state: "blocked",
-          message: completed === 0
-            ? "Requires 2 completed snapshots"
-            : "Need 1 more snapshot for comparison",
+          message:
+            completed === 0
+              ? "Requires 2 completed snapshots"
+              : "Need 1 more snapshot for comparison",
           count: completed,
         };
       }
       return {
         state: "ready",
-        message: `${completed} snapshots available`,
+        message: `${completed} snapshots available for impact assessment`,
         count: completed,
       };
     }
 
     case "documents": {
-      const approved = data.documents.filter(
-        (document) => document.status === "APPROVED",
-      ).length;
+      const approved = data.documents.filter((document) => document.status === "APPROVED").length;
       const inReview = data.documents.filter(
         (document) =>
-          document.status === "IN_REVIEW" ||
-          document.status === "CHANGES_REQUESTED",
+          document.status === "IN_REVIEW" || document.status === "CHANGES_REQUESTED",
       ).length;
       if (data.readiness && data.readiness.required_not_ready_total > 0) {
         return {
@@ -149,38 +146,12 @@ export function resolveStageStatus(
         };
       }
       if (approved > 0) {
-        return {
-          state: "ready",
-          message: `${approved} approved`,
-          count: data.documents.length,
-        };
+        return { state: "ready", message: `${approved} approved`, count: data.documents.length };
       }
       return {
         state: data.documents.length > 0 ? "ready" : "empty",
-        message:
-          data.documents.length > 0
-            ? `${data.documents.length} versions`
-            : "No documents yet",
+        message: data.documents.length > 0 ? `${data.documents.length} versions` : "No documents yet",
         count: data.documents.length,
-      };
-    }
-
-    case "evidence": {
-      const evidenceCount = data.readiness?.items.reduce(
-        (sum, item) => sum + item.evidence_count,
-        0,
-      ) ?? 0;
-      if (evidenceCount === 0) {
-        return {
-          state: "empty",
-          message: "No evidence registered",
-          count: 0,
-        };
-      }
-      return {
-        state: "ready",
-        message: `${evidenceCount} evidence artifacts`,
-        count: evidenceCount,
       };
     }
 
@@ -189,15 +160,10 @@ export function resolveStageStatus(
   }
 }
 
-export function StageDependencyBadge({
-  stage,
-  data,
-}: StageDependencyIndicatorProps) {
+export function StageDependencyBadge({ stage, data }: StageDependencyIndicatorProps) {
   const status = resolveStageStatus(stage, data);
 
-  if (status.state === "ready" && stage === "overview") {
-    return null;
-  }
+  if (status.state === "ready" && stage === "overview") return null;
 
   return (
     <span
