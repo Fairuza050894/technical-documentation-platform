@@ -8,9 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Enterprise Governance Control Plane** - Added immutable requirement revisions, requirement trace links, deterministic change-impact assessment, governed workflow cases, workspace-level Governance navigation, APIs, persistence, and regression tests for the Phase 1-5 enterprise foundation
 - **Changelog Policy** - Formalized changelog and versioning policy (TDP-GOV-003) following Keep a Changelog and Semantic Versioning standards
 
 ### Changed
+- **Product truth reconciliation** - Updated README, PRD, and product vision so implemented scanner, evidence, template, traceability, impact, and workflow capabilities are distinguished from remaining pilot and production-readiness work
 - **Source-backed UI integrity** - Knowledge Map no longer presents demo fixtures as repository facts by default; demo rendering requires `VITE_KNOWLEDGE_MAP_DEMO=true`
 - **Scanner webhook routing** - Fixed webhook event detail URL interpolation and URL encoding
 - **Frontend routing cleanup** - Removed duplicate Intelligence route handling, unsupported Intelligence primary navigation, hard-coded Knowledge Map badge, and duplicate HTTP 204 handling
