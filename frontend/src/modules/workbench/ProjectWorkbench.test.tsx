@@ -7,9 +7,7 @@ const workspaceId = "00000000-0000-4000-8000-000000000001";
 const projectId = "11111111-1111-4111-8111-111111111111";
 
 function getRequestUrl(input: RequestInfo | URL): string {
-  if (typeof input === "string") {
-    return input;
-  }
+  if (typeof input === "string") return input;
   return input instanceof URL ? input.href : input.url;
 }
 
@@ -49,6 +47,27 @@ function featureRecord() {
     },
     created_at: "2026-08-01T00:00:00Z",
     updated_at: "2026-08-01T00:00:00Z",
+  };
+}
+
+function requirementRecord() {
+  return {
+    requirement_id: "44444444-4444-4444-8444-444444444444",
+    revision_id: "55555555-5555-4555-8555-555555555555",
+    project_id: projectId,
+    key: "REQ-001",
+    revision: 1,
+    requirement_type: "SYSTEM",
+    status: "ACTIVE",
+    title: "Maintain source-backed documentation",
+    statement: "The platform shall keep governed documentation linked to verifiable evidence.",
+    owner: "Technical Writing",
+    feature_id: "33333333-3333-4333-8333-333333333333",
+    acceptance_criteria: ["A generated factual statement has a verifiable evidence reference."],
+    changed_by: "Technical Writer [local:tw]",
+    change_reason: "Initial governed requirement.",
+    created_at: "2026-08-01T00:00:00Z",
+    trace_links: [],
   };
 }
 
@@ -96,27 +115,32 @@ function readinessRecord() {
   };
 }
 
+function requirementResponse(url: string): Response | null {
+  if (url.endsWith(`/api/workspaces/${workspaceId}/projects/${projectId}/requirements`)) {
+    return new Response(JSON.stringify({ items: [requirementRecord()], total: 1 }), { status: 200 });
+  }
+  return null;
+}
+
 afterEach(() => {
   vi.restoreAllMocks();
 });
 
 describe("ProjectWorkbench", () => {
-  it("derives the next action from project evidence", async () => {
+  it("derives the next action from governed project context", async () => {
     vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
       const url = getRequestUrl(input);
       if (url.endsWith(`/api/projects/${projectId}`)) {
-        return Promise.resolve(
-          new Response(JSON.stringify(projectRecord()), { status: 200 }),
-        );
+        return Promise.resolve(new Response(JSON.stringify(projectRecord()), { status: 200 }));
       }
       if (url.endsWith(`/api/workspaces/${workspaceId}/projects/${projectId}/features`)) {
         return Promise.resolve(
           new Response(JSON.stringify({ items: [featureRecord()], total: 1 }), { status: 200 }),
         );
       }
-      return Promise.resolve(
-        new Response(JSON.stringify({ items: [], total: 0 }), { status: 200 }),
-      );
+      const requirement = requirementResponse(url);
+      if (requirement !== null) return Promise.resolve(requirement);
+      return Promise.resolve(new Response(JSON.stringify({ items: [], total: 0 }), { status: 200 }));
     });
     const navigateStage = vi.fn();
 
@@ -133,9 +157,7 @@ describe("ProjectWorkbench", () => {
       />,
     );
 
-    await waitFor(() => {
-      expect(screen.getByText("Import the first technical source")).toBeInTheDocument();
-    });
+    await waitFor(() => expect(screen.getByText("Import the first technical source")).toBeInTheDocument());
     expect(screen.queryByRole("button", { name: "Projects" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Open source intake" }));
     expect(navigateStage).toHaveBeenCalledWith("sources");
@@ -145,27 +167,20 @@ describe("ProjectWorkbench", () => {
     vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
       const url = getRequestUrl(input);
       if (url.endsWith(`/api/projects/${projectId}`)) {
-        return Promise.resolve(
-          new Response(JSON.stringify(projectRecord()), { status: 200 }),
-        );
+        return Promise.resolve(new Response(JSON.stringify(projectRecord()), { status: 200 }));
       }
       if (url.endsWith(`/api/workspaces/${workspaceId}/projects/${projectId}/features`)) {
         return Promise.resolve(
           new Response(JSON.stringify({ items: [featureRecord()], total: 1 }), { status: 200 }),
         );
       }
+      const requirement = requirementResponse(url);
+      if (requirement !== null) return Promise.resolve(requirement);
       if (url.endsWith(`/api/projects/${projectId}/sources`)) {
         return Promise.resolve(
           new Response(
             JSON.stringify({
-              items: [
-                {
-                  id: "source-1",
-                  project_id: projectId,
-                  name: "Commerce API",
-                  status: "READY",
-                },
-              ],
+              items: [{ id: "source-1", project_id: projectId, name: "Commerce API", status: "READY" }],
               total: 1,
             }),
             { status: 200 },
@@ -176,14 +191,7 @@ describe("ProjectWorkbench", () => {
         return Promise.resolve(
           new Response(
             JSON.stringify({
-              items: [
-                {
-                  id: "sync-1",
-                  source_id: "source-1",
-                  project_id: projectId,
-                  status: "COMPLETED",
-                },
-              ],
+              items: [{ id: "sync-1", source_id: "source-1", project_id: projectId, status: "COMPLETED" }],
               total: 1,
             }),
             { status: 200 },
@@ -211,9 +219,7 @@ describe("ProjectWorkbench", () => {
           ),
         );
       }
-      return Promise.resolve(
-        new Response(JSON.stringify({ items: [], total: 0 }), { status: 200 }),
-      );
+      return Promise.resolve(new Response(JSON.stringify({ items: [], total: 0 }), { status: 200 }));
     });
     const navigateStage = vi.fn();
 
@@ -230,9 +236,7 @@ describe("ProjectWorkbench", () => {
       />,
     );
 
-    expect(
-      await screen.findByRole("heading", { name: "Project documentation" }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Project documentation" })).toBeInTheDocument();
     expect(await screen.findByText("Low Level Design")).toBeInTheDocument();
     expect(screen.getAllByText("Blocked").length).toBeGreaterThan(0);
     expect(await screen.findByText("Complete evidence for Low Level Design")).toBeInTheDocument();
@@ -240,17 +244,13 @@ describe("ProjectWorkbench", () => {
     expect(navigateStage).toHaveBeenCalledWith("catalog");
   });
 
-  it("recommends defining a capability before technical intake", async () => {
+  it("recommends defining a capability before requirement and technical intake", async () => {
     vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
       const url = getRequestUrl(input);
       if (url.endsWith(`/api/projects/${projectId}`)) {
-        return Promise.resolve(
-          new Response(JSON.stringify(projectRecord()), { status: 200 }),
-        );
+        return Promise.resolve(new Response(JSON.stringify(projectRecord()), { status: 200 }));
       }
-      return Promise.resolve(
-        new Response(JSON.stringify({ items: [], total: 0 }), { status: 200 }),
-      );
+      return Promise.resolve(new Response(JSON.stringify({ items: [], total: 0 }), { status: 200 }));
     });
     const navigateStage = vi.fn();
 
@@ -267,11 +267,42 @@ describe("ProjectWorkbench", () => {
       />,
     );
 
-    expect(
-      await screen.findByText("Define the first feature or module"),
-    ).toBeInTheDocument();
+    expect(await screen.findByText("Define the first feature or module")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Open capability registry" }));
     expect(navigateStage).toHaveBeenCalledWith("features");
+  });
+
+  it("recommends establishing requirements after capability definition", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      const url = getRequestUrl(input);
+      if (url.endsWith(`/api/projects/${projectId}`)) {
+        return Promise.resolve(new Response(JSON.stringify(projectRecord()), { status: 200 }));
+      }
+      if (url.endsWith(`/api/workspaces/${workspaceId}/projects/${projectId}/features`)) {
+        return Promise.resolve(
+          new Response(JSON.stringify({ items: [featureRecord()], total: 1 }), { status: 200 }),
+        );
+      }
+      return Promise.resolve(new Response(JSON.stringify({ items: [], total: 0 }), { status: 200 }));
+    });
+    const navigateStage = vi.fn();
+
+    render(
+      <ProjectWorkbench
+        workspaceId={workspaceId}
+        projectId={projectId}
+        stage="overview"
+        featureId={null}
+        onNavigateStage={navigateStage}
+        onNavigateFeature={vi.fn()}
+        onBackToProjects={vi.fn()}
+        onProjectResolved={vi.fn()}
+      />,
+    );
+
+    expect(await screen.findByText("Establish the requirement baseline")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Open requirement registry" }));
+    expect(navigateStage).toHaveBeenCalledWith("requirements");
   });
 
   it("keeps archived project evidence available in a read-only workbench", async () => {
@@ -282,9 +313,7 @@ describe("ProjectWorkbench", () => {
           new Response(JSON.stringify(projectRecord(workspaceId, "ARCHIVED")), { status: 200 }),
         );
       }
-      return Promise.resolve(
-        new Response(JSON.stringify({ items: [], total: 0 }), { status: 200 }),
-      );
+      return Promise.resolve(new Response(JSON.stringify({ items: [], total: 0 }), { status: 200 }));
     });
     const navigateStage = vi.fn();
     const onProjectResolved = vi.fn();
@@ -326,9 +355,7 @@ describe("ProjectWorkbench", () => {
           ),
         );
       }
-      return Promise.resolve(
-        new Response(JSON.stringify({ items: [], total: 0 }), { status: 200 }),
-      );
+      return Promise.resolve(new Response(JSON.stringify({ items: [], total: 0 }), { status: 200 }));
     });
 
     render(
@@ -352,12 +379,7 @@ describe("ProjectWorkbench", () => {
   it("shows an actionable missing-project state", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response(
-        JSON.stringify({
-          error: {
-            code: "PROJECT_NOT_FOUND",
-            message: "Project missing was not found.",
-          },
-        }),
+        JSON.stringify({ error: { code: "PROJECT_NOT_FOUND", message: "Project missing was not found." } }),
         { status: 404 },
       ),
     );
