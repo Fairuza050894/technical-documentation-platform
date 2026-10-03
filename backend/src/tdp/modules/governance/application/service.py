@@ -158,18 +158,20 @@ class GovernanceApplicationService:
             raise LookupError(
                 f"Impact assessment {impact_assessment_id} was not found in project {project_id}."
             )
+        if any(
+            item.impact_assessment_id == impact_assessment_id
+            for item in self._repository.list_workflow_cases(project_id)
+        ):
+            raise ValueError(
+                f"A workflow case already exists for impact assessment {impact_assessment_id}."
+            )
         case = WorkflowCase.create(
             project_id=project_id,
             impact_assessment_id=impact_assessment_id,
             owner=owner,
             created_by=actor,
         )
-        try:
-            self._repository.add_workflow_case(case)
-        except sqlite3.IntegrityError as exc:
-            raise ValueError(
-                f"A workflow case already exists for impact assessment {impact_assessment_id}."
-            ) from exc
+        self._repository.add_workflow_case(case)
         return case
 
     async def transition_workflow_case(
