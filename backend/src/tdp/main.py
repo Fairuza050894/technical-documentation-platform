@@ -65,6 +65,15 @@ from tdp.modules.features.presentation.http.router import (
 from tdp.modules.features.presentation.http.router import (
     router as features_router,
 )
+from tdp.modules.governance.application.service import GovernanceApplicationService
+from tdp.modules.governance.domain.errors import GovernanceError
+from tdp.modules.governance.infrastructure.sqlite_repository import SqliteGovernanceRepository
+from tdp.modules.governance.presentation.http.router import (
+    governance_error_handler,
+)
+from tdp.modules.governance.presentation.http.router import (
+    router as governance_router,
+)
 from tdp.modules.projects.application.service import ProjectApplicationService
 from tdp.modules.projects.domain.errors import ProjectError
 from tdp.modules.projects.infrastructure.sqlite_repository import SqliteProjectRepository
@@ -180,6 +189,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     document_repository = SqliteDocumentRepository(runtime_settings.database_path)
     feature_repository = SqliteFeatureRepository(runtime_settings.database_path)
     evidence_repository = SqliteEvidenceRepository(runtime_settings.database_path)
+    governance_repository = SqliteGovernanceRepository(runtime_settings.database_path)
     template_repository = SqliteTemplateRepository(str(runtime_settings.database_path))
     scan_repository = SqliteScanRepository(str(runtime_settings.database_path))
     project_access = RepositoryBackedProjectAccess(
@@ -236,6 +246,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         feature_repository,
         source_repository,
         catalog_repository,
+    )
+    application.state.governance_service = GovernanceApplicationService(
+        governance_repository,
+        project_repository,
     )
     readiness_service = ReadinessApplicationService(
         project_repository,
@@ -370,6 +384,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         enterprise_generation_blocked_handler,
     )
     application.add_exception_handler(EvidenceError, evidence_error_handler)
+    application.add_exception_handler(GovernanceError, governance_error_handler)
     application.add_exception_handler(TemplateError, template_error_handler)
     application.add_exception_handler(ScannerError, scanner_error_handler)
     application.add_exception_handler(WebhookSignatureError, webhook_signature_error_handler)
@@ -395,6 +410,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.include_router(catalog_router, prefix=runtime_settings.api_prefix)
     application.include_router(changes_router, prefix=runtime_settings.api_prefix)
     application.include_router(evidence_router, prefix=runtime_settings.api_prefix)
+    application.include_router(governance_router, prefix=runtime_settings.api_prefix)
     application.include_router(documents_router, prefix=runtime_settings.api_prefix)
     application.include_router(templates_router, prefix=runtime_settings.api_prefix)
     application.include_router(scanner_router, prefix=runtime_settings.api_prefix)
