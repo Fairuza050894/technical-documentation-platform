@@ -97,3 +97,9 @@
   background: var(--color-danger-subtle);
   color: var(--color-danger);
 }
+
+.evidence-workspace {
+  display: grid;
+  min-width: 0;
+  gap: 18px;
+}

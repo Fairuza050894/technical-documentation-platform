@@ -172,8 +172,12 @@ class AuditStore:
         where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
 
         allowed_sort = {
-            "timestamp", "action", "actor_id",
-            "resource_type", "success", "created_at",
+            "timestamp",
+            "action",
+            "actor_id",
+            "resource_type",
+            "success",
+            "created_at",
         }
         col = sort_by if sort_by in allowed_sort else "timestamp"
         direction = "ASC" if sort_order.lower() == "asc" else "DESC"
@@ -189,9 +193,8 @@ class AuditStore:
             total = count_row["cnt"]
 
             rows = conn.execute(
-                f"SELECT * FROM audit_logs {where} "
-                f"ORDER BY {col} {direction} LIMIT ? OFFSET ?",
-                params + [safe_size, offset],
+                f"SELECT * FROM audit_logs {where} ORDER BY {col} {direction} LIMIT ? OFFSET ?",
+                [*params, safe_size, offset],
             ).fetchall()
 
         logs = []
@@ -215,9 +218,7 @@ class AuditStore:
     def get_by_id(self, log_id: int) -> dict[str, Any] | None:
         """Get a single audit log by its auto-increment ID."""
         with self._connect() as conn:
-            row = conn.execute(
-                "SELECT * FROM audit_logs WHERE id = ?", (log_id,)
-            ).fetchone()
+            row = conn.execute("SELECT * FROM audit_logs WHERE id = ?", (log_id,)).fetchone()
         if not row:
             return None
         log = dict(row)
@@ -265,8 +266,7 @@ class AuditStore:
             by_outcome = [
                 dict(r)
                 for r in conn.execute(
-                    f"SELECT success, COUNT(*) as count FROM audit_logs {where} "
-                    "GROUP BY success",
+                    f"SELECT success, COUNT(*) as count FROM audit_logs {where} GROUP BY success",
                     params,
                 ).fetchall()
             ]

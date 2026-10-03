@@ -31,4 +31,5 @@ def test_current_identity_comes_from_server_configuration(tmp_path: Path) -> Non
         "provider": "local",
         "assurance": "DEVELOPMENT",
         "audit_actor": "Lead Reviewer [local:reviewer-001]",
+        "role": "viewer",
     }

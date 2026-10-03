@@ -57,12 +57,13 @@ export function compareScans(scanId: string, otherId: string): Promise<ScanCompa
 }
 
 export function listWebhookEvents(signal?: AbortSignal): Promise<WebhookEventCollection> {
-  return requestJson<WebhookEventCollection>('/scanner/webhooks/events', { signal });
+  return requestJson<WebhookEventCollection>("/scanner/webhooks/events", { signal });
 }
 
 export function getWebhookEvent(eventId: string): Promise<WebhookEvent> {
-  return requestJson<WebhookEvent>("/scanner/webhooks/events/${eventId}");
+  return requestJson<WebhookEvent>(`/scanner/webhooks/events/${encodeURIComponent(eventId)}`);
 }
+
 export function getDashboard(signal?: AbortSignal): Promise<DashboardResponse> {
   return requestJson<DashboardResponse>("/scanner/dashboard", { signal });
 }

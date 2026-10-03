@@ -7,8 +7,7 @@ from tdp.modules.scanner.application.webhook_service import (
     WebhookSignatureError,
 )
 from tdp.modules.scanner.domain.model import ScanResult
-from tdp.modules.scanner.domain.webhook import WebhookEvent, WebhookEventType, WebhookStatus
-from tdp.modules.scanner.domain.webhook_repository import WebhookRepository
+from tdp.modules.scanner.domain.webhook import WebhookEvent, WebhookEventType
 
 
 class InMemoryWebhookRepository:
@@ -29,10 +28,7 @@ class InMemoryWebhookRepository:
         )[:limit]
 
     async def list_by_repo(self, repository_url: str, limit: int = 20) -> list[WebhookEvent]:
-        return [
-            e for e in self._events.values()
-            if e.repository_url == repository_url
-        ][:limit]
+        return [e for e in self._events.values() if e.repository_url == repository_url][:limit]
 
 
 class InMemoryScanRepository:
@@ -98,7 +94,7 @@ def _make_pr_payload(
 
 
 class TestWebhookServicePush:
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process_push_creates_event(self) -> None:
         webhook_repo = InMemoryWebhookRepository()
         scan_repo = InMemoryScanRepository()
@@ -116,7 +112,7 @@ class TestWebhookServicePush:
         assert result.status == "COMPLETED"
         assert result.scan_id != ""
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_push_event_saved_to_repository(self) -> None:
         webhook_repo = InMemoryWebhookRepository()
         scan_repo = InMemoryScanRepository()
@@ -131,7 +127,7 @@ class TestWebhookServicePush:
 
 
 class TestWebhookServicePR:
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_process_pr_opened(self) -> None:
         webhook_repo = InMemoryWebhookRepository()
         scan_repo = InMemoryScanRepository()
@@ -145,7 +141,7 @@ class TestWebhookServicePR:
         assert result.status == "COMPLETED"
         assert result.scan_id != ""
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_pr_closed_skipped(self) -> None:
         webhook_repo = InMemoryWebhookRepository()
         scan_repo = InMemoryScanRepository()
@@ -158,7 +154,7 @@ class TestWebhookServicePR:
         assert result.status == "SKIPPED"
         assert "ignored" in result.error_message
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_pr_synchronize_processed(self) -> None:
         webhook_repo = InMemoryWebhookRepository()
         scan_repo = InMemoryScanRepository()
@@ -172,7 +168,7 @@ class TestWebhookServicePR:
 
 
 class TestWebhookServiceList:
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_list_events(self) -> None:
         webhook_repo = InMemoryWebhookRepository()
         scan_repo = InMemoryScanRepository()
@@ -185,7 +181,7 @@ class TestWebhookServiceList:
         events = await service.list_events()
         assert len(events) == 2
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_get_event(self) -> None:
         webhook_repo = InMemoryWebhookRepository()
         scan_repo = InMemoryScanRepository()
@@ -196,7 +192,7 @@ class TestWebhookServiceList:
         fetched = await service.get_event(result.id)
         assert fetched.id == result.id
 
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_get_nonexistent_event_raises(self) -> None:
         webhook_repo = InMemoryWebhookRepository()
         scan_repo = InMemoryScanRepository()
@@ -208,7 +204,7 @@ class TestWebhookServiceList:
 
 
 class TestWebhookSignature:
-    @pytest.mark.asyncio
+    @pytest.mark.anyio
     async def test_invalid_signature_raises(self) -> None:
         webhook_repo = InMemoryWebhookRepository()
         scan_repo = InMemoryScanRepository()
@@ -218,6 +214,4 @@ class TestWebhookSignature:
         )
 
         with pytest.raises(WebhookSignatureError):
-            await service.process_github_push(
-                _make_push_payload(), signature="sha256=invalid"
-            )
+            await service.process_github_push(_make_push_payload(), signature="sha256=invalid")

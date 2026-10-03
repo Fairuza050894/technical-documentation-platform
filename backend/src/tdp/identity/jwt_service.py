@@ -60,25 +60,23 @@ class JwtService:
 
             return claims
 
-        except ExpiredSignatureError:
-            raise JwtValidationError("Token has expired", "TOKEN_EXPIRED")
-        except InvalidAudienceError:
-            raise JwtValidationError("Invalid token audience", "INVALID_AUDIENCE")
-        except InvalidIssuerError:
-            raise JwtValidationError("Invalid token issuer", "INVALID_ISSUER")
-        except DecodeError:
-            raise JwtValidationError("Invalid token format", "INVALID_FORMAT")
-        except InvalidTokenError as e:
-            raise JwtValidationError(f"Invalid token: {e}", "INVALID_TOKEN")
+        except ExpiredSignatureError as exc:
+            raise JwtValidationError("Token has expired", "TOKEN_EXPIRED") from exc
+        except InvalidAudienceError as exc:
+            raise JwtValidationError("Invalid token audience", "INVALID_AUDIENCE") from exc
+        except InvalidIssuerError as exc:
+            raise JwtValidationError("Invalid token issuer", "INVALID_ISSUER") from exc
+        except DecodeError as exc:
+            raise JwtValidationError("Invalid token format", "INVALID_FORMAT") from exc
+        except InvalidTokenError as exc:
+            raise JwtValidationError(f"Invalid token: {exc}", "INVALID_TOKEN") from exc
 
     async def extract_principal(self, token: str) -> RequestPrincipal:
         """Extract a RequestPrincipal from a validated JWT token."""
         claims = await self.validate_token(token)
 
         subject_id = claims.get("sub", "")
-        display_name = claims.get(
-            "name", claims.get("preferred_username", subject_id)
-        )
+        display_name = claims.get("name", claims.get("preferred_username", subject_id))
         email = claims.get("email", "")
 
         return RequestPrincipal(

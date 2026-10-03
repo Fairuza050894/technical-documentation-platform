@@ -1,3 +1,4 @@
+import contextlib
 import os
 from pathlib import Path
 
@@ -46,15 +47,19 @@ def detect_tech_stack(analysis: FileAnalysis, repo_path: str) -> TechStack:
         if "pydantic" in py_text:
             stack.tools.append("Pydantic")
 
-    if "JavaScript" in analysis.languages or "TypeScript" in analysis.languages or "TypeScript (React)" in analysis.languages or "JavaScript (React)" in analysis.languages:
+    if (
+        "JavaScript" in analysis.languages
+        or "TypeScript" in analysis.languages
+        or "TypeScript (React)" in analysis.languages
+        or "JavaScript (React)" in analysis.languages
+    ):
         pkg_text = _get_package_json_text(root)
         if '"next"' in pkg_text:
             stack.frameworks.append("Next.js")
         if '"react"' in pkg_text:
             stack.frameworks.append("React")
-        if '"react-dom"' in pkg_text:
-            if "React" not in stack.frameworks:
-                stack.frameworks.append("React")
+        if '"react-dom"' in pkg_text and "React" not in stack.frameworks:
+            stack.frameworks.append("React")
         if '"vue"' in pkg_text:
             stack.frameworks.append("Vue.js")
         if '"@angular/core"' in pkg_text:
@@ -123,7 +128,18 @@ def detect_tech_stack(analysis: FileAnalysis, repo_path: str) -> TechStack:
 
     stack.has_ci_cd = (root / ".github" / "workflows").exists() or ".gitlab-ci.yml" in cfg
     stack.has_tests = _has_tests(root, analysis)
-    stack.has_linting = bool(cfg & {".eslintrc", ".eslintrc.js", ".eslintrc.json", "eslint.config.js", ".flake8", "ruff.toml", "mypy.ini"})
+    stack.has_linting = bool(
+        cfg
+        & {
+            ".eslintrc",
+            ".eslintrc.js",
+            ".eslintrc.json",
+            "eslint.config.js",
+            ".flake8",
+            "ruff.toml",
+            "mypy.ini",
+        }
+    )
     stack.has_type_checking = bool(cfg & {"tsconfig.json", "jsconfig.json", "mypy.ini"})
 
     return stack
@@ -133,11 +149,16 @@ def _get_python_deps_text(root: Path) -> str:
     parts = []
     search_dirs = [root, root / "backend", root / "server", root / "api", root / "src"]
     for d in search_dirs:
-        for fname in ["requirements.txt", "requirements-dev.txt", "pyproject.toml", "setup.py", "setup.cfg", "Pipfile"]:
-            try:
+        for fname in [
+            "requirements.txt",
+            "requirements-dev.txt",
+            "pyproject.toml",
+            "setup.py",
+            "setup.cfg",
+            "Pipfile",
+        ]:
+            with contextlib.suppress(OSError):
                 parts.append((d / fname).read_text(encoding="utf-8", errors="ignore").lower())
-            except OSError:
-                pass
     return " ".join(parts)
 
 
@@ -145,10 +166,8 @@ def _get_package_json_text(root: Path) -> str:
     search_dirs = [root, root / "frontend", root / "client", root / "web", root / "app"]
     parts = []
     for d in search_dirs:
-        try:
+        with contextlib.suppress(OSError):
             parts.append((d / "package.json").read_text(encoding="utf-8", errors="ignore"))
-        except OSError:
-            pass
     return " ".join(parts)
 
 
@@ -173,7 +192,7 @@ def _has_tests(root: Path, analysis: FileAnalysis) -> bool:
     cfg = set(analysis.config_files)
     if cfg & {"pytest.ini", "tox.ini", "jest.config.js", "jest.config.ts", "vitest.config.ts"}:
         return True
-    for dirpath, _, filenames in os.walk(root):
+    for _dirpath, _, filenames in os.walk(root):
         for fn in filenames:
             if fn.startswith("test_") or fn.endswith(".test.ts") or fn.endswith(".test.js"):
                 return True
@@ -194,13 +213,9 @@ def _file_contains(root: Path, filename: str, terms: list[str]) -> bool:
 def _get_all_config_text(root: Path, analysis: FileAnalysis) -> str:
     parts = []
     for cfg in analysis.config_files:
-        try:
+        with contextlib.suppress(OSError):
             parts.append((root / cfg).read_text(encoding="utf-8", errors="ignore").lower())
-        except OSError:
-            pass
     for req in ["requirements.txt", "package.json", "go.mod", "Cargo.toml"]:
-        try:
+        with contextlib.suppress(OSError):
             parts.append((root / req).read_text(encoding="utf-8", errors="ignore").lower())
-        except OSError:
-            pass
     return " ".join(parts)

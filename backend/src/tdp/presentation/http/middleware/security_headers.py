@@ -88,9 +88,7 @@ class SecurityHeadersMiddleware:
                 headers["X-Content-Type-Options"] = "nosniff"
                 headers["X-Frame-Options"] = "DENY"
                 headers["Referrer-Policy"] = "no-referrer"
-                headers["Permissions-Policy"] = (
-                    "camera=(), microphone=(), geolocation=()"
-                )
+                headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
 
                 # ── Cross-Origin isolation ──
                 headers["Cross-Origin-Opener-Policy"] = "same-origin"

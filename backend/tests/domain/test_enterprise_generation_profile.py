@@ -11,12 +11,16 @@ from tdp.modules.documents.domain.model import (
 )
 
 
-def test_generation_profiles_cover_lld_as_built_and_hld_in_rollout_order() -> None:
+def test_generation_profiles_cover_supported_enterprise_rollout_order() -> None:
     assert ENTERPRISE_GENERATION_PROFILE_SCHEMA_VERSION == "enterprise-generation-profile-v2"
     assert [profile.document_type for profile in ENTERPRISE_GENERATION_PROFILES] == [
         DocumentType.LLD,
         DocumentType.AS_BUILT,
         DocumentType.HLD,
+        DocumentType.USER_GUIDE,
+        DocumentType.INSTALLATION_GUIDE,
+        DocumentType.UAT_EVIDENCE,
+        DocumentType.JOURNEY_MAP,
     ]
 
     lld = enterprise_generation_profile(DocumentType.LLD)

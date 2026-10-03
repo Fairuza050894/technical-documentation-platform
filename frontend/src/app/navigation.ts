@@ -79,17 +79,10 @@ export function buildNavigationGroups(activeWorkspaceId: string | null): readonl
           route: { name: "scanner" },
         },
         {
-          id: "Intelligence",
-          label: "Intelligence",
-          icon: "search",
-          route: { name: "intelligence" },
-        },
-        {
           id: "Knowledge Map",
           label: "Knowledge Map",
           icon: "overview",
           route: { name: "knowledge-map" },
-          badge: 3,
         },
         {
           id: "System status",

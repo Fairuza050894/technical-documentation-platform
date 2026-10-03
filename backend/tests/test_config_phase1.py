@@ -1,4 +1,5 @@
 """Tests for Phase 1 config additions."""
+
 from __future__ import annotations
 
 from tdp.config import Settings

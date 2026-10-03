@@ -1,5 +1,8 @@
 """Authorization domain errors."""
+
 from __future__ import annotations
+
+from typing import cast
 
 from starlette.requests import Request
 from starlette.responses import JSONResponse
@@ -42,17 +45,16 @@ class PermissionDeniedError(AuthorizationError):
         )
 
 
-async def permission_denied_handler(
-    request: Request, exc: PermissionDeniedError
-) -> JSONResponse:
+async def permission_denied_handler(request: Request, exc: Exception) -> JSONResponse:
     """FastAPI exception handler for PermissionDeniedError."""
+    error = cast(PermissionDeniedError, exc)
     return JSONResponse(
         status_code=403,
         content={
             "error": "permission_denied",
-            "message": exc.message,
-            "principal_id": exc.principal_id,
-            "permission": exc.permission,
-            "workspace_id": exc.workspace_id,
+            "message": error.message,
+            "principal_id": error.principal_id,
+            "permission": error.permission,
+            "workspace_id": error.workspace_id,
         },
     )

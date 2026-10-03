@@ -1,15 +1,16 @@
+from typing import Annotated, Any
+
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
-from typing import Annotated
 
 router = APIRouter(tags=["scanner-dashboard"])
 
 
-async def get_scanner_service(request: Request):
+async def get_scanner_service(request: Request) -> Any:
     return request.app.state.scanner_service
 
 
-ScannerServiceDependency = Annotated[object, Depends(get_scanner_service)]
+ScannerServiceDependency = Annotated[Any, Depends(get_scanner_service)]
 
 
 class RepoSummary(BaseModel):
@@ -77,12 +78,14 @@ async def get_dashboard(service: ScannerServiceDependency) -> DashboardResponse:
         for s in repo_scans[:10]:
             sh = _get(s, "health", {})
             sq = _get(s, "sonarqube", {})
-            trend.append({
-                "scan_id": _get(s, "id", ""),
-                "score": _get(sh, "score", 0),
-                "sonarqube_score": _get(sq, "total_score", 0),
-                "date": _get(s, "started_at", ""),
-            })
+            trend.append(
+                {
+                    "scan_id": _get(s, "id", ""),
+                    "score": _get(sh, "score", 0),
+                    "sonarqube_score": _get(sq, "total_score", 0),
+                    "date": _get(s, "started_at", ""),
+                }
+            )
         trend.reverse()
 
         # Alerts
@@ -92,36 +95,42 @@ async def get_dashboard(service: ScannerServiceDependency) -> DashboardResponse:
                 prev_health = _get(prev, "health", {})
                 delta = health_score - _get(prev_health, "score", 0)
                 if delta < -5:
-                    alerts.append({
-                        "type": "score_drop",
-                        "severity": "critical" if delta < -20 else "warning",
-                        "repository_name": _get(latest, "repository_name", ""),
-                        "message": f"Score dropped {abs(delta)} points ({_get(prev_health, 'score', 0)} -> {health_score})",
-                        "scan_id": _get(latest, "id", ""),
-                    })
+                    alerts.append(
+                        {
+                            "type": "score_drop",
+                            "severity": "critical" if delta < -20 else "warning",
+                            "repository_name": _get(latest, "repository_name", ""),
+                            "message": f"Score dropped {abs(delta)} points ({_get(prev_health, 'score', 0)} -> {health_score})",
+                            "scan_id": _get(latest, "id", ""),
+                        }
+                    )
 
             sec = _get(latest, "security_scan", {})
             critical_vulns = _get(sec, "critical", 0)
             if critical_vulns and critical_vulns > 0:
-                alerts.append({
-                    "type": "security",
-                    "severity": "critical",
-                    "repository_name": _get(latest, "repository_name", ""),
-                    "message": f"{critical_vulns} critical vulnerabilities",
-                    "scan_id": _get(latest, "id", ""),
-                })
+                alerts.append(
+                    {
+                        "type": "security",
+                        "severity": "critical",
+                        "repository_name": _get(latest, "repository_name", ""),
+                        "message": f"{critical_vulns} critical vulnerabilities",
+                        "scan_id": _get(latest, "id", ""),
+                    }
+                )
 
             test_suites = _get(latest, "test_suites", [])
             total_tests = sum(_get(t, "total", 0) for t in test_suites)
             failed_tests = sum(_get(t, "failed", 0) for t in test_suites)
             if total_tests > 0 and failed_tests / total_tests > 0.2:
-                alerts.append({
-                    "type": "test_failure",
-                    "severity": "warning",
-                    "repository_name": _get(latest, "repository_name", ""),
-                    "message": f"Test failure rate: {failed_tests}/{total_tests} ({failed_tests/total_tests:.0%})",
-                    "scan_id": _get(latest, "id", ""),
-                })
+                alerts.append(
+                    {
+                        "type": "test_failure",
+                        "severity": "warning",
+                        "repository_name": _get(latest, "repository_name", ""),
+                        "message": f"Test failure rate: {failed_tests}/{total_tests} ({failed_tests / total_tests:.0%})",
+                        "scan_id": _get(latest, "id", ""),
+                    }
+                )
 
         # SonarQube score
         sq_data = _get(latest, "sonarqube", {})
@@ -140,26 +149,28 @@ async def get_dashboard(service: ScannerServiceDependency) -> DashboardResponse:
         lint_total = sum(_get(r, "total_issues", 0) for r in lint_results)
         vuln_total = _get(sec, "total_vulnerabilities", 0)
 
-        repos.append(RepoSummary(
-            repository_name=_get(latest, "repository_name", ""),
-            repository_url=url,
-            latest_scan_id=_get(latest, "id", ""),
-            branch=_get(latest, "branch", ""),
-            status=_get(latest, "status", ""),
-            health_score=health_score,
-            sonarqube_score=sq_score_out,
-            total_files=_get(fa, "total_files", 0),
-            total_lines=_get(fa, "total_lines", 0),
-            frameworks=_get(ts, "frameworks", []),
-            test_suites=len(test_suites),
-            total_tests=total_tests,
-            tests_passed=tests_passed,
-            lint_issues=lint_total,
-            vulnerabilities=vuln_total,
-            last_scan_at=_get(latest, "started_at", ""),
-            scan_count=len(repo_scans),
-            score_trend=trend,
-        ))
+        repos.append(
+            RepoSummary(
+                repository_name=_get(latest, "repository_name", ""),
+                repository_url=url,
+                latest_scan_id=_get(latest, "id", ""),
+                branch=_get(latest, "branch", ""),
+                status=_get(latest, "status", ""),
+                health_score=health_score,
+                sonarqube_score=sq_score_out,
+                total_files=_get(fa, "total_files", 0),
+                total_lines=_get(fa, "total_lines", 0),
+                frameworks=_get(ts, "frameworks", []),
+                test_suites=len(test_suites),
+                total_tests=total_tests,
+                tests_passed=tests_passed,
+                lint_issues=lint_total,
+                vulnerabilities=vuln_total,
+                last_scan_at=_get(latest, "started_at", ""),
+                scan_count=len(repo_scans),
+                score_trend=trend,
+            )
+        )
 
     repos.sort(key=lambda r: r.health_score)
 

@@ -10,6 +10,7 @@ def build_client(database_path: Path) -> TestClient:
     return TestClient(
         create_app(
             Settings(
+                environment="development",
                 database_path=database_path,
                 artifact_root_path=database_path.parent / "artifacts",
             )

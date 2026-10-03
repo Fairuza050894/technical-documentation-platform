@@ -8,7 +8,7 @@ Endpoints:
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import jwt as pyjwt
 from fastapi import APIRouter, HTTPException, Request
@@ -75,8 +75,8 @@ async def refresh_token(
             access_token=result["access_token"],
             expires_in=result.get("expires_in", 3600),
         )
-    except JwtValidationError as e:
-        raise HTTPException(status_code=401, detail=str(e))
+    except JwtValidationError as exc:
+        raise HTTPException(status_code=401, detail=str(exc)) from exc
 
 
 @router.post("/logout", response_model=LogoutResponse)
@@ -97,7 +97,7 @@ async def logout(
 
             if jti and exp:
                 blacklist: TokenBlacklist = request.app.state.token_blacklist
-                expires_at = datetime.fromtimestamp(exp, tz=timezone.utc).isoformat()
+                expires_at = datetime.fromtimestamp(exp, tz=UTC).isoformat()
                 blacklist.add(jti, expires_at)
         except Exception:
             pass  # Best-effort — logout still succeeds

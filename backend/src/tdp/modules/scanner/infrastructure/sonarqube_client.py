@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, ClassVar
 
 import httpx
 
@@ -34,14 +34,21 @@ class SonarQubeMetrics:
 
 
 class SonarQubeClient:
-    METRIC_KEYS = [
-        "bugs", "vulnerabilities", "code_smells", "coverage",
-        "duplicated_lines_density", "ncloc", "sqale_rating",
-        "reliability_rating", "security_rating", "security_hotspots",
+    METRIC_KEYS: ClassVar[tuple[str, ...]] = (
+        "bugs",
+        "vulnerabilities",
+        "code_smells",
+        "coverage",
+        "duplicated_lines_density",
+        "ncloc",
+        "sqale_rating",
+        "reliability_rating",
+        "security_rating",
+        "security_hotspots",
         "cognitive_complexity",
-    ]
+    )
 
-    ISSUE_SEVERITIES = ["BLOCKER", "CRITICAL", "MAJOR", "MINOR", "INFO"]
+    ISSUE_SEVERITIES: ClassVar[tuple[str, ...]] = ("BLOCKER", "CRITICAL", "MAJOR", "MINOR", "INFO")
 
     def __init__(self, config: SonarQubeConfig) -> None:
         self._config = config

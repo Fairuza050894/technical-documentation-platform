@@ -109,22 +109,45 @@ async def export_audit_logs(
 
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow([
-        "ID", "Event ID", "Timestamp", "Actor ID", "Actor Name",
-        "Action", "Resource Type", "Resource ID", "Workspace ID",
-        "Project ID", "Request ID", "IP Address", "Success",
-        "Error Message", "Metadata",
-    ])
+    writer.writerow(
+        [
+            "ID",
+            "Event ID",
+            "Timestamp",
+            "Actor ID",
+            "Actor Name",
+            "Action",
+            "Resource Type",
+            "Resource ID",
+            "Workspace ID",
+            "Project ID",
+            "Request ID",
+            "IP Address",
+            "Success",
+            "Error Message",
+            "Metadata",
+        ]
+    )
     for log in result["logs"]:
-        writer.writerow([
-            log["id"], log["event_id"], log["timestamp"],
-            log["actor_id"], log["actor_display_name"],
-            log["action"], log["resource_type"], log["resource_id"],
-            log["workspace_id"], log["project_id"],
-            log["request_id"], log["ip_address"],
-            log["success"], log["error_message"],
-            str(log.get("metadata", "")),
-        ])
+        writer.writerow(
+            [
+                log["id"],
+                log["event_id"],
+                log["timestamp"],
+                log["actor_id"],
+                log["actor_display_name"],
+                log["action"],
+                log["resource_type"],
+                log["resource_id"],
+                log["workspace_id"],
+                log["project_id"],
+                log["request_id"],
+                log["ip_address"],
+                log["success"],
+                log["error_message"],
+                str(log.get("metadata", "")),
+            ]
+        )
 
     output.seek(0)
     filename = f"audit-logs-{datetime.now().strftime('%Y-%m-%d')}.csv"

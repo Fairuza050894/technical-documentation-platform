@@ -1,4 +1,5 @@
 """SQLite-backed workspace membership repository."""
+
 from __future__ import annotations
 
 import sqlite3
@@ -53,9 +54,7 @@ class SqliteMembershipRepository:
             )
             conn.commit()
 
-    def remove_member(
-        self, workspace_id: str, subject_id: str, role: Role
-    ) -> None:
+    def remove_member(self, workspace_id: str, subject_id: str, role: Role) -> None:
         with self._connect() as conn:
             conn.execute(
                 "DELETE FROM workspace_members"
@@ -67,8 +66,7 @@ class SqliteMembershipRepository:
     def get_roles(self, subject_id: str, workspace_id: str) -> frozenset[Role]:
         with self._connect() as conn:
             rows = conn.execute(
-                "SELECT role FROM workspace_members"
-                " WHERE subject_id = ? AND workspace_id = ?",
+                "SELECT role FROM workspace_members WHERE subject_id = ? AND workspace_id = ?",
                 (subject_id, workspace_id),
             ).fetchall()
         return frozenset(Role(row["role"]) for row in rows)
@@ -76,8 +74,7 @@ class SqliteMembershipRepository:
     def list_members(self, workspace_id: str) -> list[WorkspaceMember]:
         with self._connect() as conn:
             rows = conn.execute(
-                "SELECT * FROM workspace_members"
-                " WHERE workspace_id = ? ORDER BY added_at",
+                "SELECT * FROM workspace_members WHERE workspace_id = ? ORDER BY added_at",
                 (workspace_id,),
             ).fetchall()
         return [
@@ -94,8 +91,7 @@ class SqliteMembershipRepository:
     def list_workspaces_for_subject(self, subject_id: str) -> list[str]:
         with self._connect() as conn:
             rows = conn.execute(
-                "SELECT DISTINCT workspace_id FROM workspace_members"
-                " WHERE subject_id = ?",
+                "SELECT DISTINCT workspace_id FROM workspace_members WHERE subject_id = ?",
                 (subject_id,),
             ).fetchall()
         return [row["workspace_id"] for row in rows]

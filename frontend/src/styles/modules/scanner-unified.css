@@ -1283,3 +1283,26 @@
   background: #f3f4f6;
   border-color: #9ca3af;
 }
+
+/* Explicit contracts for scanner sections and metadata used by the workspace. */
+
+.scanner-overview,
+.scanner-tech,
+.scanner-tests,
+.scanner-security,
+.scanner-sonarqube {
+  min-width: 0;
+}
+
+.scanner-test-suite__stat,
+.scanner-lint-result__stat {
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.dashboard-repo-card__time,
+.webhook-event__time {
+  color: #9ca3af;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}

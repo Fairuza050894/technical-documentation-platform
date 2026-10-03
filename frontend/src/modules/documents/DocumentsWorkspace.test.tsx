@@ -203,7 +203,11 @@ describe("DocumentsWorkspace", () => {
     fireEvent.click(screen.getByRole("button", { name: "Submit for review" }));
 
     await waitFor(() =>
-      expect(screen.getByRole("status")).toHaveTextContent("Version 1.1 is now In Review."),
+      expect(
+        screen.getByText("Version 1.1 is now In Review.", {
+          selector: ".document-generation-status",
+        }),
+      ).toBeInTheDocument(),
     );
   });
 

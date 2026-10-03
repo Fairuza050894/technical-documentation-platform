@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, UTC
+from datetime import UTC, datetime, timedelta
 
 from tdp.modules.scanner.domain.model import (
     FileAnalysis,
@@ -6,7 +6,6 @@ from tdp.modules.scanner.domain.model import (
     ProjectHealth,
     ScanResult,
     ScanStatus,
-    SecurityIssue,
     SecurityScan,
     TechStack,
     TestSuite,

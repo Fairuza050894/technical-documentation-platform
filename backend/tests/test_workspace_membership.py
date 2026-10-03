@@ -1,4 +1,5 @@
 """Tests for workspace membership."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -14,12 +15,16 @@ from tdp.modules.workspaces.infrastructure.membership_repository import (
 
 class TestWorkspaceMember:
     def test_creation(self) -> None:
-        m = WorkspaceMember(workspace_id="ws-1", subject_id="u1", role=Role.VIEWER, added_by="admin")
+        m = WorkspaceMember(
+            workspace_id="ws-1", subject_id="u1", role=Role.VIEWER, added_by="admin"
+        )
         assert m.workspace_id == "ws-1"
         assert m.role == Role.VIEWER
 
     def test_frozen(self) -> None:
-        m = WorkspaceMember(workspace_id="ws-1", subject_id="u1", role=Role.VIEWER, added_by="admin")
+        m = WorkspaceMember(
+            workspace_id="ws-1", subject_id="u1", role=Role.VIEWER, added_by="admin"
+        )
         with pytest.raises(AttributeError):
             m.role = Role.ADMIN  # type: ignore[misc]
 

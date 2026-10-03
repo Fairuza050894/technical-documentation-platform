@@ -11,9 +11,11 @@ Usage::
     ) -> ...:
         ...
 """
+
 from __future__ import annotations
 
 from fastapi import Depends, Request
+from fastapi.params import Depends as DependsParam
 
 from tdp.authorization.errors import PermissionDeniedError
 from tdp.authorization.model import Permission
@@ -23,15 +25,13 @@ from tdp.authorization.policy import AuthorizationPolicy
 def require_workspace_permission(
     permission: Permission,
     workspace_id_param: str = "workspace_id",
-) -> Depends:
+) -> DependsParam:
     """Return a FastAPI dependency that enforces a workspace-level permission."""
 
     async def _guard(request: Request) -> None:
         policy: AuthorizationPolicy = request.app.state.authorization_policy
         principal = getattr(request.state, "principal", None)
-        principal_id = (
-            getattr(principal, "subject_id", "anonymous") if principal else "anonymous"
-        )
+        principal_id = getattr(principal, "subject_id", "anonymous") if principal else "anonymous"
         workspace_id: str = request.path_params.get(workspace_id_param, "")
 
         if not policy.has_permission(principal_id, workspace_id, permission):

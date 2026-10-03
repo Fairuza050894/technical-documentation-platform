@@ -7,6 +7,10 @@ interface LoginPageProps {
   onLogin: (token?: string) => Promise<void>;
 }
 
+function readEnvString(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
 export function LoginPage({ authMode, onLogin }: LoginPageProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -27,8 +31,8 @@ export function LoginPage({ authMode, onLogin }: LoginPageProps) {
     // Redirect to OIDC provider
     // In a real implementation, this would construct the OIDC authorize URL
     const redirectUri = `${window.location.origin}/auth/callback`;
-    const clientId = import.meta.env.VITE_OIDC_CLIENT_ID ?? "";
-    const issuer = import.meta.env.VITE_OIDC_ISSUER ?? "";
+    const clientId = readEnvString(import.meta.env.VITE_OIDC_CLIENT_ID);
+    const issuer = readEnvString(import.meta.env.VITE_OIDC_ISSUER);
 
     if (!issuer || !clientId) {
       setError("OIDC configuration is missing.");
@@ -68,7 +72,7 @@ export function LoginPage({ authMode, onLogin }: LoginPageProps) {
             <button
               type="button"
               className="login-card__button login-card__button--primary"
-              onClick={handleLocalLogin}
+              onClick={() => { void handleLocalLogin(); }}
               disabled={isLoading}
             >
               {isLoading ? "Signing in…" : "Continue as Developer"}

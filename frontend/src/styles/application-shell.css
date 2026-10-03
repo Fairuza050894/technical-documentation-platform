@@ -554,24 +554,6 @@
   margin-bottom: -1px;
 }
 
-/* Tab visibility */
-[data-active-tab="generate"] .document-section--history,
-[data-active-tab="generate"] .document-section--detail,
-[data-active-tab="generate"] .document-section--comparison {
-  display: none;
-}
-
-[data-active-tab="versions"] .document-section--generate,
-[data-active-tab="versions"] .document-section--comparison {
-  display: none;
-}
-
-[data-active-tab="compare"] .document-section--generate,
-[data-active-tab="compare"] .document-section--history,
-[data-active-tab="compare"] .document-section--detail {
-  display: none;
-}
-
 /* ── Print Styles ───────────────────────────────────────────── */
 
 @media print {
@@ -616,11 +598,6 @@
   .table-frame {
     overflow: visible !important;
     border: 1px solid #ccc !important;
-  }
-
-  .document-preview {
-    white-space: pre-wrap !important;
-    word-break: break-word !important;
   }
 
   .status-badge,

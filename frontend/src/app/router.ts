@@ -207,7 +207,6 @@ export function routeWorkspaceId(route: AppRoute): string | null {
     case "knowledge-map":
     case "intelligence":
     case "scanner":
-    case "intelligence":
     case "audit":
     case "login":
     case "not-found":
