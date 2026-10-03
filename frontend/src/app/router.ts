@@ -1,6 +1,7 @@
 export const projectStages = [
   "overview",
   "features",
+  "requirements",
   "sources",
   "catalog",
   "changes",
