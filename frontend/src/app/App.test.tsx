@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { AuthProvider } from "../shared/auth/AuthContext";
 import { App } from "./App";
 
 const workspaceId = "00000000-0000-4000-8000-000000000001";
@@ -13,6 +14,14 @@ function getRequestUrl(input: RequestInfo | URL): string {
     return input;
   }
   return input instanceof URL ? input.href : input.url;
+}
+
+function renderApp(): ReturnType<typeof render> {
+  return render(
+    <AuthProvider authMode="local">
+      <App />
+    </AuthProvider>,
+  );
 }
 
 function workspaceRecord(id = workspaceId, key = "GENERAL", name = "General Workspace") {
@@ -41,7 +50,6 @@ function projectRecord() {
     updated_at: "2026-07-30T00:00:00Z",
   };
 }
-
 
 function featureRecord() {
   return {
@@ -84,6 +92,7 @@ function mockPlatform({
             email: "technical.writer@local.invalid",
             provider: "local",
             assurance: "DEVELOPMENT",
+            role: "admin",
             audit_actor: "Technical Writer [local:local-technical-writer]",
           }),
           { status: 200 },
@@ -198,7 +207,7 @@ describe("App", () => {
   it("selects the default workspace before opening Home", async () => {
     mockPlatform();
 
-    render(<App />);
+    renderApp();
 
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "Overview" })).toBeInTheDocument();
@@ -222,7 +231,7 @@ describe("App", () => {
   it("uses a workspace-scoped URL for the project registry", async () => {
     mockPlatform();
 
-    render(<App />);
+    renderApp();
     await screen.findByRole("heading", { name: "Overview" });
     fireEvent.click(screen.getByRole("button", { name: "Projects" }));
 
@@ -236,7 +245,7 @@ describe("App", () => {
   it("opens a project workbench without replacing the workspace selector", async () => {
     mockPlatform({ withProject: true });
 
-    render(<App />);
+    renderApp();
     await screen.findByRole("heading", { name: "Overview" });
     fireEvent.click(screen.getByRole("button", { name: "Projects" }));
     await waitFor(() =>
@@ -271,7 +280,7 @@ describe("App", () => {
     );
     mockPlatform({ withProject: true });
 
-    render(<App />);
+    renderApp();
 
     await waitFor(() => {
       expect(
@@ -299,7 +308,7 @@ describe("App", () => {
     );
     mockPlatform({ withProject: true, withFeature: true });
 
-    render(<App />);
+    renderApp();
 
     expect(
       await screen.findByRole("heading", { name: "Documentation Core" }),
@@ -316,7 +325,7 @@ describe("App", () => {
     globalThis.history.replaceState({}, "", `/projects/${projectId}/workbench/sources`);
     mockPlatform({ withProject: true });
 
-    render(<App />);
+    renderApp();
 
     await waitFor(() => {
       expect(globalThis.location.pathname).toBe(
@@ -328,7 +337,7 @@ describe("App", () => {
   it("switches workspace context and returns to that workspace home", async () => {
     mockPlatform({ withSecondWorkspace: true });
 
-    render(<App />);
+    renderApp();
     await screen.findByRole("heading", { name: "Overview" });
     fireEvent.click(
       screen.getByRole("button", {
@@ -348,7 +357,7 @@ describe("App", () => {
   it("responds to browser history events", async () => {
     mockPlatform();
 
-    render(<App />);
+    renderApp();
     await screen.findByRole("heading", { name: "Overview" });
     globalThis.history.pushState({}, "", "/system");
     globalThis.dispatchEvent(new PopStateEvent("popstate"));
@@ -363,7 +372,7 @@ describe("App", () => {
     globalThis.history.replaceState({}, "", "/unknown");
     mockPlatform();
 
-    render(<App />);
+    renderApp();
 
     expect(await screen.findByRole("heading", { name: "Page not found" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Return home" }));
