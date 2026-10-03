@@ -43,7 +43,6 @@ router = APIRouter(
     tags=["requirements"],
 )
 
-
 RequirementTypeLiteral = Literal["BUSINESS", "SYSTEM", "NON_FUNCTIONAL", "ACCEPTANCE"]
 TraceTargetTypeLiteral = Literal["FEATURE", "EVIDENCE", "DOCUMENT"]
 TraceRelationLiteral = Literal["IMPLEMENTED_BY", "VERIFIED_BY", "DOCUMENTED_BY"]
@@ -62,8 +61,16 @@ class CreateRequirementRequest(BaseModel):
     change_reason: str = Field(min_length=3, max_length=500)
 
 
-class ReviseRequirementRequest(CreateRequirementRequest):
-    key: str | None = Field(default=None, exclude=True)
+class ReviseRequirementRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    requirement_type: RequirementTypeLiteral
+    title: str = Field(min_length=3, max_length=160)
+    statement: str = Field(min_length=10, max_length=4000)
+    owner: str = Field(min_length=2, max_length=120)
+    feature_id: str | None = Field(default=None, max_length=100)
+    acceptance_criteria: list[str] = Field(default_factory=list, max_length=50)
+    change_reason: str = Field(min_length=3, max_length=500)
 
 
 class RetireRequirementRequest(BaseModel):
@@ -204,9 +211,7 @@ async def get_requirement(
     requirement_id: str,
     service: RequirementServiceDependency,
 ) -> RequirementResponse:
-    return RequirementResponse.from_dto(
-        await service.get(workspace_id, project_id, requirement_id)
-    )
+    return RequirementResponse.from_dto(await service.get(workspace_id, project_id, requirement_id))
 
 
 @router.get("/{requirement_id}/revisions", response_model=RequirementCollectionResponse)
