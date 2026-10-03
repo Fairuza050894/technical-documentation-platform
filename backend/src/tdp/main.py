@@ -86,11 +86,11 @@ from tdp.modules.scanner.infrastructure.webhook_repository import SqliteWebhookR
 from tdp.modules.scanner.presentation.http.dashboard_router import router as dashboard_router
 from tdp.modules.scanner.presentation.http.router import router as scanner_router
 from tdp.modules.scanner.presentation.http.router import scanner_error_handler
+from tdp.modules.scanner.presentation.http.webhook_router import router as webhook_router
 from tdp.modules.scanner.presentation.http.webhook_router import (
     webhook_not_found_handler,
     webhook_signature_error_handler,
 )
-from tdp.modules.scanner.presentation.http.webhook_router import router as webhook_router
 from tdp.modules.sources.application.service import SourceApplicationService
 from tdp.modules.sources.domain.errors import SourceError
 from tdp.modules.sources.infrastructure.local_artifact_store import LocalArtifactStore
