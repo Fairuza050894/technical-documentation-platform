@@ -42,9 +42,7 @@ def test_requirement_revision_normalizes_governed_fields() -> None:
     assert requirement.key == "REQ-001"
     assert requirement.revision == 1
     assert requirement.status.value == "DRAFT"
-    assert requirement.acceptance_criteria == (
-        "Allowance uses the approved policy version.",
-    )
+    assert requirement.acceptance_criteria == ("Allowance uses the approved policy version.",)
 
 
 def test_impact_policy_marks_unmapped_change_for_triage() -> None:
