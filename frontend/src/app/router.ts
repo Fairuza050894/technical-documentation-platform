@@ -1,11 +1,12 @@
 export const projectStages = [
   "overview",
   "features",
+  "requirements",
   "sources",
   "catalog",
+  "evidence",
   "changes",
   "documents",
-  "evidence",
 ] as const;
 
 export type ProjectStage = (typeof projectStages)[number];
@@ -40,36 +41,16 @@ const legacyProjectPattern =
 export function parseRoute(pathname: string): AppRoute {
   const normalized = normalizePath(pathname);
 
-  if (normalized === "/" || normalized === "/home") {
-    return { name: "home", workspaceId: null };
-  }
-  if (normalized === "/projects") {
-    return { name: "projects", workspaceId: null };
-  }
-  if (normalized === "/workspaces") {
-    return { name: "workspaces" };
-  }
-  if (normalized === "/system") {
-    return { name: "system" };
-  }
-  if (normalized === "/templates") {
-    return { name: "templates" };
-  }
-  if (normalized === "/scanner") {
-    return { name: "scanner" };
-  }
-  if (normalized === "/knowledge-map") {
-    return { name: "knowledge-map" };
-  }
-  if (normalized === "/intelligence") {
-    return { name: "intelligence" };
-  }
-  if (normalized === "/audit") {
-    return { name: "audit" };
-  }
-  if (normalized === "/login") {
-    return { name: "login" };
-  }
+  if (normalized === "/" || normalized === "/home") return { name: "home", workspaceId: null };
+  if (normalized === "/projects") return { name: "projects", workspaceId: null };
+  if (normalized === "/workspaces") return { name: "workspaces" };
+  if (normalized === "/system") return { name: "system" };
+  if (normalized === "/templates") return { name: "templates" };
+  if (normalized === "/scanner") return { name: "scanner" };
+  if (normalized === "/knowledge-map") return { name: "knowledge-map" };
+  if (normalized === "/intelligence") return { name: "intelligence" };
+  if (normalized === "/audit") return { name: "audit" };
+  if (normalized === "/login") return { name: "login" };
 
   const workspaceProjectMatch = normalized.match(workspaceProjectPattern);
   if (workspaceProjectMatch) {
@@ -77,12 +58,7 @@ export function parseRoute(pathname: string): AppRoute {
     const projectId = safeDecode(workspaceProjectMatch[2]);
     const stage = workspaceProjectMatch[3] ?? "overview";
     const featureId = safeDecode(workspaceProjectMatch[4]);
-    if (
-      workspaceId !== null &&
-      projectId !== null &&
-      isProjectStage(stage) &&
-      isValidFeatureContext(stage, featureId)
-    ) {
+    if (workspaceId !== null && projectId !== null && isProjectStage(stage) && isValidFeatureContext(stage, featureId)) {
       return featureId === null
         ? { name: "project", workspaceId, projectId, stage }
         : { name: "project", workspaceId, projectId, stage, featureId };
@@ -92,17 +68,13 @@ export function parseRoute(pathname: string): AppRoute {
   const workspaceProjectsMatch = normalized.match(workspaceProjectsPattern);
   if (workspaceProjectsMatch) {
     const workspaceId = safeDecode(workspaceProjectsMatch[1]);
-    if (workspaceId !== null) {
-      return { name: "projects", workspaceId };
-    }
+    if (workspaceId !== null) return { name: "projects", workspaceId };
   }
 
   const workspaceHomeMatch = normalized.match(workspaceHomePattern);
   if (workspaceHomeMatch) {
     const workspaceId = safeDecode(workspaceHomeMatch[1]);
-    if (workspaceId !== null) {
-      return { name: "home", workspaceId };
-    }
+    if (workspaceId !== null) return { name: "home", workspaceId };
   }
 
   const legacyProjectMatch = normalized.match(legacyProjectPattern);
@@ -110,11 +82,7 @@ export function parseRoute(pathname: string): AppRoute {
     const projectId = safeDecode(legacyProjectMatch[1]);
     const stage = legacyProjectMatch[2] ?? "overview";
     const featureId = safeDecode(legacyProjectMatch[3]);
-    if (
-      projectId !== null &&
-      isProjectStage(stage) &&
-      isValidFeatureContext(stage, featureId)
-    ) {
+    if (projectId !== null && isProjectStage(stage) && isValidFeatureContext(stage, featureId)) {
       return featureId === null
         ? { name: "project", workspaceId: null, projectId, stage }
         : { name: "project", workspaceId: null, projectId, stage, featureId };
@@ -126,41 +94,21 @@ export function parseRoute(pathname: string): AppRoute {
 
 export function routePath(route: AppRoute): string {
   switch (route.name) {
-    case "home":
-      return route.workspaceId === null
-        ? "/"
-        : workspaceHomePath(route.workspaceId);
-    case "projects":
-      return route.workspaceId === null
-        ? "/projects"
-        : workspaceProjectsPath(route.workspaceId);
-    case "workspaces":
-      return "/workspaces";
-    case "system":
-      return "/system";
-    case "templates":
-      return "/templates";
-    case "scanner":
-      return "/scanner";
-    case "knowledge-map":
-      return "/knowledge-map";
-    case "intelligence":
-      return "/intelligence";
-    case "audit":
-      return "/audit";
-    case "login":
-      return "/login";
+    case "home": return route.workspaceId === null ? "/" : workspaceHomePath(route.workspaceId);
+    case "projects": return route.workspaceId === null ? "/projects" : workspaceProjectsPath(route.workspaceId);
+    case "workspaces": return "/workspaces";
+    case "system": return "/system";
+    case "templates": return "/templates";
+    case "scanner": return "/scanner";
+    case "knowledge-map": return "/knowledge-map";
+    case "intelligence": return "/intelligence";
+    case "audit": return "/audit";
+    case "login": return "/login";
     case "project":
       return route.workspaceId === null
         ? projectStagePath(route.projectId, route.stage, route.featureId)
-        : workspaceProjectStagePath(
-            route.workspaceId,
-            route.projectId,
-            route.stage,
-            route.featureId,
-          );
-    case "not-found":
-      return route.pathname;
+        : workspaceProjectStagePath(route.workspaceId, route.projectId, route.stage, route.featureId);
+    case "not-found": return route.pathname;
   }
 }
 
@@ -172,35 +120,21 @@ export function workspaceProjectsPath(workspaceId: string): string {
   return `${workspaceHomePath(workspaceId)}/projects`;
 }
 
-export function workspaceProjectStagePath(
-  workspaceId: string,
-  projectId: string,
-  stage: ProjectStage,
-  featureId?: string | null,
-): string {
+export function workspaceProjectStagePath(workspaceId: string, projectId: string, stage: ProjectStage, featureId?: string | null): string {
   const base = `${workspaceProjectsPath(workspaceId)}/${encodeURIComponent(projectId)}/workbench/${stage}`;
-  return stage === "features" && featureId
-    ? `${base}/${encodeURIComponent(featureId)}`
-    : base;
+  return stage === "features" && featureId ? `${base}/${encodeURIComponent(featureId)}` : base;
 }
 
-export function projectStagePath(
-  projectId: string,
-  stage: ProjectStage,
-  featureId?: string | null,
-): string {
+export function projectStagePath(projectId: string, stage: ProjectStage, featureId?: string | null): string {
   const base = `/projects/${encodeURIComponent(projectId)}/workbench/${stage}`;
-  return stage === "features" && featureId
-    ? `${base}/${encodeURIComponent(featureId)}`
-    : base;
+  return stage === "features" && featureId ? `${base}/${encodeURIComponent(featureId)}` : base;
 }
 
 export function routeWorkspaceId(route: AppRoute): string | null {
   switch (route.name) {
     case "home":
     case "projects":
-    case "project":
-      return route.workspaceId;
+    case "project": return route.workspaceId;
     case "workspaces":
     case "system":
     case "templates":
@@ -209,8 +143,7 @@ export function routeWorkspaceId(route: AppRoute): string | null {
     case "scanner":
     case "audit":
     case "login":
-    case "not-found":
-      return null;
+    case "not-found": return null;
   }
 }
 
@@ -218,30 +151,17 @@ export function isProjectStage(value: string): value is ProjectStage {
   return projectStages.includes(value as ProjectStage);
 }
 
-function isValidFeatureContext(
-  stage: ProjectStage,
-  featureId: string | null,
-): boolean {
+function isValidFeatureContext(stage: ProjectStage, featureId: string | null): boolean {
   return featureId === null || stage === "features";
 }
 
 function safeDecode(value: string | undefined): string | null {
-  if (value === undefined) {
-    return null;
-  }
-  try {
-    return decodeURIComponent(value);
-  } catch {
-    return null;
-  }
+  if (value === undefined) return null;
+  try { return decodeURIComponent(value); } catch { return null; }
 }
 
 function normalizePath(pathname: string): string {
-  if (!pathname || pathname === "/") {
-    return "/";
-  }
+  if (!pathname || pathname === "/") return "/";
   const withLeadingSlash = pathname.startsWith("/") ? pathname : `/${pathname}`;
-  return withLeadingSlash.length > 1
-    ? withLeadingSlash.replace(/\/+$/, "")
-    : withLeadingSlash;
+  return withLeadingSlash.length > 1 ? withLeadingSlash.replace(/\/+$/, "") : withLeadingSlash;
 }
