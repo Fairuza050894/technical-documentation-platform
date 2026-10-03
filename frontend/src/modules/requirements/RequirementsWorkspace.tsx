@@ -2,6 +2,8 @@ import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react
 
 import { ApiClientError } from "../../shared/api/client";
 import { Icon } from "../../shared/ui/Icon";
+import { listFeatures } from "../features/api";
+import type { Feature } from "../features/types";
 import type { Project } from "../projects/types";
 import { createRequirement, getTraceabilityCoverage, listRequirements } from "./api";
 import type {
@@ -29,6 +31,7 @@ const initialForm: CreateRequirementInput = {
 
 export function RequirementsWorkspace({ workspaceId, project }: RequirementsWorkspaceProps) {
   const [requirements, setRequirements] = useState<Requirement[]>([]);
+  const [features, setFeatures] = useState<Feature[]>([]);
   const [coverage, setCoverage] = useState<TraceabilityCoverage | null>(null);
   const [loadState, setLoadState] = useState<"loading" | "ready" | "error">("loading");
   const [loadError, setLoadError] = useState("");
@@ -38,17 +41,24 @@ export function RequirementsWorkspace({ workspaceId, project }: RequirementsWork
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const activeFeatures = useMemo(
+    () => features.filter((feature) => feature.status === "ACTIVE"),
+    [features],
+  );
+
   const load = useCallback(
     async (signal?: AbortSignal): Promise<void> => {
       setLoadState("loading");
       setLoadError("");
       try {
-        const [collection, traceability] = await Promise.all([
+        const [collection, traceability, featureCollection] = await Promise.all([
           listRequirements(workspaceId, project.id, signal),
           getTraceabilityCoverage(workspaceId, project.id, signal),
+          listFeatures(workspaceId, project.id, signal),
         ]);
         setRequirements(collection.items);
         setCoverage(traceability);
+        setFeatures(featureCollection.items);
         setLoadState("ready");
       } catch (error: unknown) {
         if (error instanceof DOMException && error.name === "AbortError") return;
@@ -133,9 +143,21 @@ export function RequirementsWorkspace({ workspaceId, project }: RequirementsWork
       )}
 
       <section className="feature-signal-strip" aria-label="Requirement traceability summary">
-        <RequirementSignal label="Active requirements" value={coverage?.total_requirements ?? requirements.length} detail="Latest governed revisions" />
-        <RequirementSignal label="Fully traced" value={coverage?.fully_traced ?? 0} detail="Feature + evidence + document" />
-        <RequirementSignal label="Traceability" value={`${coverage?.coverage_percent ?? 0}%`} detail="Verified links only" />
+        <RequirementSignal
+          label="Active requirements"
+          value={coverage?.total_requirements ?? requirements.length}
+          detail="Latest governed revisions"
+        />
+        <RequirementSignal
+          label="Fully traced"
+          value={coverage?.fully_traced ?? 0}
+          detail="Feature + evidence + document"
+        />
+        <RequirementSignal
+          label="Traceability"
+          value={`${coverage?.coverage_percent ?? 0}%`}
+          detail="Verified links only"
+        />
       </section>
 
       <div className="feature-workspace__grid">
@@ -148,7 +170,9 @@ export function RequirementsWorkspace({ workspaceId, project }: RequirementsWork
             <span className="record-count">{requirements.length} records</span>
           </div>
 
-          {loadState === "loading" && <p className="loading-state" role="status">Loading requirements…</p>}
+          {loadState === "loading" && (
+            <p className="loading-state" role="status">Loading requirements…</p>
+          )}
           {loadState === "ready" && requirements.length === 0 && (
             <div className="empty-state">
               <span aria-hidden="true"><Icon name="documents" size={22} /></span>
@@ -167,7 +191,11 @@ export function RequirementsWorkspace({ workspaceId, project }: RequirementsWork
                   onChange={(event) => setFilter(event.target.value)}
                   aria-label="Filter requirements"
                 />
-                {filter && <span className="record-count">{visibleRequirements.length} of {requirements.length}</span>}
+                {filter && (
+                  <span className="record-count">
+                    {visibleRequirements.length} of {requirements.length}
+                  </span>
+                )}
               </div>
               <div className="table-frame">
                 <table>
@@ -182,7 +210,9 @@ export function RequirementsWorkspace({ workspaceId, project }: RequirementsWork
                   <tbody>
                     {visibleRequirements.map((requirement) => {
                       const verifiedTypes = new Set(
-                        requirement.trace_links.filter((link) => link.verified).map((link) => link.target_type),
+                        requirement.trace_links
+                          .filter((link) => link.verified)
+                          .map((link) => link.target_type),
                       );
                       return (
                         <tr key={requirement.requirement_id}>
@@ -193,7 +223,11 @@ export function RequirementsWorkspace({ workspaceId, project }: RequirementsWork
                             </span>
                             <span className="table-secondary-text">{requirement.statement}</span>
                           </td>
-                          <td><span className="feature-kind-badge">{formatType(requirement.requirement_type)}</span></td>
+                          <td>
+                            <span className="feature-kind-badge">
+                              {formatType(requirement.requirement_type)}
+                            </span>
+                          </td>
                           <td>{requirement.owner}</td>
                           <td>
                             <strong>{verifiedTypes.size} / 3</strong>
@@ -213,18 +247,40 @@ export function RequirementsWorkspace({ workspaceId, project }: RequirementsWork
           <div className="section-heading">
             <div>
               <h3 id="create-requirement-title">Create governed requirement</h3>
-              <p>Keep statements testable and record why the requirement enters the baseline.</p>
+              <p>
+                Keep statements testable, map implementation ownership, and record why the
+                requirement enters the baseline.
+              </p>
             </div>
           </div>
           <form className="form-panel" onSubmit={(event) => void handleSubmit(event)}>
             <div className="form-grid">
               <div className="field">
                 <label htmlFor="requirement-key">Key</label>
-                <input id="requirement-key" value={form.key} onChange={(event) => setForm((current) => ({ ...current, key: event.target.value.toUpperCase() }))} placeholder="REQ-001" required disabled={isReadOnly} />
+                <input
+                  id="requirement-key"
+                  value={form.key}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, key: event.target.value.toUpperCase() }))
+                  }
+                  placeholder="REQ-001"
+                  required
+                  disabled={isReadOnly}
+                />
               </div>
               <div className="field">
                 <label htmlFor="requirement-type">Type</label>
-                <select id="requirement-type" value={form.requirement_type} onChange={(event) => setForm((current) => ({ ...current, requirement_type: event.target.value as RequirementType }))} disabled={isReadOnly}>
+                <select
+                  id="requirement-type"
+                  value={form.requirement_type}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      requirement_type: event.target.value as RequirementType,
+                    }))
+                  }
+                  disabled={isReadOnly}
+                >
                   <option value="BUSINESS">Business</option>
                   <option value="SYSTEM">System</option>
                   <option value="NON_FUNCTIONAL">Non-functional</option>
@@ -233,28 +289,95 @@ export function RequirementsWorkspace({ workspaceId, project }: RequirementsWork
               </div>
               <div className="field field--wide">
                 <label htmlFor="requirement-title">Title</label>
-                <input id="requirement-title" value={form.title} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} required disabled={isReadOnly} />
+                <input
+                  id="requirement-title"
+                  value={form.title}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, title: event.target.value }))
+                  }
+                  required
+                  disabled={isReadOnly}
+                />
               </div>
               <div className="field field--wide">
                 <label htmlFor="requirement-statement">Statement</label>
-                <textarea id="requirement-statement" value={form.statement} onChange={(event) => setForm((current) => ({ ...current, statement: event.target.value }))} required disabled={isReadOnly} />
+                <textarea
+                  id="requirement-statement"
+                  value={form.statement}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, statement: event.target.value }))
+                  }
+                  required
+                  disabled={isReadOnly}
+                />
               </div>
               <div className="field">
                 <label htmlFor="requirement-owner">Owner</label>
-                <input id="requirement-owner" value={form.owner} onChange={(event) => setForm((current) => ({ ...current, owner: event.target.value }))} required disabled={isReadOnly} />
+                <input
+                  id="requirement-owner"
+                  value={form.owner}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, owner: event.target.value }))
+                  }
+                  required
+                  disabled={isReadOnly}
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="requirement-feature">Feature / module</label>
+                <select
+                  id="requirement-feature"
+                  value={form.feature_id ?? ""}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      feature_id: event.target.value || null,
+                    }))
+                  }
+                  disabled={isReadOnly}
+                >
+                  <option value="">Not mapped yet</option>
+                  {activeFeatures.map((feature) => (
+                    <option key={feature.id} value={feature.id}>
+                      {feature.key} — {feature.name}
+                    </option>
+                  ))}
+                </select>
+                <small>
+                  Selecting a verified project feature creates the implementation trace
+                  automatically.
+                </small>
               </div>
               <div className="field field--wide">
                 <label htmlFor="requirement-criterion">Acceptance criterion</label>
-                <textarea id="requirement-criterion" value={criterion} onChange={(event) => setCriterion(event.target.value)} placeholder="Optional but recommended for testable requirements" disabled={isReadOnly} />
+                <textarea
+                  id="requirement-criterion"
+                  value={criterion}
+                  onChange={(event) => setCriterion(event.target.value)}
+                  placeholder="Optional but recommended for testable requirements"
+                  disabled={isReadOnly}
+                />
               </div>
               <div className="field field--wide">
                 <label htmlFor="requirement-reason">Change reason</label>
-                <input id="requirement-reason" value={form.change_reason} onChange={(event) => setForm((current) => ({ ...current, change_reason: event.target.value }))} required disabled={isReadOnly} />
+                <input
+                  id="requirement-reason"
+                  value={form.change_reason}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, change_reason: event.target.value }))
+                  }
+                  required
+                  disabled={isReadOnly}
+                />
               </div>
             </div>
             {formError && <p className="form-error" role="alert">{formError}</p>}
             <div className="form-actions">
-              <button type="submit" className="button button--primary" disabled={isReadOnly || isSubmitting}>
+              <button
+                type="submit"
+                className="button button--primary"
+                disabled={isReadOnly || isSubmitting}
+              >
                 {isSubmitting ? "Creating…" : "Create requirement"}
               </button>
             </div>
@@ -265,7 +388,15 @@ export function RequirementsWorkspace({ workspaceId, project }: RequirementsWork
   );
 }
 
-function RequirementSignal({ label, value, detail }: { label: string; value: string | number; detail: string }) {
+function RequirementSignal({
+  label,
+  value,
+  detail,
+}: {
+  label: string;
+  value: string | number;
+  detail: string;
+}) {
   return (
     <div className="feature-signal">
       <span>{label}</span>
