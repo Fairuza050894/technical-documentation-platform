@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import StrEnum
 
@@ -57,7 +58,11 @@ class DeterministicChangeImpactPolicy:
             project_id=comparison.project_id,
             baseline_run_id=comparison.baseline_run_id,
             target_run_id=comparison.target_run_id,
-            level=max((impact.level for impact in impacts), key=self._level_rank, default=ImpactLevel.LOW),
+            level=max(
+                (impact.level for impact in impacts),
+                key=self._level_rank,
+                default=ImpactLevel.LOW,
+            ),
             required_document_types=required_documents,
             requirement_review_required=any(
                 impact.requirement_review_required for impact in impacts
@@ -92,9 +97,6 @@ class DeterministicChangeImpactPolicy:
             level = max(level, ImpactLevel.HIGH, key=self._level_rank)
             rationale.append("Security contract changed; architecture and requirement review are required.")
 
-        if change.entity_type == "SCHEMA" and change.severity is ChangeSeverity.NON_BREAKING:
-            level = ImpactLevel.MEDIUM
-
         return ChangeImpact(
             entity_type=change.entity_type,
             entity_key=change.entity_key,
@@ -106,8 +108,8 @@ class DeterministicChangeImpactPolicy:
         )
 
     @staticmethod
-    def _ordered_documents(values: object) -> tuple[str, ...]:
-        present = set(values)  # type: ignore[arg-type]
+    def _ordered_documents(values: Iterable[str]) -> tuple[str, ...]:
+        present = set(values)
         return tuple(item for item in _DOCUMENT_ORDER if item in present)
 
     @staticmethod
