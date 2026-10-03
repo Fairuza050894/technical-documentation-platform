@@ -8,6 +8,7 @@
 | backend/tests/application/test_document_governance_service.py | 2 |
 | backend/tests/application/test_enterprise_generation_service.py | 3 |
 | backend/tests/application/test_feature_service.py | 2 |
+| backend/tests/application/test_governance_service.py | 2 |
 | backend/tests/application/test_project_service.py | 2 |
 | backend/tests/application/test_scanner_service.py | 11 |
 | backend/tests/application/test_source_service.py | 3 |
@@ -43,6 +44,7 @@
 | backend/tests/infrastructure/test_sqlite_project_repository.py | 1 |
 | backend/tests/infrastructure/test_sqlite_source_repository.py | 1 |
 | backend/tests/infrastructure/test_sqlite_workspace_repository.py | 1 |
+| backend/tests/modules/governance/test_model.py | 4 |
 | backend/tests/presentation/test_api_catalog.py | 1 |
 | backend/tests/presentation/test_document_governance_api.py | 3 |
 | backend/tests/presentation/test_document_lifecycle_api.py | 5 |
@@ -79,13 +81,14 @@
 | backend/tests/test_frontend_registry_intake_architecture.py | 4 |
 | backend/tests/test_frontend_shell_overview_architecture.py | 5 |
 | backend/tests/test_frontend_table_page_architecture.py | 3 |
+| backend/tests/test_governance_architecture.py | 2 |
 | backend/tests/test_health.py | 4 |
 | backend/tests/test_readiness_architecture.py | 3 |
 | backend/tests/test_repository_documentation.py | 1 |
 | backend/tests/test_workspace_architecture.py | 2 |
 | backend/tests/test_workspace_membership.py | 9 |
 
-Backend total: **343** tests.
+Backend total: **351** tests.
 
 ## Frontend
 
