@@ -49,10 +49,18 @@ The table is derived from FastAPI route decorators. It records declared routes, 
 | POST | `/api/projects/{project_id}/evidence/references` | `backend/src/tdp/modules/evidence/presentation/http/router.py:206` |
 | POST | `/api/projects/{project_id}/evidence/source-artifacts/{source_id}` | `backend/src/tdp/modules/evidence/presentation/http/router.py:164` |
 | POST | `/api/projects/{project_id}/evidence/{artifact_id}/materialization` | `backend/src/tdp/modules/evidence/presentation/http/router.py:233` |
+| GET | `/api/projects/{project_id}/governance-summary` | `backend/src/tdp/modules/governance/presentation/http/router.py:244` |
+| POST | `/api/projects/{project_id}/impact-assessments` | `backend/src/tdp/modules/governance/presentation/http/router.py:185` |
 | GET | `/api/projects/{project_id}/readiness` | `backend/src/tdp/modules/readiness/presentation/http/router.py:108` |
 | GET | `/api/projects/{project_id}/readiness/{document_type}` | `backend/src/tdp/modules/readiness/presentation/http/router.py:119` |
+| GET | `/api/projects/{project_id}/requirements` | `backend/src/tdp/modules/governance/presentation/http/router.py:113` |
+| POST | `/api/projects/{project_id}/requirements` | `backend/src/tdp/modules/governance/presentation/http/router.py:92` |
 | GET | `/api/projects/{project_id}/sources` | `backend/src/tdp/modules/sources/presentation/http/router.py:93` |
 | POST | `/api/projects/{project_id}/sources/openapi` | `backend/src/tdp/modules/sources/presentation/http/router.py:68` |
+| POST | `/api/projects/{project_id}/trace-links` | `backend/src/tdp/modules/governance/presentation/http/router.py:151` |
+| GET | `/api/projects/{project_id}/traceability` | `backend/src/tdp/modules/governance/presentation/http/router.py:174` |
+| POST | `/api/projects/{project_id}/workflow-cases` | `backend/src/tdp/modules/governance/presentation/http/router.py:204` |
+| POST | `/api/requirements/{requirement_id}/revisions` | `backend/src/tdp/modules/governance/presentation/http/router.py:125` |
 | GET | `/api/scanner/dashboard` | `backend/src/tdp/modules/scanner/presentation/http/dashboard_router.py:53` |
 | GET | `/api/scanner/documents/{doc_id}` | `backend/src/tdp/modules/scanner/presentation/http/router.py:139` |
 | POST | `/api/scanner/scan` | `backend/src/tdp/modules/scanner/presentation/http/router.py:86` |
@@ -78,6 +86,7 @@ The table is derived from FastAPI route decorators. It records declared routes, 
 | GET | `/api/templates/{template_id}` | `backend/src/tdp/modules/templates/presentation/http/router.py:131` |
 | PATCH | `/api/templates/{template_id}` | `backend/src/tdp/modules/templates/presentation/http/router.py:164` |
 | POST | `/api/templates/{template_id}/duplicate` | `backend/src/tdp/modules/templates/presentation/http/router.py:192` |
+| POST | `/api/workflow-cases/{case_id}/transitions` | `backend/src/tdp/modules/governance/presentation/http/router.py:223` |
 | GET | `/api/workspaces` | `backend/src/tdp/modules/workspaces/presentation/http/router.py:128` |
 | POST | `/api/workspaces` | `backend/src/tdp/modules/workspaces/presentation/http/router.py:113` |
 | GET | `/api/workspaces/{workspace_id}` | `backend/src/tdp/modules/workspaces/presentation/http/router.py:137` |
