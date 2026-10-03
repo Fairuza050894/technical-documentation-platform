@@ -1,9 +1,8 @@
-from dataclasses import replace
-
 from tdp.identity.model import RequestPrincipal
 from tdp.modules.governance.domain.errors import (
     ImpactAssessmentNotFoundError,
     InvalidRequirementError,
+    RequirementKeyAlreadyExistsError,
     RequirementNotFoundError,
 )
 from tdp.modules.governance.domain.model import (
@@ -18,6 +17,7 @@ from tdp.modules.governance.domain.model import (
     WorkflowEvent,
 )
 from tdp.modules.governance.domain.repository import GovernanceRepository
+from tdp.modules.projects.domain.errors import InvalidProjectIdError
 from tdp.modules.projects.domain.model import ProjectId
 from tdp.modules.projects.domain.repository import ProjectRepository
 
@@ -45,10 +45,11 @@ class GovernanceApplicationService:
         principal: RequestPrincipal,
     ) -> RequirementRevision:
         await self._ensure_project(workspace_id, project_id)
-        existing = await self._repository.get_latest_requirement(project_id, key.strip().upper())
+        normalized_key = key.strip().upper()
+        existing = await self._repository.get_latest_requirement(project_id, normalized_key)
         if existing is not None:
-            raise InvalidRequirementError(
-                f"Requirement key {key.strip().upper()} already exists; create a revision instead."
+            raise RequirementKeyAlreadyExistsError(
+                f"Requirement key {normalized_key} already exists; create a revision instead."
             )
         revision = RequirementRevision.create(
             workspace_id=workspace_id,
@@ -225,29 +226,10 @@ class GovernanceApplicationService:
             )
         return await self._repository.list_workflow_events(assessment_id)
 
-    async def approve_requirement_revision(
-        self,
-        *,
-        workspace_id: str,
-        project_id: str,
-        revision_id: str,
-    ) -> RequirementRevision:
-        await self._ensure_project(workspace_id, project_id)
-        revision = await self._repository.get_requirement_revision(revision_id)
-        if revision is None or revision.project_id != project_id:
-            raise RequirementNotFoundError(f"Requirement revision {revision_id} was not found.")
-        if revision.status is RequirementStatus.APPROVED:
-            return revision
-        approved = replace(revision, status=RequirementStatus.APPROVED)
-        # Requirement revisions are immutable facts. Approval is intentionally not persisted
-        # until a dedicated approval event store is introduced; callers should use impact
-        # workflow for governed decisions in the current enterprise core slice.
-        return approved
-
     async def _ensure_project(self, workspace_id: str, project_id: str) -> None:
         try:
             parsed_id = ProjectId.from_string(project_id)
-        except Exception as exc:
+        except InvalidProjectIdError as exc:
             raise InvalidRequirementError("Project reference must be a valid UUID.") from exc
         project = await self._project_repository.get(parsed_id)
         if project is None or project.workspace_id != workspace_id:
