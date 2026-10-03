@@ -68,6 +68,10 @@ from tdp.modules.evidence.presentation.http.scanner_router import (
     router as scanner_evidence_router,
 )
 from tdp.modules.evidence.application.scanner_adapter import ScannerEvidenceApplicationService
+from tdp.modules.evidence.presentation.http.scanner_router import (
+    router as scanner_evidence_router,
+)
+from tdp.modules.evidence.application.scanner_adapter import ScannerEvidenceApplicationService
 from tdp.modules.features.application.service import FeatureApplicationService
 from tdp.modules.features.domain.errors import FeatureError
 from tdp.modules.features.infrastructure.sqlite_repository import SqliteFeatureRepository
@@ -94,6 +98,11 @@ from tdp.modules.readiness.presentation.http.router import (
 from tdp.modules.readiness.presentation.http.router import (
     router as readiness_router,
 )
+from tdp.modules.requirements.application.service import RequirementApplicationService
+from tdp.modules.requirements.domain.errors import RequirementError
+from tdp.modules.requirements.infrastructure.sqlite_repository import SqliteRequirementRepository
+from tdp.modules.requirements.presentation.http.router import requirement_error_handler
+from tdp.modules.requirements.presentation.http.router import router as requirements_router
 from tdp.modules.requirements.application.service import RequirementApplicationService
 from tdp.modules.requirements.domain.errors import RequirementError
 from tdp.modules.requirements.infrastructure.sqlite_repository import SqliteRequirementRepository
@@ -145,6 +154,11 @@ from tdp.modules.workspaces.domain.errors import WorkspaceError
 from tdp.modules.workspaces.infrastructure.membership_repository import SqliteMembershipRepository
 from tdp.modules.workspaces.infrastructure.sqlite_repository import SqliteWorkspaceRepository
 from tdp.modules.workspaces.presentation.http.router import router as workspaces_router
+from tdp.modules.workflow.application.service import WorkflowApplicationService
+from tdp.modules.workflow.domain.errors import WorkflowError
+from tdp.modules.workflow.infrastructure.sqlite_repository import SqliteWorkflowRepository
+from tdp.modules.workflow.presentation.http.router import router as workflow_router
+from tdp.modules.workflow.presentation.http.router import workflow_error_handler
 from tdp.modules.workflow.application.service import WorkflowApplicationService
 from tdp.modules.workflow.domain.errors import WorkflowError
 from tdp.modules.workflow.infrastructure.sqlite_repository import SqliteWorkflowRepository
@@ -224,6 +238,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     evidence_repository = SqliteEvidenceRepository(runtime_settings.database_path)
     template_repository = SqliteTemplateRepository(str(runtime_settings.database_path))
     scan_repository = SqliteScanRepository(str(runtime_settings.database_path))
+    requirement_repository = SqliteRequirementRepository(runtime_settings.database_path)
+    workflow_repository = SqliteWorkflowRepository(runtime_settings.database_path)
     requirement_repository = SqliteRequirementRepository(runtime_settings.database_path)
     workflow_repository = SqliteWorkflowRepository(runtime_settings.database_path)
     requirement_repository = SqliteRequirementRepository(runtime_settings.database_path)
@@ -333,6 +349,22 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         document_repository,
         catalog_repository,
     )
+    application.state.requirement_service = RequirementApplicationService(
+        requirement_repository,
+        project_repository,
+        workspace_repository,
+        feature_repository,
+        evidence_repository,
+        document_repository,
+    )
+    application.state.workflow_service = WorkflowApplicationService(
+        workflow_repository,
+        project_repository,
+        workspace_repository,
+        requirement_repository,
+        document_repository,
+        catalog_repository,
+    )
     readiness_service = ReadinessApplicationService(
         project_repository,
         evidence_repository,
@@ -353,6 +385,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     application.state.template_service = TemplateApplicationService(template_repository)
     application.state.scanner_service = ScannerApplicationService(scan_repository)
+    application.state.scanner_evidence_service = ScannerEvidenceApplicationService(
+        evidence_repository,
+        scan_repository,
+        project_repository,
+        workspace_repository,
+        feature_repository,
+    )
     application.state.scanner_evidence_service = ScannerEvidenceApplicationService(
         evidence_repository,
         scan_repository,
@@ -500,6 +539,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.add_exception_handler(WorkflowError, workflow_error_handler)
     application.add_exception_handler(RequirementError, requirement_error_handler)
     application.add_exception_handler(WorkflowError, workflow_error_handler)
+    application.add_exception_handler(RequirementError, requirement_error_handler)
+    application.add_exception_handler(WorkflowError, workflow_error_handler)
     application.add_exception_handler(SourceError, source_error_handler)
     application.add_exception_handler(WorkspaceError, workspace_error_handler)
     application.add_exception_handler(RequestValidationError, validation_error_handler)
@@ -518,12 +559,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.include_router(workflow_router, prefix=runtime_settings.api_prefix)
     application.include_router(requirements_router, prefix=runtime_settings.api_prefix)
     application.include_router(workflow_router, prefix=runtime_settings.api_prefix)
+    application.include_router(requirements_router, prefix=runtime_settings.api_prefix)
+    application.include_router(workflow_router, prefix=runtime_settings.api_prefix)
     application.include_router(workspace_projects_router, prefix=runtime_settings.api_prefix)
     application.include_router(features_router, prefix=runtime_settings.api_prefix)
     application.include_router(sources_router, prefix=runtime_settings.api_prefix)
     application.include_router(catalog_router, prefix=runtime_settings.api_prefix)
     application.include_router(changes_router, prefix=runtime_settings.api_prefix)
     application.include_router(evidence_router, prefix=runtime_settings.api_prefix)
+    application.include_router(scanner_evidence_router, prefix=runtime_settings.api_prefix)
     application.include_router(scanner_evidence_router, prefix=runtime_settings.api_prefix)
     application.include_router(scanner_evidence_router, prefix=runtime_settings.api_prefix)
     application.include_router(scanner_evidence_router, prefix=runtime_settings.api_prefix)
