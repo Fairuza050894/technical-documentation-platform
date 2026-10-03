@@ -50,9 +50,7 @@ class DeterministicChangeImpactPolicy:
     def assess(self, comparison: Comparison) -> ImpactAssessment:
         impacts = tuple(self._assess_change(change) for change in comparison.changes)
         required_documents = self._ordered_documents(
-            document_type
-            for impact in impacts
-            for document_type in impact.required_document_types
+            document_type for impact in impacts for document_type in impact.required_document_types
         )
         return ImpactAssessment(
             project_id=comparison.project_id,
@@ -81,7 +79,9 @@ class DeterministicChangeImpactPolicy:
             level = ImpactLevel.CRITICAL
             documents.update({"HLD", "USER_GUIDE", "UAT_EVIDENCE"})
             requirement_review_required = True
-            rationale.append("Breaking contract change requires requirement and release-impact review.")
+            rationale.append(
+                "Breaking contract change requires requirement and release-impact review."
+            )
         elif change.severity is ChangeSeverity.POTENTIALLY_BREAKING:
             level = ImpactLevel.HIGH
             documents.add("UAT_EVIDENCE")
@@ -89,13 +89,17 @@ class DeterministicChangeImpactPolicy:
             rationale.append("Potential contract break requires requirement review before release.")
         else:
             level = ImpactLevel.MEDIUM
-            rationale.append("Non-breaking technical change still requires as-built documentation review.")
+            rationale.append(
+                "Non-breaking technical change still requires as-built documentation review."
+            )
 
         if "security_before" in change.details or "security_after" in change.details:
             documents.add("HLD")
             requirement_review_required = True
             level = max(level, ImpactLevel.HIGH, key=self._level_rank)
-            rationale.append("Security contract changed; architecture and requirement review are required.")
+            rationale.append(
+                "Security contract changed; architecture and requirement review are required."
+            )
 
         return ChangeImpact(
             entity_type=change.entity_type,
