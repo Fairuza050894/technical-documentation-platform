@@ -353,7 +353,9 @@ class WorkflowEvent:
         if not normalized_actor or len(normalized_actor) > 300:
             raise InvalidWorkflowTransitionError("Workflow actor must contain 1-300 characters.")
         if len(normalized_comment) > 2000:
-            raise InvalidWorkflowTransitionError("Workflow comment must not exceed 2000 characters.")
+            raise InvalidWorkflowTransitionError(
+                "Workflow comment must not exceed 2000 characters."
+            )
         return cls(
             id=str(uuid4()),
             assessment_id=assessment_id,
