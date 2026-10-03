@@ -1,3 +1,4 @@
+import sqlite3
 from dataclasses import asdict
 
 from tdp.modules.governance.domain.model import (
@@ -105,10 +106,8 @@ class GovernanceApplicationService:
         )
         try:
             self._repository.add_trace_link(link)
-        except Exception as exc:
-            if "UNIQUE constraint failed" in str(exc):
-                raise ValueError("An identical trace link already exists.") from exc
-            raise
+        except sqlite3.IntegrityError as exc:
+            raise ValueError("An identical trace link already exists.") from exc
         return link
 
     async def traceability_summary(self, project_id: str) -> dict[str, object]:
@@ -165,7 +164,12 @@ class GovernanceApplicationService:
             owner=owner,
             created_by=actor,
         )
-        self._repository.add_workflow_case(case)
+        try:
+            self._repository.add_workflow_case(case)
+        except sqlite3.IntegrityError as exc:
+            raise ValueError(
+                f"A workflow case already exists for impact assessment {impact_assessment_id}."
+            ) from exc
         return case
 
     async def transition_workflow_case(
