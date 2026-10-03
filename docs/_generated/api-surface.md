@@ -49,7 +49,7 @@ The table is derived from FastAPI route decorators. It records declared routes, 
 | POST | `/api/projects/{project_id}/evidence/references` | `backend/src/tdp/modules/evidence/presentation/http/router.py:206` |
 | POST | `/api/projects/{project_id}/evidence/source-artifacts/{source_id}` | `backend/src/tdp/modules/evidence/presentation/http/router.py:164` |
 | POST | `/api/projects/{project_id}/evidence/{artifact_id}/materialization` | `backend/src/tdp/modules/evidence/presentation/http/router.py:233` |
-| GET | `/api/projects/{project_id}/governance-summary` | `backend/src/tdp/modules/governance/presentation/http/router.py:244` |
+| GET | `/api/projects/{project_id}/governance-summary` | `backend/src/tdp/modules/governance/presentation/http/router.py:246` |
 | POST | `/api/projects/{project_id}/impact-assessments` | `backend/src/tdp/modules/governance/presentation/http/router.py:185` |
 | GET | `/api/projects/{project_id}/readiness` | `backend/src/tdp/modules/readiness/presentation/http/router.py:108` |
 | GET | `/api/projects/{project_id}/readiness/{document_type}` | `backend/src/tdp/modules/readiness/presentation/http/router.py:119` |
@@ -86,7 +86,7 @@ The table is derived from FastAPI route decorators. It records declared routes, 
 | GET | `/api/templates/{template_id}` | `backend/src/tdp/modules/templates/presentation/http/router.py:131` |
 | PATCH | `/api/templates/{template_id}` | `backend/src/tdp/modules/templates/presentation/http/router.py:164` |
 | POST | `/api/templates/{template_id}/duplicate` | `backend/src/tdp/modules/templates/presentation/http/router.py:192` |
-| POST | `/api/workflow-cases/{case_id}/transitions` | `backend/src/tdp/modules/governance/presentation/http/router.py:223` |
+| POST | `/api/workflow-cases/{case_id}/transitions` | `backend/src/tdp/modules/governance/presentation/http/router.py:225` |
 | GET | `/api/workspaces` | `backend/src/tdp/modules/workspaces/presentation/http/router.py:128` |
 | POST | `/api/workspaces` | `backend/src/tdp/modules/workspaces/presentation/http/router.py:113` |
 | GET | `/api/workspaces/{workspace_id}` | `backend/src/tdp/modules/workspaces/presentation/http/router.py:137` |
