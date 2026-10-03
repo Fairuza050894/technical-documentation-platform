@@ -79,6 +79,14 @@ class EvidenceSnapshotNotCompletedError(EvidenceError):
     code = "EVIDENCE_SNAPSHOT_NOT_COMPLETED"
 
 
+class EvidenceRepositoryScanNotFoundError(EvidenceError):
+    code = "EVIDENCE_REPOSITORY_SCAN_NOT_FOUND"
+
+
+class EvidenceRepositoryScanNotCompletedError(EvidenceError):
+    code = "EVIDENCE_REPOSITORY_SCAN_NOT_COMPLETED"
+
+
 class EvidenceFeatureNotFoundError(EvidenceError):
     code = "EVIDENCE_FEATURE_NOT_FOUND"
 
