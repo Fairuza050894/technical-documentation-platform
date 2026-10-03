@@ -1,6 +1,5 @@
 import { AuditTrailViewer } from "../../modules/audit/AuditTrailViewer";
-import { TemplateWorkspace } from "../../modules/templates/TemplateWorkspace";
-import { ScannerWorkspace } from "../../modules/scanner/ScannerWorkspace";
+import { GovernanceHub } from "../../modules/governance/GovernanceHub";
 import { IntelligenceWorkspace } from "../../modules/intelligence/IntelligenceWorkspace";
 import { KnowledgeMap } from "../../modules/knowledge-map";
 import {
@@ -9,6 +8,8 @@ import {
 } from "../../modules/overview/OperationalOverview";
 import { ProjectWorkspace } from "../../modules/projects/ProjectWorkspace";
 import type { Project } from "../../modules/projects/types";
+import { ScannerWorkspace } from "../../modules/scanner/ScannerWorkspace";
+import { TemplateWorkspace } from "../../modules/templates/TemplateWorkspace";
 import { WorkspaceRegistry } from "../../modules/workspaces/WorkspaceRegistry";
 import type { Workspace } from "../../modules/workspaces/types";
 import { ProjectWorkbench } from "../../modules/workbench/ProjectWorkbench";
@@ -65,16 +66,25 @@ export function RouteContent({
     });
   };
 
+  const workspaceIndependentRoute =
+    route.name === "system" ||
+    route.name === "templates" ||
+    route.name === "scanner" ||
+    route.name === "intelligence" ||
+    route.name === "knowledge-map" ||
+    route.name === "audit" ||
+    route.name === "login";
+
   return (
     <>
-      {workspaceLoadState === "error" && route.name !== "system" && route.name !== "templates" && route.name !== "scanner" && route.name !== "intelligence" && route.name !== "audit" && route.name !== "login" && (
+      {workspaceLoadState === "error" && !workspaceIndependentRoute && (
         <WorkspaceContextError
           message={workspaceLoadError}
           onManage={manageWorkspaces}
         />
       )}
 
-      {workspaceLoadState === "loading" && route.name !== "system" && route.name !== "templates" && route.name !== "scanner" && route.name !== "intelligence" && route.name !== "audit" && route.name !== "login" && (
+      {workspaceLoadState === "loading" && !workspaceIndependentRoute && (
         <div className="project-workbench-state" role="status">
           <span className="loading-bar" aria-hidden="true" />
           Loading workspace context…
@@ -115,6 +125,10 @@ export function RouteContent({
         )
       )}
 
+      {workspaceLoadState === "ready" && route.name === "governance" && (
+        <GovernanceHub workspaceId={route.workspaceId ?? activeWorkspaceId} />
+      )}
+
       {workspaceLoadState === "ready" && route.name === "project" && (
         <ProjectWorkbench
           workspaceId={route.workspaceId}
@@ -152,15 +166,12 @@ export function RouteContent({
       )}
 
       {route.name === "system" && <SystemStatus apiState={apiState} />}
-
       {route.name === "audit" && <AuditTrailViewer />}
-
       {route.name === "templates" && <TemplateWorkspace />}
-
       {route.name === "scanner" && <ScannerWorkspace />}
-{route.name === "knowledge-map" && <KnowledgeMap />}
-{route.name === "intelligence" && <IntelligenceWorkspace />}
-      
+      {route.name === "knowledge-map" && <KnowledgeMap />}
+      {route.name === "intelligence" && <IntelligenceWorkspace />}
+
       {workspaceLoadState === "ready" && route.name === "not-found" && (
         <RouteNotFound
           pathname={route.pathname}
