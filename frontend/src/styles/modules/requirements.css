@@ -1,0 +1,176 @@
+.requirements-workspace {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.requirements-workspace__header,
+.requirements-detail__heading,
+.workflow-card,
+.requirement-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.requirements-workspace__header p,
+.requirements-detail p,
+.workflow-card p {
+  color: var(--text-muted);
+}
+
+.requirements-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.requirements-kpi,
+.requirements-create-panel,
+.requirements-registry,
+.requirements-detail,
+.workflow-queue {
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-raised);
+  border-radius: 0.75rem;
+}
+
+.requirements-kpi {
+  padding: 0.9rem 1rem;
+}
+
+.requirements-kpi span {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.requirements-kpi strong {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 1.5rem;
+}
+
+.requirements-kpi--attention {
+  border-color: var(--status-warning-border, var(--border-strong));
+}
+
+.requirements-create-panel,
+.requirements-registry,
+.requirements-detail,
+.workflow-queue {
+  padding: 1rem;
+}
+
+.requirements-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(20rem, 0.75fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.requirement-row {
+  width: 100%;
+  margin-top: 0.55rem;
+  padding: 0.8rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.6rem;
+  background: var(--surface-base);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.requirement-row:hover,
+.requirement-row--selected {
+  border-color: var(--border-strong);
+  background: var(--surface-hover, var(--surface-base));
+}
+
+.requirement-row > span:first-child {
+  min-width: 7.5rem;
+}
+
+.requirement-row small,
+.helper-text {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.requirement-row__title {
+  flex: 1;
+}
+
+.traceability-coverage {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.traceability-coverage__grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0.65rem 0;
+}
+
+.trace-chip,
+.workflow-card__priority {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  padding: 0.25rem 0.55rem;
+  font-size: 0.75rem;
+  text-transform: capitalize;
+}
+
+.trace-chip--covered {
+  border-color: var(--status-success-border, var(--border-strong));
+}
+
+.requirements-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 1rem;
+}
+
+.workflow-queue__list {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.workflow-card {
+  padding: 0.75rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.6rem;
+}
+
+.workflow-card--overdue {
+  border-color: var(--status-danger-border, var(--border-strong));
+}
+
+@media (max-width: 960px) {
+  .requirements-kpis,
+  .requirements-layout {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .requirements-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .requirements-kpis {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .requirements-workspace__header,
+  .workflow-card,
+  .requirement-row {
+    flex-direction: column;
+  }
+}
