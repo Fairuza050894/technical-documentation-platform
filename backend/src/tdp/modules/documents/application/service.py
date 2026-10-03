@@ -1,6 +1,7 @@
 import hashlib
 import re
 
+from tdp.identity.model import IdentityAssurance
 from tdp.modules.catalog.domain.model import SynchronizationId, SynchronizationStatus
 from tdp.modules.catalog.domain.repository import CatalogRepository
 from tdp.modules.changes.domain.model import DeterministicCatalogComparator
@@ -39,6 +40,7 @@ from tdp.modules.documents.domain.model import (
     DocumentVersionNumber,
 )
 from tdp.modules.documents.domain.repository import DocumentRepository
+from tdp.modules.documents.domain.workflow_policy import ApprovalContext, DocumentApprovalPolicy
 from tdp.modules.projects.domain.model import Project, ProjectId, ProjectStatus
 from tdp.modules.projects.domain.repository import ProjectRepository
 from tdp.modules.sources.domain.model import SourceId
@@ -57,6 +59,7 @@ class DocumentApplicationService:
         comparator: DeterministicCatalogComparator,
         renderer: TechnicalSourceOverviewRenderer,
         workspace_repository: WorkspaceRepository | None = None,
+        approval_policy: DocumentApprovalPolicy | None = None,
     ) -> None:
         self._repository = repository
         self._project_repository = project_repository
@@ -66,6 +69,7 @@ class DocumentApplicationService:
         self._renderer = renderer
         self._workspace_repository = workspace_repository
         self._document_comparator = DeterministicMarkdownSectionComparator()
+        self._approval_policy = approval_policy or DocumentApprovalPolicy()
 
     async def generate(
         self,
@@ -243,6 +247,13 @@ class DocumentApplicationService:
     ) -> DocumentDetailDto:
         version, series = await self._require_version_and_series(command.version_id)
         await self._require_writable_project(version.project_id)
+        self._approval_policy.validate(
+            ApprovalContext(
+                author_actor=version.created_by,
+                reviewer_actor=command.principal.audit_actor,
+                verified_identity=command.principal.assurance is IdentityAssurance.VERIFIED,
+            )
+        )
         event = version.approve(actor=command.principal.audit_actor, comment=command.comment)
         previous_approved = await self._repository.get_current_approved_version(series.id)
         superseded_version = None
