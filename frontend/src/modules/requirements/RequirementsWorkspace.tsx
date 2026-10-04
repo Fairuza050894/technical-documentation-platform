@@ -5,11 +5,17 @@ import { Icon } from "../../shared/ui/Icon";
 import { listFeatures } from "../features/api";
 import type { Feature } from "../features/types";
 import type { Project } from "../projects/types";
-import { createRequirement, getTraceabilityCoverage, listRequirements } from "./api";
+import {
+  addRequirementTraceLink,
+  createRequirement,
+  getTraceabilityCoverage,
+  listRequirements,
+} from "./api";
 import type {
   CreateRequirementInput,
   Requirement,
   RequirementType,
+  TraceTargetType,
   TraceabilityCoverage,
 } from "./types";
 
@@ -40,6 +46,12 @@ export function RequirementsWorkspace({ workspaceId, project }: RequirementsWork
   const [filter, setFilter] = useState("");
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [traceRequirementId, setTraceRequirementId] = useState("");
+  const [traceTargetType, setTraceTargetType] = useState<TraceTargetType>("EVIDENCE");
+  const [traceTargetReference, setTraceTargetReference] = useState("");
+  const [traceError, setTraceError] = useState("");
+  const [traceMessage, setTraceMessage] = useState("");
+  const [isTracing, setIsTracing] = useState(false);
 
   const activeFeatures = useMemo(
     () => features.filter((feature) => feature.status === "ACTIVE"),
@@ -59,6 +71,7 @@ export function RequirementsWorkspace({ workspaceId, project }: RequirementsWork
         setRequirements(collection.items);
         setCoverage(traceability);
         setFeatures(featureCollection.items);
+        setTraceRequirementId((current) => current || collection.items[0]?.requirement_id || "");
         setLoadState("ready");
       } catch (error: unknown) {
         if (error instanceof DOMException && error.name === "AbortError") return;
@@ -97,16 +110,51 @@ export function RequirementsWorkspace({ workspaceId, project }: RequirementsWork
         acceptance_criteria: acceptanceCriteria,
       });
       setRequirements((current) => [...current, created]);
+      setTraceRequirementId((current) => current || created.requirement_id);
       setForm(initialForm);
       setCriterion("");
-      const nextCoverage = await getTraceabilityCoverage(workspaceId, project.id);
-      setCoverage(nextCoverage);
+      setCoverage(await getTraceabilityCoverage(workspaceId, project.id));
     } catch (error: unknown) {
       setFormError(
         error instanceof ApiClientError ? error.message : "The requirement could not be created.",
       );
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  async function handleTraceSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
+    event.preventDefault();
+    if (!traceRequirementId || !traceTargetReference.trim() || isReadOnly) return;
+    setTraceError("");
+    setTraceMessage("");
+    setIsTracing(true);
+    try {
+      const updated = await addRequirementTraceLink(
+        workspaceId,
+        project.id,
+        traceRequirementId,
+        traceTargetType,
+        traceTargetReference,
+      );
+      setRequirements((current) =>
+        current.map((item) =>
+          item.requirement_id === updated.requirement_id ? updated : item,
+        ),
+      );
+      setCoverage(await getTraceabilityCoverage(workspaceId, project.id));
+      setTraceTargetReference("");
+      setTraceMessage(
+        `${updated.key} now has a verified ${traceTargetType.toLowerCase()} trace link.`,
+      );
+    } catch (error: unknown) {
+      setTraceError(
+        error instanceof ApiClientError
+          ? error.message
+          : "The trace link could not be verified and saved.",
+      );
+    } finally {
+      setIsTracing(false);
     }
   }
 
@@ -384,6 +432,90 @@ export function RequirementsWorkspace({ workspaceId, project }: RequirementsWork
           </form>
         </section>
       </div>
+
+      <section className="content-section" aria-labelledby="trace-link-title">
+        <div className="section-heading">
+          <div>
+            <p className="section-kicker">Controlled relationship</p>
+            <h3 id="trace-link-title">Add verified trace link</h3>
+            <p>
+              Link a requirement to an existing project target. The backend verifies that the
+              target exists inside this project before the relationship becomes official.
+            </p>
+          </div>
+        </div>
+        {requirements.length === 0 ? (
+          <div className="empty-state empty-state--compact">
+            <h4>Create a requirement first</h4>
+            <p>Traceability can only be recorded against a governed requirement revision.</p>
+          </div>
+        ) : (
+          <form className="form-panel" onSubmit={(event) => void handleTraceSubmit(event)}>
+            <div className="form-grid">
+              <div className="field">
+                <label htmlFor="trace-requirement">Requirement</label>
+                <select
+                  id="trace-requirement"
+                  value={traceRequirementId}
+                  onChange={(event) => setTraceRequirementId(event.target.value)}
+                  disabled={isReadOnly || isTracing}
+                  required
+                >
+                  {requirements.map((requirement) => (
+                    <option key={requirement.requirement_id} value={requirement.requirement_id}>
+                      {requirement.key} — {requirement.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor="trace-target-type">Target type</label>
+                <select
+                  id="trace-target-type"
+                  value={traceTargetType}
+                  onChange={(event) => {
+                    setTraceTargetType(event.target.value as TraceTargetType);
+                    setTraceTargetReference("");
+                    setTraceMessage("");
+                    setTraceError("");
+                  }}
+                  disabled={isReadOnly || isTracing}
+                >
+                  <option value="FEATURE">Feature</option>
+                  <option value="EVIDENCE">Evidence</option>
+                  <option value="DOCUMENT">Document</option>
+                </select>
+              </div>
+              <div className="field field--wide">
+                <label htmlFor="trace-target-reference">Target ID</label>
+                <input
+                  id="trace-target-reference"
+                  value={traceTargetReference}
+                  onChange={(event) => setTraceTargetReference(event.target.value)}
+                  placeholder={tracePlaceholder(traceTargetType)}
+                  disabled={isReadOnly || isTracing}
+                  required
+                />
+                <small>
+                  Use the canonical {traceTargetType.toLowerCase()} identifier. Relations are
+                  derived by policy: feature = implemented by, evidence = verified by, document = documented by.
+                </small>
+              </div>
+            </div>
+            {traceError && <p className="form-error" role="alert">{traceError}</p>}
+            {traceMessage && <p className="loading-state" role="status">{traceMessage}</p>}
+            <div className="form-actions">
+              <button
+                type="submit"
+                className="button button--primary"
+                disabled={isReadOnly || isTracing || !traceTargetReference.trim()}
+              >
+                {isTracing ? "Verifying…" : "Verify & link"}
+              </button>
+            </div>
+          </form>
+        )}
+      </section>
     </div>
   );
 }
@@ -412,4 +544,15 @@ function formatType(value: RequirementType): string {
     .split("_")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
+}
+
+function tracePlaceholder(targetType: TraceTargetType): string {
+  switch (targetType) {
+    case "FEATURE":
+      return "Feature UUID";
+    case "EVIDENCE":
+      return "Evidence artifact UUID";
+    case "DOCUMENT":
+      return "Document series UUID";
+  }
 }
