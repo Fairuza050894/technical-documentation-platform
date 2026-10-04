@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Phase 1-5 closure UX** - Added an operable verified trace-link workflow in Requirements and a typed semantic evidence materialization editor so existing backend governance capabilities can be completed from the Project Workbench
 - **Enterprise foundation phases 1-5** - Consolidated the project workbench flow from feature intent through requirements, evidence, deterministic change impact, and governed document review/approval (PR #23)
 - **Requirement Registry** - Added immutable requirement revisions, acceptance criteria, ownership, revision reasons, retirement, and verified traceability to existing Feature, Evidence, and Document records
 - **Deterministic change impact** - Added source-backed API catalog impact policy that calculates requirement-review, testing, architecture, documentation, and release obligations without AI inference
@@ -15,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Changelog Policy** - Formalized changelog and versioning policy (TDP-GOV-003) following Keep a Changelog and Semantic Versioning standards
 
 ### Changed
+- **Product journeys and flows** - Reconciled governed requirement, evidence, change-impact, scanner-boundary, and approval flows with the implemented source-backed product behavior
+- **Evidence materialization integrity** - Replaced the invalid empty-manifest UI action with a typed `semantic-evidence-manifest-v1` editor; non-semantic source/catalog artifacts are shown as canonical rather than being offered an impossible materialization action
+- **Requirement traceability UX** - Feature, Evidence, and Document relations are policy-derived in the client and re-verified by the backend inside the current Project boundary
 - **Product truth and information architecture** - Reconciled README, product vision, PRD, project stages, generated API surface, and repository indexes with implemented enterprise-foundation capabilities
 - **Source-backed UI integrity** - Knowledge Map no longer presents demo fixtures as repository facts by default; demo rendering requires `VITE_KNOWLEDGE_MAP_DEMO=true`
 - **Scanner webhook routing** - Fixed webhook event detail URL interpolation and URL encoding

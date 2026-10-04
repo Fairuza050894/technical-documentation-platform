@@ -103,9 +103,11 @@ Backend total: **357** tests.
 | frontend/src/modules/catalog/ApiCatalogWorkspace.test.tsx | 2 |
 | frontend/src/modules/changes/ChangesWorkspace.test.tsx | 1 |
 | frontend/src/modules/documents/DocumentsWorkspace.test.tsx | 3 |
+| frontend/src/modules/evidence/EvidenceMaterializationPanel.test.tsx | 2 |
 | frontend/src/modules/features/FeatureWorkspace.test.tsx | 3 |
 | frontend/src/modules/overview/OperationalOverview.test.tsx | 2 |
 | frontend/src/modules/projects/ProjectWorkspace.test.tsx | 4 |
+| frontend/src/modules/requirements/api.test.ts | 1 |
 | frontend/src/modules/scanner/api.test.ts | 1 |
 | frontend/src/modules/sources/SourceWorkspace.test.tsx | 2 |
 | frontend/src/modules/workbench/ProjectDocumentationOverview.test.tsx | 4 |
@@ -114,6 +116,6 @@ Backend total: **357** tests.
 | frontend/src/modules/workspaces/WorkspaceSwitcher.test.tsx | 5 |
 | frontend/src/shared/api/config.test.ts | 3 |
 
-Frontend total: **58** tests.
+Frontend total: **61** tests.
 
 Counts are structural and do not replace execution evidence from `make verify`.
