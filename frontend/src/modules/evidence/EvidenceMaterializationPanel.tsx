@@ -3,21 +3,11 @@ import { useMemo, useState } from "react";
 import { materializeEvidence } from "./api";
 import type { EvidenceArtifact, EvidenceKind } from "./types";
 
-const MATERIALIZABLE_KINDS: ReadonlySet<EvidenceKind> = new Set([
-  "USER_JOURNEY",
-  "DEPLOYMENT_RUNTIME",
-  "UAT_RESULT",
-]);
-
 interface EvidenceMaterializationPanelProps {
   projectId: string;
   artifact: EvidenceArtifact;
   onCancel: () => void;
   onMaterialized: (message: string) => void;
-}
-
-export function isMaterializableEvidence(kind: EvidenceKind): boolean {
-  return MATERIALIZABLE_KINDS.has(kind);
 }
 
 export function EvidenceMaterializationPanel({
