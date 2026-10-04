@@ -3,11 +3,24 @@ import { useMemo, useState } from "react";
 import { materializeEvidence } from "./api";
 import type { EvidenceArtifact, EvidenceKind } from "./types";
 
+const MATERIALIZABLE_KINDS: ReadonlySet<EvidenceKind> = new Set([
+  "USER_JOURNEY",
+  "DEPLOYMENT_RUNTIME",
+  "UAT_RESULT",
+]);
+
 interface EvidenceMaterializationPanelProps {
   projectId: string;
   artifact: EvidenceArtifact;
   onCancel: () => void;
   onMaterialized: (message: string) => void;
+}
+
+// This pure boundary helper is intentionally colocated with the panel so the UI and test share
+// the same materialization contract without duplicating policy constants.
+// eslint-disable-next-line react-refresh/only-export-components
+export function isMaterializableEvidence(kind: EvidenceKind): boolean {
+  return MATERIALIZABLE_KINDS.has(kind);
 }
 
 export function EvidenceMaterializationPanel({
