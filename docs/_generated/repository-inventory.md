@@ -43,7 +43,7 @@ This inventory is derived from the repository tree and is checked by `make docs-
 |---|---|
 | Backend Python files | 232 |
 | Backend test files | 85 |
-| Frontend TypeScript files | 51 |
-| Frontend TSX files | 62 |
-| Frontend test files | 16 |
+| Frontend TypeScript files | 52 |
+| Frontend TSX files | 64 |
+| Frontend test files | 18 |
 | Controlled Markdown files | 110 |
