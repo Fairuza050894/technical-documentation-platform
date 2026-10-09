@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import { App } from "./app/App";
 import { AuthProvider } from "./shared/auth/AuthContext";
 import "./styles/globals.css";
+import "./styles/modules/dashboard.css";
 
 // Determine auth mode from environment
 const authMode = (import.meta.env.VITE_AUTH_MODE ?? "local") as "local" | "oidc";

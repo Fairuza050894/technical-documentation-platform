@@ -33,11 +33,14 @@ export function ScannerWorkspace({ embedded = false }: ScannerWorkspaceProps) {
   const [activeTab, setActiveTab] = useState<DetailTab>("overview");
   const [generatedDocs, setGeneratedDocs] = useState<GeneratedDocument[]>([]);
   const [compareTarget, setCompareTarget] = useState<string | null>(null);
-    const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"score" | "name" | "recent">("score");
   const [showScanForm, setShowScanForm] = useState(false);
   const [selectedSuggestions, setSelectedSuggestions] = useState<Set<string>>(new Set());
   const [expandedDocs, setExpandedDocs] = useState<Set<string>>(new Set());
+  const [isLoading, setIsLoading] = useState(true);
+  const [keyboardFocusIndex, setKeyboardFocusIndex] = useState(-1);
+  const [density, setDensity] = useState<"comfortable" | "compact">("comfortable");
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const loadScans = useCallback(async (signal?: AbortSignal) => {
@@ -46,6 +49,8 @@ export function ScannerWorkspace({ embedded = false }: ScannerWorkspaceProps) {
       setScans(data.items);
     } catch {
       // ignore
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
@@ -221,7 +226,7 @@ export function ScannerWorkspace({ embedded = false }: ScannerWorkspaceProps) {
   return (
     <div className={`scanner-unified${embedded ? " scanner-unified--embedded" : ""}`}>
       {/* Summary Header */}
-      <div className="scanner-header">
+      <div className="scanner-header" data-density={density}>
         <div className="scanner-header__title">
           <h1>Repository Scanner</h1>
           <span className="scanner-header__subtitle">Code health, analysis, and documentation</span>
@@ -236,7 +241,9 @@ export function ScannerWorkspace({ embedded = false }: ScannerWorkspaceProps) {
             <span className="scanner-header__stat-label">Scans</span>
           </div>
           <div className="scanner-header__stat">
-            <span className="scanner-header__stat-value" style={{ color: getScoreColor(dashboard?.avg_health_score ?? 0) }}>{dashboard?.avg_health_score ?? "-"}</span>
+            <span className={`scanner-header__stat-value score-inline ${getScoreClass(dashboard?.avg_health_score ?? 0)}`}>
+              <span className="tooltip" data-tooltip="Average health score across all repositories (0-100). Based on file analysis, tests, linting, and security scans.">{dashboard?.avg_health_score ?? "-"}</span>
+            </span>
             <span className="scanner-header__stat-label">Avg Score</span>
           </div>
           <div className="scanner-header__stat">
@@ -244,9 +251,23 @@ export function ScannerWorkspace({ embedded = false }: ScannerWorkspaceProps) {
             <span className="scanner-header__stat-label">Alerts</span>
           </div>
         </div>
-        <button type="button" className="scanner-header__scan-btn" onClick={() => setShowScanForm(!showScanForm)}>
-          {showScanForm ? "Cancel" : "+ Scan Repository"}
-        </button>
+        <div className="scanner-header__actions" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span className="scanner-header__last-scan">
+            Last updated: {scans[0] ? getTimeAgo(scans[0].started_at) : "Never"}
+          </span>
+          <button
+            type="button"
+            className="scanner-header__scan-btn"
+            onClick={() => setDensity(density === "comfortable" ? "compact" : "comfortable")}
+            title={density === "comfortable" ? "Switch to compact mode" : "Switch to comfortable mode"}
+            style={{ padding: '6px 10px', fontSize: '11px' }}
+          >
+            {density === "comfortable" ? "Compact" : "Comfortable"}
+          </button>
+          <button type="button" className="scanner-header__scan-btn" onClick={() => setShowScanForm(!showScanForm)}>
+            {showScanForm ? "Cancel" : "+ Scan Repository"}
+          </button>
+        </div>
       </div>
 
       {/* Scan Form */}
@@ -291,9 +312,9 @@ export function ScannerWorkspace({ embedded = false }: ScannerWorkspaceProps) {
       )}
 
       {/* Main Layout: Sidebar + Content */}
-      <div className="scanner-body">
+      <div className="scanner-body" data-density={density}>
         {/* Sidebar */}
-        <div className="scanner-sidebar">
+        <div className="scanner-sidebar" role="listbox" aria-label="Repositories">
           <div className="scanner-sidebar__search">
             <input
               className="scanner-sidebar__search-input"
@@ -308,34 +329,96 @@ export function ScannerWorkspace({ embedded = false }: ScannerWorkspaceProps) {
             </select>
           </div>
 
-          <div className="scanner-sidebar__list">
-            {filteredGroups.length === 0 ? (
-              <div className="scanner-sidebar__empty">
-                {searchQuery ? "No matching repositories" : "No scans yet"}
+          <div className="scanner-sidebar__list" role="presentation">
+            {isLoading ? (
+              <div className="scanner-sidebar__skeleton" aria-busy="true" aria-live="polite">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="skeleton-row">
+                    <div className="skeleton-row__icon skeleton skeleton-avatar" />
+                    <div className="skeleton-row__content">
+                      <div className="skeleton skeleton-text" style={{ width: '120px' }} />
+                      <div className="skeleton skeleton-text" style={{ width: '80px' }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : filteredGroups.length === 0 ? (
+              <div className="empty-state empty-state--compact" role="status">
+                <svg className="empty-state__illustration" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+                  <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <h3 className="empty-state__title">{searchQuery ? "No matching repositories" : "No scans yet"}</h3>
+                <p className="empty-state__message">
+                  {searchQuery
+                    ? "Try adjusting your search or filter criteria."
+                    : "Start your first scan to analyze a repository."}
+                </p>
+                {!searchQuery && (
+                  <button type="button" className="empty-state__action" onClick={() => setShowScanForm(true)}>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                      <line x1="8" y1="2" x2="8" y2="14" />
+                      <line x1="2" y1="8" x2="14" y2="8" />
+                    </svg>
+                    Scan Repository
+                  </button>
+                )}
               </div>
             ) : (
-              filteredGroups.map((group) => {
+              filteredGroups.map((group, index) => {
                 const isSelected = group.repoUrl === selectedRepoUrl;
                 const score = group.latest.health.score;
                 const sqScore = group.latest.sonarqube && typeof group.latest.sonarqube === "object" && "total_score" in group.latest.sonarqube
                   ? (group.latest.sonarqube as unknown as Record<string, unknown>).total_score as number
                   : null;
+                const hasKeyboardFocus = keyboardFocusIndex === index;
+
+                const handleKeyDown = (e: React.KeyboardEvent) => {
+                  if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    setKeyboardFocusIndex((prev) => Math.min(prev + 1, filteredGroups.length - 1));
+                  } else if (e.key === "ArrowUp") {
+                    e.preventDefault();
+                    setKeyboardFocusIndex((prev) => Math.max(prev - 1, 0));
+                  } else if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleSelectRepo(group.repoUrl);
+                  } else if (e.key === "Escape") {
+                    setKeyboardFocusIndex(-1);
+                  }
+                };
 
                 return (
                   <button
                     key={group.repoUrl}
                     type="button"
-                    className={`scanner-sidebar__item ${isSelected ? "scanner-sidebar__item--selected" : ""}`}
+                    role="option"
+                    aria-selected={isSelected}
+                    aria-current={isSelected ? "true" : undefined}
+                    className={`scanner-sidebar__item ${isSelected ? "scanner-sidebar__item--selected" : ""} ${hasKeyboardFocus ? "[&:not(.scanner-sidebar__item--selected)]:bg-blue-50 [&:not(.scanner-sidebar__item--selected)]:border-blue-200" : ""}`}
                     onClick={() => handleSelectRepo(group.repoUrl)}
+                    onKeyDown={handleKeyDown}
+                    tabIndex={hasKeyboardFocus || isSelected ? 0 : -1}
+                    data-keyboard-focus={hasKeyboardFocus}
                   >
                     <div className="scanner-sidebar__item-header">
                       <span className="scanner-sidebar__item-name">{group.repoName}</span>
                       <span className="scanner-sidebar__item-branch">{group.latest.branch}</span>
                     </div>
                     <div className="scanner-sidebar__item-scores">
-                      <span className="scanner-sidebar__score-badge" style={{ background: getScoreBg(score), color: getScoreColor(score) }}>{score}</span>
+                      <span
+                        className={`scanner-sidebar__score-badge score-badge ${getScoreClass(score)} tooltip`}
+                        data-tooltip={`Health Score: ${score}/100 — Based on file analysis, tests, linting, and security. ≥70 Good, 40-69 Fair, <40 Needs Attention.`}
+                      >
+                        {score}
+                      </span>
                       {sqScore !== null && sqScore !== undefined && sqScore > 0 && (
-                        <span className="scanner-sidebar__score-badge scanner-sidebar__score-badge--sq" style={{ background: getScoreBg(sqScore), color: getScoreColor(sqScore) }}>SQ:{sqScore}</span>
+                        <span
+                          className={`scanner-sidebar__score-badge scanner-sidebar__score-badge--sq score-badge ${getScoreClass(sqScore)} tooltip`}
+                          data-tooltip={`SonarQube Quality Gate Score: ${sqScore}/100 — From SonarQube analysis.`}
+                        >
+                          SQ:{sqScore}
+                        </span>
                       )}
                     </div>
                     <div className="scanner-sidebar__item-meta">
@@ -352,9 +435,20 @@ export function ScannerWorkspace({ embedded = false }: ScannerWorkspaceProps) {
         {/* Content */}
         <div className="scanner-content">
           {!selectedScan ? (
-            <div className="scanner-content__empty">
-              <h3>Select a repository</h3>
-              <p>Choose a repository from the sidebar or start a new scan.</p>
+            <div className="empty-state" role="status">
+              <svg className="empty-state__illustration" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+                <rect x="2" y="3" width="20" height="14" rx="2" />
+                <path d="M8 21h8M12 17v4" />
+              </svg>
+              <h3 className="empty-state__title">Select a repository</h3>
+              <p className="empty-state__message">Choose a repository from the sidebar or start a new scan to begin analysis.</p>
+              <button type="button" className="empty-state__action" onClick={() => setShowScanForm(true)}>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <line x1="8" y1="2" x2="8" y2="14" />
+                  <line x1="2" y1="8" x2="14" y2="8" />
+                </svg>
+                Scan Repository
+              </button>
             </div>
           ) : (
             <>
@@ -428,7 +522,7 @@ export function ScannerWorkspace({ embedded = false }: ScannerWorkspaceProps) {
               </div>
 
               {/* Tab Content */}
-              <div className="scanner-tab-content">
+              <div className={`scanner-tab-content ${isLoading ? "skeleton-loading" : ""}`}>
                 {/* Compare View */}
                 {compareTarget && activeTab === "overview" && selectedGroup && (
                   <ScanComparisonView
@@ -443,17 +537,19 @@ export function ScannerWorkspace({ embedded = false }: ScannerWorkspaceProps) {
                   <div className="scanner-overview">
                     {/* Health Score */}
                     <div className="scanner-overview__score-section">
-                      <div className="scanner-overview__score-ring" style={{ borderColor: getScoreColor(selectedScan.health.score) }}>
-                        <span className="scanner-overview__score-value" style={{ color: getScoreColor(selectedScan.health.score) }}>
-                          {selectedScan.health.score}
-                        </span>
+                      <div
+                        className={`scanner-overview__score-ring score-ring ${getScoreClass(selectedScan.health.score)} tooltip`}
+                        data-tooltip={`Health Score: ${selectedScan.health.score}/100 — Composite score from file analysis (30%), tests (25%), linting (25%), security (20%). ≥70 Good, 40-69 Fair, <40 Needs Attention.`}
+                      >
+                        <span className="scanner-overview__score-value">{selectedScan.health.score}</span>
                         <span className="scanner-overview__score-label">Health</span>
                       </div>
                       {selectedScan.sonarqube.total_score > 0 && (
-                        <div className="scanner-overview__score-ring" style={{ borderColor: getScoreColor(selectedScan.sonarqube.total_score) }}>
-                          <span className="scanner-overview__score-value" style={{ color: getScoreColor(selectedScan.sonarqube.total_score) }}>
-                            {selectedScan.sonarqube.total_score}
-                          </span>
+                        <div
+                          className={`scanner-overview__score-ring score-ring ${getScoreClass(selectedScan.sonarqube.total_score)} tooltip`}
+                          data-tooltip={`SonarQube Quality Gate: ${selectedScan.sonarqube.total_score}/100 — Based on SonarQube analysis including reliability, security, maintainability, and coverage.`}
+                        >
+                          <span className="scanner-overview__score-value">{selectedScan.sonarqube.total_score}</span>
                           <span className="scanner-overview__score-label">SonarQube</span>
                         </div>
                       )}
@@ -461,27 +557,27 @@ export function ScannerWorkspace({ embedded = false }: ScannerWorkspaceProps) {
 
                     {/* Metrics Grid */}
                     <div className="scanner-overview__metrics">
-                      <div className="scanner-metric">
+                      <div className="scanner-metric tooltip" data-tooltip="Total number of files analyzed in the repository.">
                         <span className="scanner-metric__value">{selectedScan.file_analysis.total_files}</span>
                         <span className="scanner-metric__label">Files</span>
                       </div>
-                      <div className="scanner-metric">
+                      <div className="scanner-metric tooltip" data-tooltip="Total lines of code across all analyzed files.">
                         <span className="scanner-metric__value">{formatNumber(selectedScan.file_analysis.total_lines)}</span>
                         <span className="scanner-metric__label">Lines</span>
                       </div>
-                      <div className="scanner-metric">
+                      <div className="scanner-metric tooltip" data-tooltip="Total test cases across all test suites.">
                         <span className="scanner-metric__value">{selectedScan.test_suites.reduce((sum, t) => sum + t.total, 0)}</span>
                         <span className="scanner-metric__label">Tests</span>
                       </div>
-                      <div className="scanner-metric">
+                      <div className="scanner-metric tooltip" data-tooltip="Total linting issues found (errors + warnings).">
                         <span className="scanner-metric__value">{selectedScan.lint_results.reduce((sum, r) => sum + r.total_issues, 0)}</span>
                         <span className="scanner-metric__label">Lint Issues</span>
                       </div>
-                      <div className="scanner-metric">
+                      <div className="scanner-metric tooltip" data-tooltip="Total security vulnerabilities detected across all severities.">
                         <span className="scanner-metric__value">{selectedScan.security_scan.total_vulnerabilities}</span>
                         <span className="scanner-metric__label">Vulnerabilities</span>
                       </div>
-                      <div className="scanner-metric">
+                      <div className="scanner-metric tooltip" data-tooltip="Number of detected frameworks (React, Vue, Express, etc.).">
                         <span className="scanner-metric__value">{selectedScan.tech_stack.frameworks.length}</span>
                         <span className="scanner-metric__label">Frameworks</span>
                       </div>
@@ -513,7 +609,12 @@ export function ScannerWorkspace({ embedded = false }: ScannerWorkspaceProps) {
                               className={`scanner-history-item ${scan.id === selectedScan.id ? "scanner-history-item--current" : ""}`}
                               onClick={() => handleSelectScan(scan)}
                             >
-                              <span className="scanner-history-item__score" style={{ color: getScoreColor(scan.health.score) }}>{scan.health.score}</span>
+                              <span
+                                className={`scanner-history-item__score score-inline ${getScoreClass(scan.health.score)} tooltip`}
+                                data-tooltip={`Health Score: ${scan.health.score}/100 — ${getTimeAgo(scan.started_at)}`}
+                              >
+                                {scan.health.score}
+                              </span>
                               <span className="scanner-history-item__date">{new Date(scan.started_at).toLocaleString()}</span>
                               <span className={`scanner-history-item__status scanner-history-item__status--${scan.status.toLowerCase()}`}>{scan.status}</span>
                             </button>
@@ -579,7 +680,14 @@ export function ScannerWorkspace({ embedded = false }: ScannerWorkspaceProps) {
                     <div className="scanner-tests__section">
                       <h3>Test Suites</h3>
                       {selectedScan.test_suites.length === 0 ? (
-                        <p className="scanner-tests__empty">No test suites found</p>
+                        <div className="empty-state empty-state--compact" role="status">
+                          <svg className="empty-state__illustration" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+                            <path d="M9 11l3 3L22 4" />
+                            <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
+                          </svg>
+                          <h4 className="empty-state__title">No test suites found</h4>
+                          <p className="empty-state__message">This repository doesn't appear to have any test configurations detected.</p>
+                        </div>
                       ) : (
                         <div className="scanner-tests__list">
                           {selectedScan.test_suites.map((suite, i) => (
@@ -608,7 +716,15 @@ export function ScannerWorkspace({ embedded = false }: ScannerWorkspaceProps) {
                     <div className="scanner-tests__section">
                       <h3>Lint Results</h3>
                       {selectedScan.lint_results.length === 0 ? (
-                        <p className="scanner-tests__empty">No lint results</p>
+                        <div className="empty-state empty-state--compact" role="status">
+                          <svg className="empty-state__illustration" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                          </svg>
+                          <h4 className="empty-state__title">No lint results</h4>
+                          <p className="empty-state__message">No linting tools were detected or configured for this repository.</p>
+                        </div>
                       ) : (
                         <div className="scanner-tests__list">
                           {selectedScan.lint_results.map((result, i) => (
@@ -634,19 +750,19 @@ export function ScannerWorkspace({ embedded = false }: ScannerWorkspaceProps) {
                 {activeTab === "security" && (
                   <div className="scanner-security">
                     <div className="scanner-security__summary">
-                      <div className="scanner-security__stat">
+                      <div className="scanner-security__stat tooltip" data-tooltip="Critical vulnerabilities requiring immediate attention. Usually remotely exploitable.">
                         <span className="scanner-security__stat-value" style={{ color: "#dc2626" }}>{selectedScan.security_scan.critical}</span>
                         <span className="scanner-security__stat-label">Critical</span>
                       </div>
-                      <div className="scanner-security__stat">
+                      <div className="scanner-security__stat tooltip" data-tooltip="High severity vulnerabilities. Often exploitable with specific conditions.">
                         <span className="scanner-security__stat-value" style={{ color: "#f59e0b" }}>{selectedScan.security_scan.high}</span>
                         <span className="scanner-security__stat-label">High</span>
                       </div>
-                      <div className="scanner-security__stat">
+                      <div className="scanner-security__stat tooltip" data-tooltip="Medium severity vulnerabilities. May require chaining or local access.">
                         <span className="scanner-security__stat-value" style={{ color: "#3b82f6" }}>{selectedScan.security_scan.medium}</span>
                         <span className="scanner-security__stat-label">Medium</span>
                       </div>
-                      <div className="scanner-security__stat">
+                      <div className="scanner-security__stat tooltip" data-tooltip="Low severity vulnerabilities. Minimal direct impact, defense-in-depth.">
                         <span className="scanner-security__stat-value" style={{ color: "#6b7280" }}>{selectedScan.security_scan.low}</span>
                         <span className="scanner-security__stat-label">Low</span>
                       </div>
@@ -678,9 +794,12 @@ export function ScannerWorkspace({ embedded = false }: ScannerWorkspaceProps) {
                         sonarqube={selectedScan.sonarqube}
                       />
                     ) : (
-                      <div className="scanner-sonarqube__empty">
-                        <h3>No SonarQube Data</h3>
-                        <p>SonarQube analysis was not configured for this scan. Set SONARQUBE_URL, SONARQUBE_TOKEN, and SONARQUBE_PROJECT_KEY environment variables to enable SonarQube integration.</p>
+                      <div className="empty-state" role="status">
+                        <svg className="empty-state__illustration" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+                          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        </svg>
+                        <h3 className="empty-state__title">No SonarQube Data</h3>
+                        <p className="empty-state__message">SonarQube analysis was not configured for this scan. Set SONARQUBE_URL, SONARQUBE_TOKEN, and SONARQUBE_PROJECT_KEY environment variables to enable SonarQube integration.</p>
                       </div>
                     )}
                   </div>
@@ -799,9 +918,16 @@ export function ScannerWorkspace({ embedded = false }: ScannerWorkspaceProps) {
                     )}
 
                     {selectedScan.suggestions.length === 0 && generatedDocs.length === 0 && (
-                      <div className="scanner-documents__empty">
-                        <h3>No Document Suggestions</h3>
-                        <p>This scan did not produce any document suggestions. Try re-scanning the repository.</p>
+                      <div className="empty-state" role="status">
+                        <svg className="empty-state__illustration" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+                          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                          <polyline points="14 2 14 8 20 8" />
+                          <line x1="16" y1="13" x2="8" y2="13" />
+                          <line x1="16" y1="17" x2="8" y2="17" />
+                          <polyline points="10 9 9 9 8 9" />
+                        </svg>
+                        <h3 className="empty-state__title">No Document Suggestions</h3>
+                        <p className="empty-state__message">This scan did not produce any document suggestions. Try re-scanning the repository or check if the repository has detectable tech stack.</p>
                       </div>
                     )}
                   </div>
@@ -820,19 +946,13 @@ export function ScannerWorkspace({ embedded = false }: ScannerWorkspaceProps) {
   );
 }
 
-function getScoreColor(score: number): string {
-  if (score >= 70) return "#16a34a";
-  if (score >= 40) return "#f59e0b";
-  return "#dc2626";
+function getScoreClass(score: number): string {
+  if (score >= 70) return "score-badge--high";
+  if (score >= 40) return "score-badge--medium";
+  return "score-badge--low";
 }
 
-function getScoreBg(score: number): string {
-  if (score >= 70) return "#dcfce7";
-  if (score >= 40) return "#fef3c7";
-  return "#fef2f2";
-}
-
-function getTimeAgo(dateStr: string): string {
+export function getTimeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return "just now";
@@ -843,13 +963,19 @@ function getTimeAgo(dateStr: string): string {
   return days + "d ago";
 }
 
-function formatNumber(n: number): string {
+export function formatNumber(n: number): string {
   if (n >= 1000000) return (n / 1000000).toFixed(1) + "M";
   if (n >= 1000) return (n / 1000).toFixed(1) + "K";
   return String(n);
 }
 
-function getProgressPercent(status: string): number {
+export function getProgressPercent(status: string): number {
   const steps: Record<string, number> = { PENDING: 5, CLONING: 20, ANALYZING: 40, TESTING: 65, GENERATING: 85 };
   return steps[status] ?? 0;
 }
+
+export function formatDate(value: string): string {
+  return new Date(value).toLocaleDateString();
+}
+
+export { getScoreClass };
