@@ -21,6 +21,7 @@ export type AppRoute =
   | { name: "knowledge-map" }
   | { name: "intelligence" }
   | { name: "audit" }
+  | { name: "dashboard" }
   | { name: "login" }
   | {
       name: "project";
@@ -67,6 +68,9 @@ export function parseRoute(pathname: string): AppRoute {
   }
   if (normalized === "/audit") {
     return { name: "audit" };
+  }
+  if (normalized === "/dashboard") {
+    return { name: "dashboard" };
   }
   if (normalized === "/login") {
     return { name: "login" };
@@ -149,6 +153,8 @@ export function routePath(route: AppRoute): string {
       return "/intelligence";
     case "audit":
       return "/audit";
+    case "dashboard":
+      return "/dashboard";
     case "login":
       return "/login";
     case "project":
@@ -209,6 +215,7 @@ export function routeWorkspaceId(route: AppRoute): string | null {
     case "intelligence":
     case "scanner":
     case "audit":
+    case "dashboard":
     case "login":
     case "not-found":
       return null;

@@ -8,6 +8,8 @@ export type IconName =
   | "changes"
   | "check"
   | "chevron-down"
+  | "chevron-left"
+  | "chevron-right"
   | "clock"
   | "documents"
   | "folder"
@@ -141,6 +143,10 @@ function renderIcon(name: IconName) {
       );
     case "chevron-down":
       return <path d="m7 9.5 5 5 5-5" />;
+    case "chevron-left":
+      return <path d="m14.5 14.5-5-5 5-5" />;
+    case "chevron-right":
+      return <path d="m9.5 9.5 5 5-5 5" />;
     case "clock":
       return (
         <>

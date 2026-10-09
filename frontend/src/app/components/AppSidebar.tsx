@@ -159,7 +159,7 @@ export function AppSidebar({
         aria-expanded={!collapsed}
         title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
       >
-        <Icon name={collapsed ? "arrow-right" : "arrow-right"} size={14} />
+        <Icon name={collapsed ? "chevron-right" : "chevron-left"} size={14} />
       </button>
     </aside>
   );

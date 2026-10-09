@@ -1,8 +1,9 @@
 import { AuditTrailViewer } from "../../modules/audit/AuditTrailViewer";
 import { TemplateWorkspace } from "../../modules/templates/TemplateWorkspace";
-import { ScannerWorkspace } from "../../modules/scanner/ScannerWorkspace";
+import { ScannerWorkspace } from "../..//modules/scanner/ScannerWorkspace";
 import { IntelligenceWorkspace } from "../../modules/intelligence/IntelligenceWorkspace";
 import { KnowledgeMap } from "../../modules/knowledge-map";
+import { DashboardWorkspace } from "../../modules/dashboard/DashboardWorkspace";
 import {
   OperationalOverview,
   type OverviewNavigationTarget,
@@ -67,14 +68,14 @@ export function RouteContent({
 
   return (
     <>
-      {workspaceLoadState === "error" && route.name !== "system" && route.name !== "templates" && route.name !== "scanner" && route.name !== "intelligence" && route.name !== "audit" && route.name !== "login" && (
+      {workspaceLoadState === "error" && route.name !== "system" && route.name !== "templates" && route.name !== "scanner" && route.name !== "intelligence" && route.name !== "audit" && route.name !== "login" && route.name !== "dashboard" && (
         <WorkspaceContextError
           message={workspaceLoadError}
           onManage={manageWorkspaces}
         />
       )}
 
-      {workspaceLoadState === "loading" && route.name !== "system" && route.name !== "templates" && route.name !== "scanner" && route.name !== "intelligence" && route.name !== "audit" && route.name !== "login" && (
+      {workspaceLoadState === "loading" && route.name !== "system" && route.name !== "templates" && route.name !== "scanner" && route.name !== "intelligence" && route.name !== "audit" && route.name !== "login" && route.name !== "dashboard" && (
         <div className="project-workbench-state" role="status">
           <span className="loading-bar" aria-hidden="true" />
           Loading workspace context…
@@ -160,6 +161,7 @@ export function RouteContent({
       {route.name === "scanner" && <ScannerWorkspace />}
 {route.name === "knowledge-map" && <KnowledgeMap />}
 {route.name === "intelligence" && <IntelligenceWorkspace />}
+{route.name === "dashboard" && <DashboardWorkspace />}
       
       {workspaceLoadState === "ready" && route.name === "not-found" && (
         <RouteNotFound

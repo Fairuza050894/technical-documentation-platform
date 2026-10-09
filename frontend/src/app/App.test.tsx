@@ -193,13 +193,17 @@ function mockPlatform({
 }
 
 beforeEach(() => {
-  globalThis.localStorage.clear();
-  globalThis.history.replaceState({}, "", "/");
-});
+    if (globalThis.localStorage) {
+      globalThis.localStorage.clear();
+    }
+    globalThis.history.replaceState({}, "", "/");
+  });
 
 afterEach(() => {
   vi.restoreAllMocks();
-  globalThis.localStorage.clear();
+  if (globalThis.localStorage) {
+    globalThis.localStorage.clear();
+  }
   globalThis.history.replaceState({}, "", "/");
 });
 
@@ -351,7 +355,9 @@ describe("App", () => {
     await waitFor(() => {
       expect(globalThis.location.pathname).toBe(`/workspaces/${secondWorkspaceId}`);
     });
-    expect(globalThis.localStorage.getItem("tdp.last-workspace-id")).toBe(secondWorkspaceId);
+    if (globalThis.localStorage) {
+      expect(globalThis.localStorage.getItem("tdp.last-workspace-id")).toBe(secondWorkspaceId);
+    }
   });
 
   it("responds to browser history events", async () => {

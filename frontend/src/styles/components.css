@@ -120,6 +120,42 @@
   background: var(--color-warning-subtle);
 }
 
+/* Score badges (used by Scanner) */
+.score-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.5rem;
+  height: 1.5rem;
+  padding: 0 0.375rem;
+  border-radius: var(--radius-small);
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.score-badge--high {
+  color: var(--color-score-high);
+  background: var(--color-score-high-subtle);
+}
+
+.score-badge--medium {
+  color: var(--color-score-medium);
+  background: var(--color-score-medium-subtle);
+}
+
+.score-badge--low {
+  color: var(--color-score-low);
+  background: var(--color-score-low-subtle);
+}
+
+.score-badge--sq {
+  font-size: 0.625rem;
+  min-width: auto;
+  padding: 0 0.25rem;
+}
+
 .notice {
   display: grid;
   min-width: 0;
@@ -901,4 +937,114 @@ td strong {
 
 .md-table-row {
   display: table-row;
+}
+
+/* Sparklines & Trend Indicators */
+.sparkline {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 4px;
+  vertical-align: middle;
+}
+
+.sparkline svg {
+  display: block;
+}
+
+.sparkline__trend {
+  font-size: 10px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  margin-top: 2px;
+}
+
+.sparkline__trend--up {
+  color: var(--color-success);
+}
+
+.sparkline__trend--down {
+  color: var(--color-danger);
+}
+
+.sparkline__trend--flat {
+  color: var(--color-text-muted);
+}
+
+.minisparkline {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+}
+
+.minisparkline svg {
+  display: block;
+}
+
+/* Trend Card for Dashboard */
+.trend-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-medium);
+  background: var(--color-surface);
+}
+
+.trend-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.trend-card__title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.trend-card__value {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.trend-card__sparkline {
+  height: 50px;
+}
+
+.trend-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.trend-card__change {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.trend-card__change--positive {
+  color: var(--color-success);
+}
+
+.trend-card__change--negative {
+  color: var(--color-danger);
+}
+
+.trend-card__change--neutral {
+  color: var(--color-text-muted);
+}
+
+.trend-card__period {
+  font-size: 11px;
+  color: var(--color-text-muted);
 }

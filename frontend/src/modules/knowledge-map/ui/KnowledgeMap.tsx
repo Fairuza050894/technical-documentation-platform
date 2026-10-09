@@ -41,10 +41,10 @@ export function KnowledgeMap() {
         <section className="km__section" aria-live="polite">
           <h2 className="km__section-title">Evidence status</h2>
           <div className="km-empty">
-            Knowledge Map belum mempunyai source-backed aggregator pada baseline ini.
-            Data demo sengaja tidak ditampilkan sebagai fakta repository. Hubungkan
-            capability ini ke evidence API sebelum menggunakan metrik, perubahan,
-            atau action item untuk keputusan operasional.
+            Knowledge Map does not yet have a source-backed aggregator at this baseline.
+            Demo data is intentionally not shown as repository fact. Connect this capability
+            to the evidence API before using metrics, changes, or action items for
+            operational decisions.
           </div>
         </section>
       </div>

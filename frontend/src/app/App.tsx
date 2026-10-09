@@ -49,7 +49,9 @@ export function App() {
     const nextWorkspaceId = routeWorkspaceId(nextRoute);
     if (nextWorkspaceId !== null) {
       setActiveWorkspaceId(nextWorkspaceId);
-      globalThis.localStorage.setItem(LAST_WORKSPACE_KEY, nextWorkspaceId);
+      if (globalThis.localStorage) {
+        globalThis.localStorage.setItem(LAST_WORKSPACE_KEY, nextWorkspaceId);
+      }
     }
     setRoute(nextRoute);
   }, []);
@@ -63,7 +65,9 @@ export function App() {
       const nextWorkspaceId = routeWorkspaceId(nextRoute);
       if (nextWorkspaceId !== null) {
         setActiveWorkspaceId(nextWorkspaceId);
-        globalThis.localStorage.setItem(LAST_WORKSPACE_KEY, nextWorkspaceId);
+        if (globalThis.localStorage) {
+          globalThis.localStorage.setItem(LAST_WORKSPACE_KEY, nextWorkspaceId);
+        }
       }
       setRoute(nextRoute);
     };
@@ -88,7 +92,7 @@ export function App() {
         const requestedId = routeWorkspaceId(
           parseRoute(globalThis.location.pathname),
         );
-        const storedId = globalThis.localStorage.getItem(LAST_WORKSPACE_KEY);
+        const storedId = globalThis.localStorage?.getItem(LAST_WORKSPACE_KEY);
         const requestedWorkspace =
           requestedId === null
             ? null
@@ -111,7 +115,9 @@ export function App() {
         setWorkspaces(response.items);
         setActiveWorkspaceId(selected?.id ?? null);
         if (selected !== null) {
-          globalThis.localStorage.setItem(LAST_WORKSPACE_KEY, selected.id);
+          if (globalThis.localStorage) {
+            globalThis.localStorage.setItem(LAST_WORKSPACE_KEY, selected.id);
+          }
         }
         setWorkspaceLoadState("ready");
 
@@ -159,10 +165,12 @@ export function App() {
         route.workspaceId === null
       ) {
         setActiveWorkspaceId(project.workspace_id);
-        globalThis.localStorage.setItem(
-          LAST_WORKSPACE_KEY,
-          project.workspace_id,
-        );
+        if (globalThis.localStorage) {
+          globalThis.localStorage.setItem(
+            LAST_WORKSPACE_KEY,
+            project.workspace_id,
+          );
+        }
         navigate(
           {
             name: "project",
@@ -181,7 +189,9 @@ export function App() {
     (workspace: Workspace): void => {
       setActiveWorkspaceId(workspace.id);
       setActiveProject(null);
-      globalThis.localStorage.setItem(LAST_WORKSPACE_KEY, workspace.id);
+      if (globalThis.localStorage) {
+        globalThis.localStorage.setItem(LAST_WORKSPACE_KEY, workspace.id);
+      }
       navigate({ name: "home", workspaceId: workspace.id });
     },
     [navigate],

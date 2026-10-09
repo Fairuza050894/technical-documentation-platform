@@ -8,6 +8,7 @@ from tdp.config import Settings
 class TestPhase1Config:
     def test_rate_limit_defaults(self) -> None:
         s = Settings(
+            _env_file=None,
             environment="development",
             database_path="/tmp/test.sqlite3",
             artifact_root_path="/tmp/artifacts",
@@ -17,6 +18,7 @@ class TestPhase1Config:
 
     def test_audit_default_enabled(self) -> None:
         s = Settings(
+            _env_file=None,
             environment="development",
             database_path="/tmp/test.sqlite3",
             artifact_root_path="/tmp/artifacts",
@@ -25,6 +27,7 @@ class TestPhase1Config:
 
     def test_oidc_defaults_empty(self) -> None:
         s = Settings(
+            _env_file=None,
             environment="development",
             database_path="/tmp/test.sqlite3",
             artifact_root_path="/tmp/artifacts",
@@ -35,6 +38,7 @@ class TestPhase1Config:
 
     def test_database_url_default_empty(self) -> None:
         s = Settings(
+            _env_file=None,
             environment="development",
             database_path="/tmp/test.sqlite3",
             artifact_root_path="/tmp/artifacts",

@@ -29,6 +29,7 @@ import type {
 } from "./types";
 import { ConfirmDialog } from "../../shared/ui/ConfirmDialog";
 import { EnterpriseGenerationForm } from "./EnterpriseGenerationForm";
+import { MarkdownPreview } from "../scanner/MarkdownPreview";
 
 interface SnapshotOption {
   run: SynchronizationRun;
@@ -688,7 +689,7 @@ export function DocumentsWorkspace({
 
           <details className="document-preview-disclosure" open>
             <summary>Markdown preview</summary>
-            <pre className="document-preview">{selectedVersion.content}</pre>
+            <MarkdownPreview content={selectedVersion.content} />
           </details>
         </section>
       )}

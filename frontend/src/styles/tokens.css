@@ -37,6 +37,13 @@
   --color-danger: #b93838;
   --color-danger-subtle: #fdecec;
 
+  --color-score-high: #16a34a;
+  --color-score-high-subtle: #dcfce7;
+  --color-score-medium: #f59e0b;
+  --color-score-medium-subtle: #fef3c7;
+  --color-score-low: #dc2626;
+  --color-score-low-subtle: #fef2f2;
+
   --focus-ring: 0 0 0 3px rgb(37 99 217 / 20%);
 
   --radius-small: 3px;
@@ -54,6 +61,19 @@
   --space-6: 24px;
   --space-8: 32px;
   --space-10: 40px;
+
+  /* Density modes */
+  --density-compact: 0;
+  --space-1-compact: 2px;
+  --space-2-compact: 4px;
+  --space-3-compact: 8px;
+  --space-4-compact: 12px;
+  --space-5-compact: 16px;
+  --space-6-compact: 16px;
+  --space-8-compact: 24px;
+  --space-10-compact: 32px;
+  --control-height-compact: 28px;
+  --sidebar-width-compact: 260px;
 
   --control-height: 36px;
   --sidebar-width: 240px;

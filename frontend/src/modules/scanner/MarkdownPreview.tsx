@@ -1,5 +1,10 @@
-import { useMemo } from "react";
+import { useMemo, useEffect, useState, useCallback } from "react";
 import { MermaidDiagram } from "./MermaidDiagram";
+import { createHighlighter } from "shiki";
+
+interface Highlighter {
+  codeToHtml(code: string, options: { lang: string; theme: string }): string;
+}
 
 interface MarkdownPreviewProps {
   content: string;
@@ -119,22 +124,112 @@ function renderInline(text: string): React.ReactNode {
   return <>{parts}</>;
 }
 
+interface CodeBlockProps {
+  code: string;
+  language?: string;
+}
+
+function CodeBlock({ code, language }: CodeBlockProps) {
+  const [html, setHtml] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
+
+  const copyToClipboard = useCallback(() => {
+    navigator.clipboard.writeText(code).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }).catch((err) => {
+      console.error("Failed to copy:", err);
+    });
+  }, [code]);
+
+  useEffect(() => {
+    let mounted = true;
+    setLoading(true);
+    setHtml("");
+
+    createHighlighter({ themes: ["github-light"], langs: [language ?? "text"] })
+      .then((highlighter: Highlighter) => {
+        if (!mounted) return;
+        const highlighted = highlighter.codeToHtml(code, {
+          lang: language ?? "text",
+          theme: "github-light",
+        });
+        setHtml(highlighted);
+        setLoading(false);
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setHtml(`<pre><code>${escapeHtml(code)}</code></pre>`);
+        setLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [code, language]);
+
+  function escapeHtml(text: string): string {
+    const quot = "&" + "quot;";
+    const apos = "&#039;";
+    return text
+      .replace(/&/g, "&")
+      .replace(/</g, "<")
+      .replace(/>/g, ">")
+      .replace(/"/g, quot)
+      .replace(/'/g, apos);
+  }
+  if (loading) {
+    return (
+      <pre className="md-code-block">
+        <button
+          type="button"
+          className="md-code-block__copy"
+          onClick={copyToClipboard}
+          aria-label="Copy code to clipboard"
+        >
+          {copied ? "Copied!" : "Copy"}
+        </button>
+        <code>{code}</code>
+      </pre>
+    );
+  }
+
+  return (
+    <pre className="md-code-block">
+      <button
+        type="button"
+        className={`md-code-block__copy ${copied ? "copied" : ""}`}
+        onClick={copyToClipboard}
+        aria-label="Copy code to clipboard"
+      >
+        {copied ? "Copied!" : "Copy"}
+      </button>
+      <div dangerouslySetInnerHTML={{ __html: html }} />
+    </pre>
+  );
+}
+
 function renderMarkdownBlock(text: string): React.ReactNode {
   const lines = text.split("\n");
   const elements: React.ReactNode[] = [];
   let inCodeBlock = false;
   let codeLines: string[] = [];
+  let codeLang = "";
   let codeKey = 0;
 
   for (let i = 0; i < lines.length; i++) {
     const line: string = lines[i] ?? "";
-    if (line.trimStart().startsWith("```")) {
+    const fenceMatch = line.trimStart().match(/^```(\w*)/);
+    if (fenceMatch) {
       if (inCodeBlock) {
-        elements.push(<pre key={"code-" + codeKey++} className="md-code-block"><code>{codeLines.join("\n")}</code></pre>);
+        elements.push(<CodeBlock key={"code-" + codeKey++} code={codeLines.join("\n")} language={codeLang} />);
         codeLines = [];
+        codeLang = "";
         inCodeBlock = false;
       } else {
         inCodeBlock = true;
+        codeLang = fenceMatch[1] ?? "text";
       }
       continue;
     }
@@ -146,7 +241,7 @@ function renderMarkdownBlock(text: string): React.ReactNode {
   }
 
   if (inCodeBlock && codeLines.length > 0) {
-    elements.push(<pre key={"code-" + codeKey} className="md-code-block"><code>{codeLines.join("\n")}</code></pre>);
+    elements.push(<CodeBlock key={"code-" + codeKey} code={codeLines.join("\n")} language={codeLang} />);
   }
 
   return <>{elements}</>;
